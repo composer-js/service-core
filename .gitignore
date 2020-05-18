@@ -1,0 +1,16 @@
+.nyc_output
+.DS_Store
+*.log
+.idea
+.awcache
+.rpt2_cache
+.vs
+build/
+compiled/
+coverage/
+dist/
+docs/
+node_modules/
+temp/
+tmp/
+axr-test

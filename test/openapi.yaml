@@ -1,0 +1,155 @@
+openapi: 3.0.1
+info:
+  description: An API spec for a micro-service.
+  version: 1.0.0
+  title: CRUDS Template
+  termsOfService: 'http://acceleratxr.com/terms/'
+  contact:
+    email: info@acceleratxr.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+components:
+  parameters:
+    id:
+      name: id
+      description: The unique identifier of the object.
+      in: path
+      required: true
+      schema:
+        type: string
+    jwt_token:
+      name: jwt_token
+      in: query
+      description: The JWT access token to use for user authentication.
+      required: false
+      schema:
+        type: string
+    maxResults:
+      name: maxResults
+      in: query
+      description: The maximum number of results to return. Cannot exceed 1000.
+      required: false
+      schema:
+        type: integer
+        format: int32
+    page:
+      name: page
+      in: query
+      description: 'The page number, or offset, of the search results to search for and return.'
+      required: false
+      schema:
+        type: integer
+        format: int32
+    sort:
+      name: sort
+      in: query
+      description: 'A mapping of property to 1 or -1 that indicates the order to sort results by. 1 indicates ascending order, -1 descending.'
+      required: false
+      schema:
+        type: string
+  schemas:
+    authToken:
+      type: object
+      properties:
+        token:
+          type: string
+          format: JWT
+    count:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int
+    Item:
+      type: object
+      x-dbId: mongo1
+      properties:
+        uid:
+          type: string
+          format: uuid
+          nullable: false
+          x-identifier: true
+          x-index: true
+          x-unique: true
+        dateCreated:
+          type: string
+          format: date-time
+          nullable: false
+        dateModified:
+          type: string
+          format: date-time
+          nullable: false
+        version:
+          type: integer
+          nullable: false
+          default: 0
+        userId:
+          type: string
+          format: uuid
+          nullable: false
+        name:
+          type: string
+          nullable: false
+          x-identifier: true
+          x-index: true
+          x-unique: true
+        description:
+          type: string
+        quantity:
+          type: integer
+        metaData:
+          type: object
+          additionalProperties:
+            type: string
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    basic:
+      type: http
+      scheme: basic
+paths:
+  /hello:
+    get:
+      x-behaviors: 'helloWorld'
+  /login:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/jwt_token'
+      security:
+        - basic: []
+  /token:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/jwt_token'
+      security:
+        - jwt: []
+        - basic: []
+  /items:
+    parameters:
+      - $ref: '#/components/parameters/jwt_token'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/maxResults'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/sort'
+      description: Returns all items from the system that the user has access to
+      x-behaviors:
+        - 'models.Item.findAll'
+        - 'helloWorld'
+      responses:
+        '200':
+          description: A list of items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+      security:
+        - jwt: []
+externalDocs:
+  description: Powered by AcceleratXR Core technology.
+  url: 'https://acceleratxr.com'
