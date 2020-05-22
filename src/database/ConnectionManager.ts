@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Logger } from "../Logger";
+import { Logger } from "@composer-js/core";
 import * as Redis from "ioredis";
 import * as typeorm from "typeorm";
 

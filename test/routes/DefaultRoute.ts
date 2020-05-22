@@ -2,7 +2,7 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Route, Get, User, Init, Auth } from "../../src/decorators/RouteDecorators";
-import { Logger } from "../../src/service_core";
+import { Logger } from "@composer-js/core";
 import { AccessControlList } from "../../src/security/AccessControlList";
 
 const logger = Logger();

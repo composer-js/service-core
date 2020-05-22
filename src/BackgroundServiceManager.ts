@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import BackgroundService from "./BackgroundService";
 import * as schedule from "node-schedule";
-import ClassLoader from "./ClassLoader";
+import { ClassLoader } from "@composer-js/core";
 import * as path from "path";
 
 /**

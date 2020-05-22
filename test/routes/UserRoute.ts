@@ -16,7 +16,7 @@ import {
 } from "../../src/decorators/RouteDecorators";
 import { Model, MongoRepository } from "../../src/decorators/ModelDecorators";
 import ModelRoute from "../../src/routes/ModelRoute";
-import { Logger } from "../../src/service_core";
+import { Logger } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { AccessControlList } from "../../src/security/AccessControlList";

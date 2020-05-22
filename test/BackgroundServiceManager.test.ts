@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import config from "./config";
 import BackgroundServiceManager from "../src/BackgroundServiceManager";
-import { Logger } from "../src/Logger";
+import { Logger } from "@composer-js/core";
 import MyFirstService from "./jobs/MyFirstService";
 import MySecondService from "./jobs/MySecondService";
 import MyThirdService from "./jobs/MyThirdService";

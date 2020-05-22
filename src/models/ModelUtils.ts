@@ -4,7 +4,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { Logger } from "../Logger";
+import { Logger } from "@composer-js/core";
 import {
     getMetadataArgsStorage,
     Repository,
