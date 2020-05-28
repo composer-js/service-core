@@ -4,7 +4,6 @@ cache:
     paths:
         - node_modules/
         - dist/
-        - docs/
 
 build:
     stage: build
