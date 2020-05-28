@@ -1,6 +1,6 @@
 {
     "name": "@composer-js/service-core",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "description": "Provides all core functionality for ComposerJS based backend services.",
     "author": "AcceleratXR, Inc. <info@acceleratxr.com>",
     "repository": "https://gitlab.com/AcceleratXR/composerjs/composer-service-core.git",
