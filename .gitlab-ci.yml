@@ -27,6 +27,5 @@ publish:
     image: node:12
     stage: deploy
     script:
-        - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
-        - git config user.email "gitlab@acceleratxr.com"
+        - yarn docs
         - npm publish --access public

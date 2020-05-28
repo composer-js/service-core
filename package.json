@@ -16,7 +16,8 @@
     "scripts": {
         "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
         "prebuild": "rimraf dist",
-        "build": "tsc && typedoc --out docs --target es6 --theme minimal --mode file src",
+        "build": "tsc",
+        "docs": "typedoc --plugin typedoc-plugin-markdown --out docs --target esnext --mode file src",
         "test": "node_modules/.bin/jest --detectOpenHandles",
         "test:watch": "node_modules/.bin/jest --detectOpenHandles --watch",
         "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
@@ -140,6 +141,7 @@
         "tslint-config-prettier": "^1.18.0",
         "tslint-config-standard": "^9.0.0",
         "typedoc": "^0.17.7",
+        "typedoc-plugin-markdown": "^2.2.17",
         "typescript": "^3.9.2"
     },
     "dependencies": {
