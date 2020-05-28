@@ -26,5 +26,6 @@ publish:
     image: node:12
     stage: deploy
     script:
+        - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
         - yarn docs
         - npm publish --access public
