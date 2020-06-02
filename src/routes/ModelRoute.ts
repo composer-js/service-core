@@ -82,12 +82,17 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const acl: AccessControlList | undefined = this.getDefaultACL();
         if (acl) {
             const existing: AccessControlList | undefined = await ACLUtils.findACL(acl.uid);
-            if (!existing) {
-                await ACLUtils.saveACL(acl);
-                this.defaultACLUid = acl.uid;
-            } else {
-                this.defaultACLUid = existing.uid;
+
+            // When an existing ACL is found make sure we can modify it
+            if (existing) {
+                acl.dateCreated = existing.dateCreated;
+                acl.dateModified = new Date();
+                acl.version = existing.version;
             }
+
+            // Always save the ACL into the datastore
+            await ACLUtils.saveACL(acl);
+            this.defaultACLUid = acl.uid;
         }
     }
 
