@@ -79,20 +79,37 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     @Init
     private async superInitialize() {
-        const acl: AccessControlList | undefined = this.getDefaultACL();
-        if (acl) {
-            const existing: AccessControlList | undefined = await ACLUtils.findACL(acl.uid);
+        let defaultAcl: AccessControlList | undefined = this.getDefaultACL();
+        if (defaultAcl) {
+            this.defaultACLUid = defaultAcl.uid;
+            defaultAcl.uid = `default_${defaultAcl.uid}`;
 
-            // When an existing ACL is found make sure we can modify it
+            // Two documents are stored for each default ACL. A record named `default_<NAME>`
+            // and another named `<NAME>`. The `<NAME>` record stores the user-defined
+            // overrides that overlay the `default_<NAME>` document. The `default_<NAME>` is
+            // therefore always updated with whatever is returned from the above function.
+            const existing: AccessControlList | undefined = await ACLUtils.findACL(defaultAcl.uid);
+
             if (existing) {
-                acl.dateCreated = existing.dateCreated;
-                acl.dateModified = new Date();
-                acl.version = existing.version;
+                // Copy over the new records from code
+                existing.records = defaultAcl.records;
+                defaultAcl = existing;
+            }
+            else {
+                // Create the user-defined override record
+                const acl: AccessControlList = {
+                    uid: this.defaultACLUid,
+                    dateCreated: new Date(),
+                    dateModified: new Date(),
+                    version: 0,
+                    parentUid: defaultAcl.uid,
+                    records: []
+                };
+                await ACLUtils.saveACL(acl);
             }
 
             // Always save the ACL into the datastore
-            await ACLUtils.saveACL(acl);
-            this.defaultACLUid = acl.uid;
+            await ACLUtils.saveACL(defaultAcl);
         }
     }
 

@@ -60,6 +60,12 @@ export default class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
             throw error;
         }
 
+        if (id.startsWith("default_")) {
+            const error: any = new Error("User does not have permission to perform this action.");
+            error.status = 403;
+            throw error;
+        }
+
         return super.doDelete(id, user);
     }
 
@@ -104,6 +110,12 @@ export default class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
             (!UserUtils.hasRoles(user, this.config.get("trusted_roles")) &&
                 !ACLUtils.hasPermission(user, id, ACLAction.FULL))
         ) {
+            const error: any = new Error("User does not have permission to perform this action.");
+            error.status = 403;
+            throw error;
+        }
+
+        if (id.startsWith("default_")) {
             const error: any = new Error("User does not have permission to perform this action.");
             error.status = 403;
             throw error;

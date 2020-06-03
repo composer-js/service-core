@@ -74,7 +74,8 @@ describe("ACLRouteMongo Tests", () => {
 
     beforeEach(async () => {
         try {
-            await repo.clear();
+            // Don't delete the default ACLs initialized by the server
+            await repo.deleteMany({uid: { $nin: ["default_User", "User"] } });
         } catch (err) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
             if (err.message != "ns not found") {
@@ -210,6 +211,17 @@ describe("ACLRouteMongo Tests", () => {
 
         const existing: AccessControlListMongo | undefined = await repo.findOne({ uid: acl.uid });
         expect(existing).toBeUndefined();
+    });
+
+    it("Cannot delete a default_ ACL document.", async () => {
+        const result = await request(server.getApplication())
+            .delete("/acls/default_User")
+            .set("Authorization", "jwt " + adminToken);
+        expect(result.status).toBe(403);
+
+        const results: any[] = await repo.find();
+        const count: number = await repo.count({ uid: "default_User" });
+        expect(count).toBe(1);
     });
     it("Cannot delete ACL document as non-admin.", async () => {
         const acl: AccessControlListMongo = await createACL([
@@ -482,13 +494,28 @@ describe("ACLRouteMongo Tests", () => {
         expect(result.status).toBe(403);
     });
 
+    it("Cannot update default_ ACL document.", async () => {
+        const acl: AccessControlListMongo | undefined = await repo.findOne({uid: "default_User"});
+        expect(acl).toBeDefined();
+        if (acl) {
+            acl.records = [];
+
+            const result = await request(server.getApplication())
+                .put("/acls/" + acl.uid)
+                .set("Authorization", "jwt " + adminToken)
+                .send(acl);
+            expect(result.status).toBe(403);
+        }
+    });
+
     it("Can find all ACL documents.", async () => {
         const acls: AccessControlListMongo[] = await createACLs(5);
         const result = await request(server.getApplication())
             .get("/acls")
             .set("Authorization", "jwt " + adminToken);
         expect(result).toHaveProperty("body");
-        expect(result.body).toHaveLength(acls.length);
+        // Add two to the ACL length to cover default_User and User
+        expect(result.body).toHaveLength(acls.length + 2);
     });
 
     it("Can find ACL documents with criteria (eq).", async () => {

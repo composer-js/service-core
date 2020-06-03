@@ -682,5 +682,32 @@ describe("ModelRoute Tests [MongoDB]", () => {
             const count: number = await repo.count();
             expect(count).toBe(users.length);
         });
+
+        it("Can override default ACL behavior. [MongoDB]", async () => {
+            const defaultACL: AccessControlListMongo | undefined = await aclRepo.findOne({ uid: "User" });
+            expect(defaultACL).toBeDefined();
+            if (defaultACL) {
+                defaultACL.records.push({
+                    userOrRoleId: "anonymous",
+                    create: null,
+                    read: true,
+                    update: null,
+                    delete: null,
+                    special: null,
+                    full: null,
+                });
+                defaultACL.version++;
+
+                await aclRepo.save(defaultACL);
+            }
+
+            const users: User[] = await createUsers(25);
+            const result = await request(server.getApplication())
+                .get("/userswithacl");
+            expect(result.status).toBeGreaterThanOrEqual(200);
+            expect(result.status).toBeLessThan(300);
+            expect(result).toHaveProperty("body");
+            expect(result.body).toHaveLength(users.length);
+        });
     });
 });
