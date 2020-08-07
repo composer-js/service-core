@@ -9,7 +9,7 @@ build/
 compiled/
 coverage/
 dist/
-docs/
+docs/_build
 node_modules/
 temp/
 tmp/
