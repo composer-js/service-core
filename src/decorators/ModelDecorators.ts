@@ -96,3 +96,20 @@ export function RedisConnection(name: string) {
         });
     };
 }
+
+/**
+ * Indicates that the class will track changes for each document update limited to the specified number of versions.
+ *
+ * @param versions The number of versions that will be tracked for each document change. Set to `-1` to store all
+ * versions. Default value is `-1`.
+ */
+export function TrackChanges(versions: number = -1) {
+    return function(target: any) {
+        Reflect.defineMetadata("axr:trackChanges", versions, target);
+        Object.defineProperty(target, "trackChanges", {
+            enumerable: true,
+            writable: true,
+            value: versions,
+        });
+    };
+}

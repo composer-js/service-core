@@ -10,7 +10,7 @@ describe("RoutesScanner Tests", () => {
         expect(scanner).toBeDefined();
         let routes: any[] = await scanner.scan();
         expect(routes).toBeDefined();
-        expect(routes).toHaveLength(5);
+        expect(routes).toHaveLength(6);
         expect(routes[0]).toHaveProperty("modelClass"); // CacheUserRoute
         expect(routes[2]).toHaveProperty("modelClass"); // ItemRoute
         expect(routes[3]).toHaveProperty("modelClass"); // UserRoute

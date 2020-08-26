@@ -270,7 +270,11 @@ class ACLUtils {
         // If the acl wasn't found in the cache look in the database
         if (!acl) {
             const query: any = ModelUtils.buildSearchQuery(this.repo, { uid: entityId });
-            acl = await this.repo.findOne(query);
+            if (this.repo instanceof MongoRepository) {
+                acl = await this.repo.aggregate(query).limit(1).next();
+            } else {
+                acl = await this.repo.findOne(query);
+            }
 
             // Retrieve the parent ACL and assign it if available
             if (acl && acl.parentUid) {

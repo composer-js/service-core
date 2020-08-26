@@ -5,7 +5,7 @@ import { Repository, MongoRepository } from "typeorm";
 import ModelUtils from "../models/ModelUtils";
 import RepoUtils from "../models/RepoUtils";
 import BaseEntity from "../models/BaseEntity";
-import { SimpleEntity, Init, ACLUtils } from "../service_core";
+import { SimpleEntity, Init, ACLUtils, BaseMongoEntity } from "../service_core";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../decorators/ModelDecorators";
 import * as crypto from "crypto";
@@ -43,6 +43,12 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /** The model class associated with the controller to perform operations against. */
     protected abstract repo?: Repository<T> | MongoRepository<T>;
+
+    /**
+     * The number of previous document versions to store in the database. A negative value indicates storing all
+     * versions, a value of `0` stores no versions.
+     */
+    protected trackChanges: number = 0;
 
     /**
      * Initializes a new instance using any defaults.
@@ -118,13 +124,14 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * the cache is populated to speed up subsequent requests.
      *
      * @param id The unique identifier of the object to retrieve.
+     * @param version The desired version number of the object to retrieve. If `undefined` returns the latest.
      */
-    protected async getObj(id: string): Promise<T | undefined> {
+    protected async getObj(id: string, version?: number): Promise<T | undefined> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
-        const query: any = this.searchIdQuery(id);
+        const query: any = this.searchIdQuery(id, version);
         if (this.cacheClient && this.cacheTTL) {
             // First attempt to retrieve the object from the cache
             const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${this.hashQuery(query)}`);
@@ -155,11 +162,11 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Search for existing object based on passed in id
+     * Search for existing object based on passed in id and version
      */
-    private searchIdQuery(id: string): any {
+    private searchIdQuery(id: string, version?: number): any {
         const clazz: any = (this as any).class;
-        return ModelUtils.buildIdSearchQuery(this.repo, clazz.modelClass, id);
+        return ModelUtils.buildIdSearchQuery(this.repo, clazz.modelClass, id, version);
     }
 
     /**
@@ -201,6 +208,11 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         obj = await RepoUtils.preprocessBeforeSave(this.repo, obj);
+
+        // Are we tracking multiple versions for this object?
+        if (obj instanceof BaseEntity || this.trackChanges != 0) {
+            (obj as any).version = 0;
+        }
 
         // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
         // extends BaseEntity.
@@ -262,22 +274,67 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const query: any = this.searchIdQuery(id);
-        const obj: T | undefined = await this.repo.findOne(query);
+        const objs: T[] | undefined = await this.repo.find(query);
+        const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
 
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(obj ? obj.uid : id);
+        const acl: AccessControlList | undefined = await ACLUtils.findACL(uid ? uid : id);
         if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.DELETE))) {
             const error: any = new Error("User does not have permission to perform this action.");
             error.status = 403;
             throw error;
         }
 
-        if (obj) {
-            await this.repo.remove(obj);
+        if (uid && objs) {
+            await this.repo.remove(objs);
 
             if (this.cacheClient && this.cacheTTL) {
                 // Delete the object from cache
                 this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
-                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(obj.uid))}`);
+                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
+            }
+
+            await ACLUtils.removeACL(id);
+        }
+    }
+
+    /**
+     * Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
+     * `id` for a specified `version`.
+     */
+    protected async doDeleteVersion(id: string, version: number, user?: any): Promise<void> {
+        if (!this.repo) {
+            throw new Error("Repository not set or could not be found.");
+        }
+
+        // When id === `me` this is a special keyword meaning the authenticated user
+        if (id.toLowerCase() === "me") {
+            if (user) {
+                id = user.uid;
+            } else {
+                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                error.status = 403;
+                throw error;
+            }
+        }
+
+        const query: any = this.searchIdQuery(id, version);
+        const objs: T[] | undefined = await this.repo.find(query);
+        const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
+
+        const acl: AccessControlList | undefined = await ACLUtils.findACL(uid ? uid : id);
+        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.DELETE))) {
+            const error: any = new Error("User does not have permission to perform this action.");
+            error.status = 403;
+            throw error;
+        }
+
+        if (uid && objs) {
+            await this.repo.remove(objs);
+
+            if (this.cacheClient && this.cacheTTL) {
+                // Delete the object from cache
+                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
+                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
             }
 
             await ACLUtils.removeACL(id);
@@ -288,10 +345,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
      * `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
      * never null.
-     *
-     * @param req The HTTP request that contains one or more query parameters to use in the search.
-     * @param res The HTTP response whose `result` property will contain all objects found in the search.
-     * @param next The next function to execute after this one.
      */
     protected async doFindAll(params: any, query: any, user?: any): Promise<T[]> {
         let results: T[] = [];
@@ -331,7 +384,12 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         // If the query wasn't cached retrieve from the database
         if (results.length === 0) {
-            results = await this.repo.find(searchQuery);
+            if (this.repo instanceof MongoRepository) {
+                results = await this.repo.aggregate(searchQuery).toArray();
+            }
+            else {
+                results = await this.repo.find(searchQuery);
+            }
 
             // Cache the results for future requests
             if (this.cacheClient && this.cacheTTL) {
@@ -354,10 +412,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
-     *
-     * @param req The HTTP request that contains a `params.id` parameter with the unique identifier to retrieve.
-     * @param res The HTTP response whose `result` property will be set with the results of the search.
-     * @param next The next function to execute after this one.
      */
     protected async doFindById(id: string, user?: any): Promise<T | undefined> {
         if (!this.repo) {
@@ -376,6 +430,42 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const result: T | undefined = await this.getObj(id);
+        if (!result) {
+            const error: any = new Error("No object with that id could be found.");
+            error.status = 404;
+            throw error;
+        }
+
+        const acl: AccessControlList | undefined = await ACLUtils.findACL(result.uid);
+        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.READ))) {
+            const error: any = new Error("User does not have permission to perform this action.");
+            error.status = 403;
+            throw error;
+        }
+
+        return result;
+    }
+
+    /**
+     * Attempts to retrieve a single data model object as identified by the `id` and `version` parameters in the URI.
+     */
+    protected async doFindByIdAndVersion(id: string, version: number, user?: any): Promise<T | undefined> {
+        if (!this.repo) {
+            throw new Error("Repository not set or could not be found.");
+        }
+
+        // When id === `me` this is a special keyword meaning the authenticated user
+        if (id.toLowerCase() === "me") {
+            if (user) {
+                id = user.uid;
+            } else {
+                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                error.status = 403;
+                throw error;
+            }
+        }
+
+        const result: T | undefined = await this.getObj(id, version);
         if (!result) {
             const error: any = new Error("No object with that id could be found.");
             error.status = 404;
@@ -451,44 +541,80 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
+        const keepPrevious: boolean = this.trackChanges != 0;
+
         if (this.repo instanceof MongoRepository) {
             if (obj instanceof BaseEntity) {
-                await this.repo.updateOne(
-                    { uid: obj.uid, version: obj.version },
-                    {
-                        $set: {
-                            ...obj,
-                            dateModified: new Date(),
-                            version: obj.version + 1,
-                        },
-                    }
-                );
+                if (keepPrevious) {
+                    await this.repo.save({
+                        ...obj,
+                        _id: undefined, // Ensure we save a new document
+                        dateModified: new Date(),
+                        version: obj.version + 1,
+                    } as any);
+                } else {
+                    await this.repo.updateOne(
+                        { uid: obj.uid, version: obj.version },
+                        {
+                            $set: {
+                                ...obj,
+                                dateModified: new Date(),
+                                version: obj.version + 1,
+                            },
+                        }
+                    );
+                }
             } else if (obj.uid) {
-                await this.repo.updateOne(
-                    { uid: obj.uid },
-                    {
-                        $set: {
-                            ...obj,
-                        },
-                    }
-                );
+                if (keepPrevious) {
+                    await this.repo.save({
+                        ...obj,
+                        version: (obj as any).version + 1,
+                    } as any);
+                } else {
+                    await this.repo.updateOne(
+                        { uid: obj.uid },
+                        {
+                            $set: {
+                                ...obj,
+                            },
+                        }
+                    );
+                }
             } else {
-                // HAX We shouldn't be casting `obj` to `any` here but this is the only way to get it to compile since T
-                // extends `BaseEntity`.
-                const result: T | undefined = await this.repo.save(obj as any);
+                const toSave: any = obj as any;
+                if (keepPrevious) {
+                    toSave.version += 1;
+                }
+
+                const result: T | undefined = await this.repo.save(toSave);
                 if (result) {
                     obj = result;
                 }
             }
         } else {
             if (obj instanceof BaseEntity) {
-                await this.repo.update(query, {
-                    ...obj,
-                    dateModified: new Date(),
-                    version: obj.version + 1,
-                } as any);
+                if (keepPrevious) {
+                    await this.repo.insert({
+                        ...obj,
+                        dateModified: new Date(),
+                        version: obj.version + 1,
+                    } as any);
+                } else {
+                    await this.repo.update(query, {
+                        ...obj,
+                        dateModified: new Date(),
+                        version: obj.version + 1,
+                    } as any);
+                }
             } else {
-                await this.repo.update(query, obj as any);
+                const toSave: any = obj as any;
+
+                if (keepPrevious) {
+                    toSave.version += 1;
+                    await this.repo.save(toSave);
+                } else {
+                    await this.repo.update(query, toSave);
+                }
             }
         }
 

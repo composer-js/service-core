@@ -67,12 +67,13 @@ class ModelUtils {
     public static buildIdSearchQuery<T>(
         repo: Repository<T> | MongoRepository<T> | undefined,
         modelClass: any,
-        id: any
+        id: any,
+        version?: number
     ): any {
         if (repo instanceof MongoRepository) {
-            return ModelUtils.buildIdSearchQueryMongo(modelClass, id);
+            return ModelUtils.buildIdSearchQueryMongo(modelClass, id, version);
         } else {
-            return ModelUtils.buildIdSearchQuerySQL(modelClass, id);
+            return ModelUtils.buildIdSearchQuerySQL(modelClass, id, version);
         }
     }
 
@@ -82,19 +83,20 @@ class ModelUtils {
      *
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
+     * @param version The version number of the document to search for.
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuerySQL(modelClass: any, id: any): any {
+    public static buildIdSearchQuerySQL(modelClass: any, id: any, version?: number): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const where: any = [];
         for (const prop of props) {
-            where.push({ [prop]: id });
+            where.push(version ? { [prop]: new RegExp(id, "i"), version } : { [prop]: new RegExp(id, "i") });
         }
 
-        return { where };
+        return { where, order: { version: "DESC" } };
     }
 
     /**
@@ -103,19 +105,24 @@ class ModelUtils {
      *
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
+     * @param version The version number of the document to search for.
      * @returns An object that can be passed to a MongoDB `find` function.
      */
-    public static buildIdSearchQueryMongo(modelClass: any, id: any): any {
+    public static buildIdSearchQueryMongo(modelClass: any, id: any, version?: number): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const query: any[] = [];
         for (const prop of props) {
-            query.push({ [prop]: id });
+            query.push({ [prop]: new RegExp(id, "i") });
         }
 
-        return { $or: query };
+        if (version) {
+            return { $and: [{ $or: query }, { version }] };
+        } else {
+            return { $or: query, order: { version: "DESC" } };
+        }
     }
 
     /**
@@ -542,7 +549,8 @@ class ModelUtils {
         //    delete query.skip;
         //}
 
-        return query;
+        return [ { $match: query }, { $sort: { version: -1 } }, { $group: { $last: "$version" } } ];
+        //return query;
     }
 
     /**

@@ -372,6 +372,11 @@ class Server {
         if (clazz.modelClass && clazz.modelClass.cacheTTL) {
             obj.cacheTTL = clazz.modelClass.cacheTTL;
         }
+
+        // Set the trackChanges if set on the model
+        if (clazz.modelClass && clazz.modelClass.trackChanges) {
+            obj.trackChanges = clazz.modelClass.trackChanges;
+        }
     }
 
     /**
