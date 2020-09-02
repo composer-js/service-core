@@ -105,6 +105,8 @@ describe("ACLRouteMongo Tests", () => {
             .send(acl)
             .set("Authorization", "jwt " + adminToken);
         expect(result).toHaveProperty("body");
+        expect(result.status).toBeGreaterThanOrEqual(200);
+        expect(result.status).toBeLessThan(300);
         const resultACL: AccessControlListMongo = new AccessControlListMongo(result.body);
         expect(resultACL.uid).toEqual(acl.uid);
         expect(resultACL.version).toEqual(acl.version);

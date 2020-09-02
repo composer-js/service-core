@@ -60,8 +60,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
     @Post()
     @Validate("validate")
     protected async create(obj: UserModel, @User user?: any): Promise<UserModel> {
-        const newObj: UserModel = new UserModel(obj);
-        return await super.doCreate(newObj, user);
+        return await super.doCreate(obj, user);
     }
 
     @Delete(":id")
@@ -97,8 +96,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
     @Put(":id")
     @Validate("validate")
     protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
-        const newObj: UserModel = new UserModel(obj);
-        return await super.doUpdate(id, newObj, user);
+        return await super.doUpdate(id, obj, user);
     }
 }
 

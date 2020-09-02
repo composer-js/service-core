@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ObjectID, ObjectIdColumn } from "typeorm";
+import { ObjectIdColumn } from "typeorm";
+import { ObjectID } from "mongodb";
 import BaseEntity from "./BaseEntity";
 
 /**
@@ -20,7 +21,12 @@ export default abstract class BaseMongoEntity extends BaseEntity {
         super(other);
 
         if (other) {
-            this._id = other._id ? other._id : this._id;
+            this._id = other._id
+                ? (typeof other._id === "string" || typeof other._id === "number"
+                    ? new ObjectID(other._id)
+                    : other._id
+                  )
+                : this._id;
         }
     }
 }

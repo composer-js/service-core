@@ -93,10 +93,10 @@ class ModelUtils {
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const where: any = [];
         for (const prop of props) {
-            where.push(version ? { [prop]: new RegExp(id, "i"), version } : { [prop]: new RegExp(id, "i") });
+            where.push(version ? { [prop]: id, version } : { [prop]: id });
         }
 
-        return { where, order: { version: "DESC" } };
+        return { where };
     }
 
     /**
@@ -115,13 +115,13 @@ class ModelUtils {
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const query: any[] = [];
         for (const prop of props) {
-            query.push({ [prop]: new RegExp(id, "i") });
+            query.push({ [prop]: id });
         }
 
         if (version) {
             return { $and: [{ $or: query }, { version }] };
         } else {
-            return { $or: query, order: { version: "DESC" } };
+            return { $or: query };
         }
     }
 
@@ -179,7 +179,12 @@ class ModelUtils {
                             "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
                         );
                     }
-                    return Between(args[0], args[1]);
+                    try {
+                        // Attempt to parse the range values to native types
+                        return Between(JSON.parse(args[0]), JSON.parse(args[1]));
+                    } catch (err) {
+                        return Between(args[0], args[1]);
+                    }
                 }
                 default:
                     return Equal(value);
@@ -250,7 +255,12 @@ class ModelUtils {
                             "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
                         );
                     }
-                    return { $gte: args[0], $lte: args[1] };
+                    try {
+                        // Attempt to parse the range values to native types
+                        return { $gte: JSON.parse(args[0]), $lte: JSON.parse(args[1]) };
+                    } catch (err) {
+                        return { $gte: args[0], $lte: args[1] };
+                    }
                 }
                 default:
                     return value;
@@ -283,6 +293,7 @@ class ModelUtils {
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
      *
+     * @param modelClass The class definition of the data model to build a search query for.
      * @param repo The repository to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
@@ -292,17 +303,17 @@ class ModelUtils {
      * @returns {object} The TypeORM compatible query object.
      */
     public static buildSearchQuery<T>(
+        modelClass: any,
         repo: Repository<T> | MongoRepository<T> | undefined,
         params?: any,
         queryParams?: any,
         exactMatch: boolean = false,
-        user?: any,
-        includeLimitsSkips: boolean = true
+        user?: any
     ): any {
         if (repo instanceof MongoRepository) {
-            return ModelUtils.buildSearchQueryMongo(params, queryParams, exactMatch, user, includeLimitsSkips);
+            return ModelUtils.buildSearchQueryMongo(modelClass, params, queryParams, exactMatch, user);
         } else {
-            return ModelUtils.buildSearchQuerySQL(params, queryParams, exactMatch, user, includeLimitsSkips);
+            return ModelUtils.buildSearchQuerySQL(modelClass, params, queryParams, exactMatch, user);
         }
     }
 
@@ -322,6 +333,7 @@ class ModelUtils {
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
      *
+     * @param modelClass The class definition of the data model to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
      * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to
@@ -330,17 +342,17 @@ class ModelUtils {
      * @returns {object} The TypeORM compatible query object.
      */
     public static buildSearchQuerySQL(
+        modelClass: any,
         params?: any,
         queryParams?: any,
         exactMatch: boolean = false,
-        user?: any,
-        includeLimitsSkips: boolean = true
+        user?: any
     ): any {
-        let query: any = {};
+        const query: any = {};
         query.where = [];
 
         // Add the URL parameters
-        for (let key in params) {
+        for (const key in params) {
             // If the value is 'me' that's a special keyword to reference the user ID.
             if (params[key] === "me") {
                 if (!user) {
@@ -358,8 +370,8 @@ class ModelUtils {
 
         // So first let's find out how many queries in total we are going to need.
         let numQueries = 1;
-        for (let key in queryParams) {
-            let value: string | string[] = queryParams[key];
+        for (const key in queryParams) {
+            const value: string | string[] = queryParams[key];
             if (Array.isArray(value)) {
                 if (value.length > numQueries) {
                     numQueries = value.length;
@@ -407,7 +419,7 @@ class ModelUtils {
             if (Array.isArray(queryParams[key])) {
                 // Add each value in the array to each corresponding query
                 let i = 0;
-                for (let value of queryParams[key]) {
+                for (const value of queryParams[key]) {
                     if (!query.where[i]) {
                         query.where[i] = {};
                     }
@@ -438,10 +450,7 @@ class ModelUtils {
             query.take = 100;
         }
         query.skip = query.skip ? query.skip : 0;
-        if (!includeLimitsSkips) {
-            delete query.take;
-            delete query.skip;
-        }
+
         return query;
     }
 
@@ -461,6 +470,7 @@ class ModelUtils {
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
      *
+     * @param modelClass The class definition of the data model to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
      * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to
@@ -469,13 +479,14 @@ class ModelUtils {
      * @returns {object} The TypeORM compatible query object.
      */
     public static buildSearchQueryMongo(
+        modelClass: any,
         params?: any,
         queryParams?: any,
         exactMatch: boolean = false,
-        user?: any,
-        includeLimitsSkips: boolean = true
+        user?: any
     ): any {
         const query: any = {};
+        let sort: any = undefined;
 
         // Add the URL parameters
         for (const key in params) {
@@ -490,7 +501,7 @@ class ModelUtils {
             }
         }
 
-        for (let key in queryParams) {
+        for (const key in queryParams) {
             // Ignore reserved query parameters
             if (key.match(new RegExp("(jwt_|oauth_).*", "i"))) {
                 continue;
@@ -500,14 +511,7 @@ class ModelUtils {
             if (key.match(new RegExp("(limit|skip|sort).*", "i"))) {
                 let value: any = queryParams[key];
 
-                if (key === "limit") {
-                    key = "take";
-                    query[key] = Number(value);
-                } else if (key === "skip") {
-                    query[key] = Number(value);
-                } else if (key === "sort") {
-                    key = "order";
-
+                if (key === "sort") {
                     if (typeof value === "string") {
                         if (value.match(new RegExp(/^\{.*\}$/, "i"))) {
                             value = JSON.parse(value);
@@ -519,7 +523,10 @@ class ModelUtils {
                         }
                     }
 
-                    query[key] = value;
+                    sort = {
+                        ...sort,
+                        ...value
+                    };
                 }
 
                 continue;
@@ -538,19 +545,25 @@ class ModelUtils {
             }
         }
 
-        //if (query.take) {
-        //    query.take = Math.min(query.take, 1000);
-        //} else {
-        //    query.take = 100;
-        //}
-        //query.skip = query.skip ? query.skip : 0;
-        //if (!includeLimitsSkips) {
-        //    delete query.take;
-        //    delete query.skip;
-        //}
+        // Determine if the model class is versioned or not. We provide a different
+        // aggregation query if it is.
+        let result: any[] = [];
+        if (modelClass && modelClass.trackChanges !== undefined) {
+            result = [
+                { $match: query },
+                { $sort: { version: -1 } },
+                { $group: { _id: "$uid", doc: { $first: "$$ROOT" } } },
+                { $replaceRoot: { newRoot: "$doc" } }
+            ];
+        } else {
+            result.push({ $match: query });
+        }
 
-        return [ { $match: query }, { $sort: { version: -1 } }, { $group: { $last: "$version" } } ];
-        //return query;
+        // Add the sort if specified
+        if (sort) {
+            result.push({ $sort: sort });
+        }
+        return result;
     }
 
     /**

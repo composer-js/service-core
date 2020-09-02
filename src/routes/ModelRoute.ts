@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository } from "typeorm";
+import { Repository, MongoRepository, AggregationCursorResult } from "typeorm";
 import ModelUtils from "../models/ModelUtils";
 import RepoUtils from "../models/RepoUtils";
 import BaseEntity from "../models/BaseEntity";
@@ -61,6 +61,14 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     protected get baseCacheKey(): string {
         const clazz: any = (this as any).class;
         return "db.cache." + clazz.modelClass.fqn;
+    }
+
+    /**
+     * The class type of the model this route is associated with.
+     */
+    protected get modelClass(): any {
+        const clazz: any = (this as any).class;
+        return clazz.modelClass;
     }
 
     /**
@@ -147,7 +155,21 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const existing: T | undefined = await this.repo.findOne(query);
+        let existing: T | undefined = undefined;
+        if (this.repo instanceof MongoRepository) {
+            existing = await this.repo.aggregate(
+                [
+                    {
+                        $match: query,
+                    },
+                    {
+                        $sort: { version: -1 }
+                    }
+                ]
+            ).limit(1).next();
+        } else {
+            existing = await this.repo.findOne(query);
+        }
 
         if (existing && this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
@@ -158,15 +180,15 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             );
         }
 
-        return existing;
+        // Make sure we return the correct data type
+        return new this.modelClass(existing);
     }
 
     /**
      * Search for existing object based on passed in id and version
      */
     private searchIdQuery(id: string, version?: number): any {
-        const clazz: any = (this as any).class;
-        return ModelUtils.buildIdSearchQuery(this.repo, clazz.modelClass, id, version);
+        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, version);
     }
 
     /**
@@ -185,10 +207,15 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
-        const result: number = await this.repo.count(
-            ModelUtils.buildSearchQuery(this.repo, params, query, true, user, false)
-        );
-        return { count: result };
+        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
+        if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
+            searchQuery.push({ $count: "count" });
+            const result: AggregationCursorResult = await (this.repo as MongoRepository<T>).aggregate(searchQuery).next();
+            return result;
+        } else {
+            const result: number = await this.repo.count(searchQuery);
+            return { count: result };
+        }
     }
 
     /**
@@ -200,6 +227,9 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
+
+        // Make sure the provided object has the correct typing
+        obj = new this.modelClass(obj);
 
         if (!(await ACLUtils.hasPermission(user, this.defaultACLUid, ACLAction.CREATE))) {
             const error: any = new Error("User does not have permission to perform this action.");
@@ -216,7 +246,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
         // extends BaseEntity.
-        const result: T = await this.repo.save(obj as any);
+        const result: T = new this.modelClass(await this.repo.save(obj as any));
 
         if (this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
@@ -359,7 +389,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.repo, params, query, true, user, false);
+        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
 
         // Pull from the cache if available
         if (this.cacheClient && this.cacheTTL) {
@@ -384,8 +414,10 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         // If the query wasn't cached retrieve from the database
         if (results.length === 0) {
-            if (this.repo instanceof MongoRepository) {
-                results = await this.repo.aggregate(searchQuery).toArray();
+            const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
+            const skip: number = query.skip ? query.skip : 0;
+            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
+                results = await this.repo.aggregate(searchQuery).limit(limit).skip(skip).toArray();
             }
             else {
                 results = await this.repo.find(searchQuery);
@@ -519,6 +551,9 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
+        
+        // Make sure the provided object has the correct typing
+        obj = new this.modelClass(obj);
 
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
@@ -531,7 +566,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const query: any = this.searchIdQuery(obj.uid);
+        let query: any = this.searchIdQuery(obj.uid);
         obj = await RepoUtils.preprocessBeforeUpdate(this.repo, obj);
 
         const acl: AccessControlList | undefined = await ACLUtils.findACL(obj.uid);
@@ -546,12 +581,12 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (this.repo instanceof MongoRepository) {
             if (obj instanceof BaseEntity) {
                 if (keepPrevious) {
-                    await this.repo.save({
+                    obj = new this.modelClass(await this.repo.save({
                         ...obj,
                         _id: undefined, // Ensure we save a new document
                         dateModified: new Date(),
                         version: obj.version + 1,
-                    } as any);
+                    } as any));
                 } else {
                     await this.repo.updateOne(
                         { uid: obj.uid, version: obj.version },
@@ -566,10 +601,10 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 }
             } else if (obj.uid) {
                 if (keepPrevious) {
-                    await this.repo.save({
+                    obj = new this.modelClass(await this.repo.save({
                         ...obj,
                         version: (obj as any).version + 1,
-                    } as any);
+                    } as any));
                 } else {
                     await this.repo.updateOne(
                         { uid: obj.uid },
@@ -588,7 +623,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
                 const result: T | undefined = await this.repo.save(toSave);
                 if (result) {
-                    obj = result;
+                    obj = new this.modelClass(result);
                 }
             }
         } else {
@@ -618,9 +653,10 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
+        query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version : undefined);
         const result: T | undefined = await this.repo.findOne(query);
         if (result) {
-            obj = result;
+            obj = new this.modelClass(result);
         }
 
         if (obj && this.cacheClient && this.cacheTTL) {

@@ -176,7 +176,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
             const count: number = await repo.count({ uid: user.uid });
             expect(count).toBe(2);
 
-            const query: any = ModelUtils.buildIdSearchQuery(repo, User, user.uid);
+            const query: any = ModelUtils.buildIdSearchQuery(repo, User, user.uid, 1);
             const existing: User | undefined = await repo.findOne(query);
             expect(existing).toBeDefined();
             if (existing) {
@@ -235,11 +235,12 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
             const users: User[] = await createUsers(13, 2);
             await createUser("David", "Tennant", 47, 3);
             await createUser("Matt", "Smith", 36, 6);
-            const result = await request(server.getApplication()).get(`${baseUrl}/count?lastName=Doctor`);
+            const result = await request(server.getApplication()).get(`${baseUrl}?lastName=Doctor`);
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveLength(13);
             for (const user of result.body) {
                 expect(user.lastName).toBe("Doctor");
+                expect(user.version).toBe(1);
             }
         });
 

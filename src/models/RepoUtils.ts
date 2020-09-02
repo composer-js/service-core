@@ -12,17 +12,6 @@ import BaseMongoEntity from "../models/BaseMongoEntity";
  */
 class RepoUtils {
     /**
-     * Search for existing object based on passed in id
-     */
-    private static searchIdQuery<T extends BaseEntity | SimpleEntity>(
-        repo: Repository<T> | MongoRepository<T>,
-        obj: T,
-        id: string
-    ): any {
-        return ModelUtils.buildIdSearchQuery(repo, obj.constructor, id);
-    }
-
-    /**
      * Verify object does not exist and update required fields for BaseEntity
      * @param repo Repository used to verify no existing object
      * @param obj Object that exentds BaseEntity or SimpleEntity
@@ -35,7 +24,8 @@ class RepoUtils {
             throw new Error("Repository not set or could not be found.");
         }
         // Make sure an existing object doesn't already exist with the same uid
-        const existing: T | undefined = await repo.findOne(this.searchIdQuery(repo, obj, obj.uid));
+        const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, obj.uid, obj instanceof BaseEntity ? obj.version : undefined);
+        const existing: T | undefined = await repo.findOne(query);
         if (existing) {
             const error: any = new Error("An existing object with this identifier already exists.");
             error.status = 400;
@@ -63,7 +53,8 @@ class RepoUtils {
         if (!repo) {
             throw new Error("Repository not set or could not be found.");
         }
-        const old: T | undefined = await repo.findOne(this.searchIdQuery(repo, obj, obj.uid));
+        const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, obj.uid);
+        const old: T | undefined = await repo.findOne(query);
         if (!old) {
             const error: any = new Error("No object with that id could be found.");
             error.status = 404;

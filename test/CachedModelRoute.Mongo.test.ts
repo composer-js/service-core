@@ -157,7 +157,9 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const cacheKey: string = getCacheKey(query);
             const json: string = await redis.get(cacheKey);
             expect(json).toBeDefined();
-            expect(json).toEqual(JSON.stringify(result.body));
+            const cachedObj: any = JSON.parse(json);
+            expect(cachedObj).toBeDefined();
+            expect(cachedObj).toEqual(result.body);
         });
 
         it("Can update cached document.", async () => {
@@ -190,7 +192,9 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const cacheKey: string = getCacheKey(query);
             const json: string = await redis.get(cacheKey);
             expect(json).toBeDefined();
-            expect(json).toEqual(JSON.stringify(existing));
+            const cachedObj: User = new User(JSON.parse(json));
+            expect(cachedObj).toBeDefined();
+            expect(cachedObj).toEqual(existing);
         });
     });
 
