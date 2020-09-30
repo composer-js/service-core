@@ -27,6 +27,7 @@ import ACLRouteSQL from "./security/ACLRouteSQL";
 import { default as AccessControlListSQL } from "./security/AccessControlListSQL";
 import { default as AccessControlListMongo } from "./security/AccessControlListMongo";
 import ACLUtils from "./security/ACLUtils";
+import ObjectFactory from "./ObjectFactory";
 
 interface Entity {
     storeName?: any;
@@ -150,6 +151,8 @@ class Server {
     protected readonly config?: any;
     /** The logging utility to use when outputing to console/file. */
     protected readonly logger: any;
+    /** The object factory to use when injecting dependencies. */
+    protected readonly objectFactory: ObjectFactory;
     /** The port that the server is listening on. */
     public readonly port: number;
     /** The underlying HTTP server instance. */
@@ -199,6 +202,7 @@ class Server {
         this.apiSpec = apiSpec;
         this.basePath = basePath;
         this.logger = logger;
+        this.objectFactory = new ObjectFactory();
         this.port = config.get("port") ? config.get("port") : 3000;
 
         // Express configuration
@@ -211,7 +215,7 @@ class Server {
         this.app.use(passport.session());
 
         // cors
-        var corsOptions: CorsOptions = {
+        const corsOptions: CorsOptions = {
             origin: this.config.get("cors:origins"),
             credentials: true,
             methods: "GET,HEAD,OPTIONS,PUT,POST,DELETE",
@@ -297,6 +301,10 @@ class Server {
      * @param obj The object whose dependencies will be injected.
      */
     protected injectProperties(clazz: any, obj: any): void {
+        // Initialize the object with the ObjectFactory
+        this.objectFactory.initialize(obj);
+
+        // Now inject all other attributes
         let proto = Object.getPrototypeOf(obj);
         while (proto) {
             // Search for each type of injectable property

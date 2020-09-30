@@ -4,6 +4,28 @@
 import "reflect-metadata";
 
 /**
+ * Injects an object instance to the decorated property of the given name and type using the provided arguments
+ * if no object has been created yet.
+ * @param type The name or type of the class instance to inject.
+ * @param name The unique name of the object to inject. Set to `undefined` to force a new instance to be created. Default value is `default`.
+ * @param args The constructor arguments to use if the object hasn't been created before.
+ */
+export function Inject(type: any, name: string | undefined = "default", ...args: any) {
+    return function(target: any, propertyKey: string | symbol) {
+        Reflect.defineMetadata("axr:injectObject", {
+            args,
+            name,
+            type
+        }, target, propertyKey);
+        Object.defineProperty(target, propertyKey, {
+            enumerable: true,
+            writable: true,
+            value: undefined,
+        });
+    };
+}
+
+/**
  * Apply this to a property to have the global configuration object injected at instantiation.
  */
 export function Config(target: any, propertyKey: string | symbol) {
