@@ -58,11 +58,20 @@ export default class ObjectFactory {
 
     /**
      * Returns the object instance with the given unique name.
-     * @param name The unique name of the object to retrieve.
+     * @param nameOrType The unique name or class type of the object to retrieve.
      * @returns The object instance associated with the given name if found, otherwise `undefined`.
      */
-    public getInstance<T>(name: string): T {
-        const obj: T = this.instances.get(name);
+    public getInstance<T>(nameOrType: any): T {
+        if (typeof nameOrType !== "string") {
+            nameOrType = nameOrType && nameOrType.name ? `${nameOrType.name}.default` : (nameOrType.constructor ? `${nameOrType.constructor.name}.default` : undefined);
+        }
+
+        // Make sure we have a valid type name
+        if (!nameOrType) {
+            throw new Error("No valid nameOrType was specified.");
+        }
+
+        const obj: T = this.instances.get(nameOrType);
         return obj;
     }
 
@@ -78,14 +87,19 @@ export default class ObjectFactory {
      * @param args The set of constructor arguments to use during construction
      */
     public newInstance<T>(type: any, name?: string, ...args: any): T {
-        // First check to see if an instance was already created for the given name
-        if (name && this.instances.has(name)) {
-            return this.instances.get(name);
-        }
-
         // If an class type was given extract it's fqn
         if (typeof type !== "string") {
             type = type.name ? type.name : (type.constructor ? type.constructor.name : undefined);
+        }
+
+        // Names are namespace specific by type. Prepend the type to the name if not already done.
+        if (name && !name.includes(type)) {
+            name = `${type}.${name}`;
+        }
+
+        // First check to see if an instance was already created for the given name
+        if (name && this.instances.has(name)) {
+            return this.instances.get(name);
         }
 
         // Make sure we have a valid type name
