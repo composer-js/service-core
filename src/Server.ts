@@ -196,13 +196,14 @@ class Server {
      * @param {any} apiSpec The optional OpenAPI specification object to initialize the server with.
      * @param {string} basePath The base file system path that models and routes will be searched from.
      * @param {Logger} logger The logging utility to use for outputing to console/file.
+     * @param objectFactory The object factory to use for automatic dependency injection (IOC).
      */
-    constructor(config: any, apiSpec?: any, basePath: string = ".", logger: any = Logger()) {
+    constructor(config: any, apiSpec?: any, basePath: string = ".", logger: any = Logger(), objectFactory: ObjectFactory = new ObjectFactory()) {
         this.config = config;
         this.apiSpec = apiSpec;
         this.basePath = basePath;
         this.logger = logger;
-        this.objectFactory = new ObjectFactory();
+        this.objectFactory = objectFactory;
         this.port = config.get("port") ? config.get("port") : 3000;
 
         // Express configuration
