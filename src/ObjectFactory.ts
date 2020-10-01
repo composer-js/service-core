@@ -18,6 +18,40 @@ export default class ObjectFactory {
     private instances: Map<string, any> = new Map();
 
     /**
+     * Destroys the factory including all instantiated objects it is managing.
+     */
+    public async destroy(): Promise<void> {
+        // Go through each managed instance and call its destructor, if available
+        this.instances.forEach(async (obj: any) => {
+            let destroyFunc: Function | undefined = undefined;
+            let proto = Object.getPrototypeOf(obj);
+            while (proto) {
+                for (const member of Object.getOwnPropertyNames(proto)) {
+                    const hasDestructor: boolean = Reflect.getMetadata("axr:destructor", proto, member);
+                    if (hasDestructor) {
+                        destroyFunc = obj[member];
+                        break;
+                    }
+                }
+
+                if (destroyFunc) {
+                    break;
+                }
+                proto = Object.getPrototypeOf(proto);
+            }
+
+            if (destroyFunc) {
+                const result: Promise<void> | void = destroyFunc();
+                if (result instanceof Promise) {
+                    await result;
+                }
+            }
+        });
+
+        this.clearAll();
+    }
+
+    /**
      * Deletes all instantiated objects.
      */
     public clear(): void {

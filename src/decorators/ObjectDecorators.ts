@@ -4,6 +4,13 @@
 import "reflect-metadata";
 
 /**
+ * Apply this to a class function to mark it as a destructor to be called by the `ObjectFactory` during cleanup.
+ */
+export function Destroy(target: any, propertyKey: string) {
+    Reflect.defineMetadata("axr:destructor", true, target, propertyKey);
+}
+
+/**
  * Injects an object instance to the decorated property of the given name and type using the provided arguments
  * if no object has been created yet.
  * @param type The name or type of the class instance to inject.

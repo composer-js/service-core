@@ -2,9 +2,12 @@
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import ObjectFactory from "../src/ObjectFactory";
-import { Inject } from "../src/decorators/ObjectDecorators";
+import { Inject, Destroy } from "../src/decorators/ObjectDecorators";
 
 class TestClassA {
+    @Destroy
+    public destroy(): void {
+    }
 }
 
 class TestClassB {
@@ -15,6 +18,12 @@ class TestClassB {
         this.arg1 = arg1;
         this.arg2 = arg2;
     }
+
+    @Destroy
+    public async destroy(): Promise<void> {
+        this.arg1 = "";
+        this.arg2 = -1;
+    }
 }
 
 class TestClassC {
@@ -23,19 +32,24 @@ class TestClassC {
 
     constructor() {
     }
+
+    @Destroy
+    public async destroy(): Promise<void> {
+        this.dep = undefined;
+    }
 }
 
 describe("ObjectFactory Tests", () => {
     const factory: ObjectFactory = new ObjectFactory();
 
-    beforeAll(() => {
+    beforeEach(() => {
         factory.register(TestClassA);
         factory.register(TestClassB, TestClassB.name);
         factory.register(TestClassC);
     });
 
-    afterEach(() => {
-        factory.clear();
+    afterEach(async () => {
+        await factory.destroy();
     })
 
     it("Can create new class instances by name.", () => {
