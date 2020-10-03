@@ -2,6 +2,7 @@
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
+const uuid = require("uuid");
 
 /**
  * The `ObjectFactory` is a manager for creating objects based on registered
@@ -15,7 +16,7 @@ export default class ObjectFactory {
     private classes: Map<string, any> = new Map();
 
     /** A map for the unique name to the intance of a particular class type. */
-    private instances: Map<string, any> = new Map();
+    public readonly instances: Map<string, any> = new Map();
 
     /**
      * Destroys the factory including all instantiated objects it is managing.
@@ -122,13 +123,19 @@ export default class ObjectFactory {
      */
     public newInstance<T>(type: any, name?: string, ...args: any): T {
         // If an class type was given extract it's fqn
-        if (typeof type !== "string") {
-            type = type.name ? type.name : (type.constructor ? type.constructor.name : undefined);
+        const className = typeof type === "string"
+            ? type
+            : (type.name
+                ? type.name : (type.constructor ? type.constructor.name : undefined));
+
+        // Generate a name if none was given
+        if (!name) {
+            name = uuid.v4();
         }
 
         // Names are namespace specific by type. Prepend the type to the name if not already done.
-        if (name && !name.includes(type)) {
-            name = `${type}.${name}`;
+        if (name && !name.includes(className)) {
+            name = `${className}.${name}`;
         }
 
         // First check to see if an instance was already created for the given name
@@ -137,19 +144,19 @@ export default class ObjectFactory {
         }
 
         // Make sure we have a valid type name
-        if (!type) {
+        if (!className) {
             throw new Error("No valid type was specified.");
         }
 
-        // Make sure the class has been registered before
-        if (!this.classes.has(type)) {
-            throw new Error(`Unknown class type: ${type}. Did you register it?`);
+        // Make sure the class has been registered if a type was provided
+        if (typeof type !== "string") {
+            this.register(type);
         }
 
         // Look up the class type in our list
-        const clazz: any = this.classes.get(type);
+        const clazz: any = this.classes.get(className);
         if (!clazz || !clazz.constructor) {
-            throw new Error("No class found with name: " + type);
+            throw new Error("No class found with name: " + className);
         }
 
         // Create the new instance using the provided params
