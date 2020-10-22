@@ -181,7 +181,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         // Make sure we return the correct data type
-        return new this.modelClass(existing);
+        return existing ? new this.modelClass(existing) : undefined;
     }
 
     /**
