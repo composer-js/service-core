@@ -52,24 +52,14 @@ describe("ModelUtils Tests", () => {
         it("Can build id search query with single identifier and version.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID", 2);
             expect(query).toEqual({
-                $and: [{
-                    $or: [{ id: "MyID" }]
-                },
-                {
-                    version: 2
-                }]
+                $or: [{ id: "MyID", version: 2 }]
             });
         });
 
         it("Can build id search query with single identifier and version 0.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID", 0);
             expect(query).toEqual({
-                $and: [{
-                    $or: [{ id: "MyID" }]
-                },
-                {
-                    version: 0
-                }]
+                $or: [{ id: "MyID", version: 0 }]
             });
         });
 
@@ -83,10 +73,7 @@ describe("ModelUtils Tests", () => {
         it("Can build id search query with multiple identifiers and version.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, "MyID", 3);
             expect(query).toEqual({
-                $and: [
-                    { $or: [{ id: "MyID" }, { id2: "MyID" }] },
-                    { version: 3 }
-                ]
+                $or: [{ id: "MyID", version: 3 }, { id2: "MyID", version: 3 }]
             });
         });
 

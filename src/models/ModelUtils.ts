@@ -115,14 +115,14 @@ class ModelUtils {
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const query: any[] = [];
         for (const prop of props) {
-            query.push({ [prop]: id });
+            if (version !== undefined) {
+                query.push({ [prop]: id, version });
+            } else {
+                query.push({ [prop]: id });
+            }
         }
 
-        if (version !== undefined) {
-            return { $and: [{ $or: query }, { version }] };
-        } else {
-            return { $or: query };
-        }
+        return { $or: query };
     }
 
     /**
