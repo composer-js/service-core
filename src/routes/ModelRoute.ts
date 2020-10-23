@@ -653,7 +653,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version : undefined);
+        query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
         const result: T | undefined = await this.repo.findOne(query);
         if (result) {
             obj = new this.modelClass(result);

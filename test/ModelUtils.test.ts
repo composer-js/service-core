@@ -61,6 +61,18 @@ describe("ModelUtils Tests", () => {
             });
         });
 
+        it("Can build id search query with single identifier and version 0.", () => {
+            const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID", 0);
+            expect(query).toEqual({
+                $and: [{
+                    $or: [{ id: "MyID" }]
+                },
+                {
+                    version: 0
+                }]
+            });
+        });
+
         it("Can build id search query with multiple identifiers.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, "MyID");
             expect(query).toEqual({
