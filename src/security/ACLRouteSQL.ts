@@ -1,9 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { User, Delete, Get, Param, Post, Put, Query, Route } from "../decorators/RouteDecorators";
+import { Delete, Get, Repository, Model, Param, Post, Put, Query, Route, User } from "../decorators/RouteDecorators";
 import { Config } from "../decorators/ObjectDecorators";
-import { Repository } from "../decorators/ModelDecorators";
 import AccessControlListSQL from "./AccessControlListSQL";
 import { Repository as Repo } from "typeorm";
 import ModelRoute from "../routes/ModelRoute";
@@ -11,6 +10,7 @@ import { JWTUser, UserUtils } from "@composer-js/core";
 import { ACLAction, AccessControlList } from "./AccessControlList";
 import { ACLUtils } from "../service_core";
 
+@Model(AccessControlListSQL)
 @Route("/acls")
 export default class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
     @Config

@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Query, Param, Route, User, Get, Post, Validate, Delete, Put } from "../../src/decorators/RouteDecorators";
-import { Model, Repository } from "../../src/decorators/ModelDecorators";
+import { Query, Param, Route, User, Get, Post, Validate, Delete, Put, Model, Repository } from "../../src/decorators/RouteDecorators";
 import ModelRoute from "../../src/routes/ModelRoute";
 import Item from "../models/Item";
 import { Repository as Repo } from "typeorm";

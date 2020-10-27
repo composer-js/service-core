@@ -1,7 +1,6 @@
 import BaseEntity from "../../src/models/BaseEntity";
-import { Entity, Column, Index, PrimaryColumn } from "typeorm";
+import { Entity, Column, Index } from "typeorm";
 import { Identifier } from "../../src/decorators/ModelDecorators";
-import * as uuid from "uuid";
 
 @Entity()
 export default class Item extends BaseEntity {

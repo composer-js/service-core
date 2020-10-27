@@ -1,7 +1,5 @@
 import BaseMongoEntity from "../../src/models/BaseMongoEntity";
-import { Entity, Column, ObjectIdColumn, ObjectID, Index, PrimaryColumn } from "typeorm";
-import { Identifier } from "../../src/decorators/ModelDecorators";
-import * as uuid from "uuid";
+import { Entity, Column } from "typeorm";
 
 @Entity()
 export default class User extends BaseMongoEntity {

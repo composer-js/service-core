@@ -1,7 +1,6 @@
 import BaseMongoEntity from "../../src/models/BaseMongoEntity";
-import { Entity, Column, ObjectIdColumn, ObjectID, Index, PrimaryColumn } from "typeorm";
-import { Identifier, Cache } from "../../src/decorators/ModelDecorators";
-import * as uuid from "uuid";
+import { Entity, Column } from "typeorm";
+import { Cache } from "../../src/decorators/ModelDecorators";
 
 @Entity()
 @Cache()

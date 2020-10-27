@@ -1,9 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Delete, Get, Param, Post, Put, Query, Route, User } from "../decorators/RouteDecorators";
+import { Delete, Get, MongoRepository, Model, Param, Post, Put, Query, Route, User } from "../decorators/RouteDecorators";
 import { Config } from "../decorators/ObjectDecorators";
-import { MongoRepository, Model } from "../decorators/ModelDecorators";
 import AccessControlListMongo from "./AccessControlListMongo";
 import { MongoRepository as Repo } from "typeorm";
 import ModelRoute from "../routes/ModelRoute";

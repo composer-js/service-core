@@ -12,8 +12,9 @@ import {
     User,
     Query,
     Init,
+    Model,
+    MongoRepository
 } from "../../src/decorators/RouteDecorators";
-import { Model, MongoRepository } from "../../src/decorators/ModelDecorators";
 import ModelRoute from "../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/CacheUser";

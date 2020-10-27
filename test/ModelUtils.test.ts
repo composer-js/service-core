@@ -4,7 +4,8 @@
 const fs = require("fs");
 import "reflect-metadata";
 
-import { ModelUtils, Identifier } from "../src/service_core";
+import { ModelUtils } from "../src/service_core";
+import { Identifier } from "../src/decorators/ModelDecorators";
 import {
     Not,
     Like,
