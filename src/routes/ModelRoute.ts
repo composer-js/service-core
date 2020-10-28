@@ -59,15 +59,15 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * The base key used to get or set data in the cache.
      */
     protected get baseCacheKey(): string {
-        const clazz: any = (this as any).class;
-        return "db.cache." + clazz.modelClass.fqn;
+        const clazz: any = Object.getPrototypeOf(this).constructor;
+        return "db.cache." + clazz.modelClass.name;
     }
 
     /**
      * The class type of the model this route is associated with.
      */
     protected get modelClass(): any {
-        const clazz: any = (this as any).class;
+        const clazz: any = Object.getPrototypeOf(this).constructor;
         return clazz.modelClass;
     }
 

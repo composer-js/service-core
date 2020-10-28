@@ -61,7 +61,7 @@ class ConnectionManager {
                                     `Model ${className} already defined as an entity for ${processedDatastore}`
                                 );
                             }
-                            clazz.storeName = name;
+                            clazz.datastore = name;
                             entities.push(clazz);
                             processedModels.set(className, name);
                         }

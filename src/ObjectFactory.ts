@@ -9,7 +9,7 @@ import * as Redis from "ioredis";
 const uuid = require("uuid");
 
 interface Entity {
-    storeName?: any;
+    datastore?: any;
 }
 
 /**
@@ -118,13 +118,13 @@ export default class ObjectFactory {
                 const injectRepo: any = Reflect.getMetadata("axr:injectRepo", proto, member);
                 if (injectRepo) {
                     // Look up the connection name from the model class
-                    const storeName: string = (injectRepo as Entity).storeName;
-                    if (storeName) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
+                    const datastore: string = (injectRepo as Entity).datastore;
+                    if (datastore) {
+                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(datastore);
                         if (conn instanceof Connection) {
                             obj[member] = conn.getRepository(injectRepo);
                         } else {
-                            throw new Error("Unable to find database connection with name: " + storeName);
+                            throw new Error("Unable to find database connection with name: " + datastore);
                         }
                     } else {
                         throw new Error(
@@ -137,13 +137,13 @@ export default class ObjectFactory {
                 const injectMongoRepo: any = Reflect.getMetadata("axr:injectMongoRepo", proto, member);
                 if (injectMongoRepo) {
                     // Look up the connection name from the model class
-                    const storeName: string = (injectMongoRepo as Entity).storeName;
-                    if (storeName) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
+                    const datastore: string = (injectMongoRepo as Entity).datastore;
+                    if (datastore) {
+                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(datastore);
                         if (conn instanceof Connection) {
                             obj[member] = conn.getMongoRepository(injectMongoRepo);
                         } else {
-                            throw new Error("Unable to find database connection with name: " + storeName);
+                            throw new Error("Unable to find database connection with name: " + datastore);
                         }
                     } else {
                         throw new Error(
