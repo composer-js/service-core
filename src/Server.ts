@@ -29,14 +29,6 @@ import { default as AccessControlListMongo } from "./security/AccessControlListM
 import ACLUtils from "./security/ACLUtils";
 import ObjectFactory from "./ObjectFactory";
 
-interface Entity {
-    storeName?: any;
-}
-
-interface Model {
-    modelClass?: any;
-}
-
 /**
  * Provides an HTTP server utilizing ExpressJS and PassportJS. The server automatically registers all routes, and
  * establishes database connections for all configured data stores. Additionally provides automatic authentication
@@ -198,12 +190,12 @@ class Server {
      * @param {Logger} logger The logging utility to use for outputing to console/file.
      * @param objectFactory The object factory to use for automatic dependency injection (IOC).
      */
-    constructor(config: any, apiSpec?: any, basePath: string = ".", logger: any = Logger(), objectFactory: ObjectFactory = new ObjectFactory()) {
+    constructor(config: any, apiSpec?: any, basePath: string = ".", logger: any = Logger(), objectFactory?: ObjectFactory) {
         this.config = config;
         this.apiSpec = apiSpec;
         this.basePath = basePath;
         this.logger = logger;
-        this.objectFactory = objectFactory;
+        this.objectFactory = objectFactory ? objectFactory : new ObjectFactory(config, logger);
         this.port = config.get("port") ? config.get("port") : 3000;
 
         // Express configuration
@@ -304,78 +296,6 @@ class Server {
     protected injectProperties(clazz: any, obj: any): void {
         // Initialize the object with the ObjectFactory
         this.objectFactory.initialize(obj);
-
-        // Now inject all other attributes
-        let proto = Object.getPrototypeOf(obj);
-        while (proto) {
-            // Search for each type of injectable property
-            for (const member of Object.getOwnPropertyNames(proto)) {
-                // Inject @Config
-                const injectConfig: any = Reflect.getMetadata("axr:injectConfig", proto, member);
-                if (injectConfig) {
-                    obj[member] = this.config;
-                }
-
-                // Inject @Logger
-                const injectLogger: any = Reflect.getMetadata("axr:injectLogger", proto, member);
-                if (injectLogger) {
-                    obj[member] = this.logger;
-                }
-
-                // Inject @Repository
-                const injectRepo: any = Reflect.getMetadata("axr:injectRepo", proto, member);
-                if (injectRepo) {
-                    // Look up the connection name from the model class
-                    const storeName: string = (injectRepo as Entity).storeName;
-                    if (storeName) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
-                        if (conn instanceof Connection) {
-                            obj[member] = conn.getRepository(injectRepo);
-                        } else {
-                            throw new Error("Unable to find database connection with name: " + storeName);
-                        }
-                    } else {
-                        throw new Error(
-                            "The model " + injectRepo.name + " must defined as an entity in datastore config."
-                        );
-                    }
-                }
-
-                // Inject @MongoRepository
-                const injectMongoRepo: any = Reflect.getMetadata("axr:injectMongoRepo", proto, member);
-                if (injectMongoRepo) {
-                    // Look up the connection name from the model class
-                    const storeName: string = (injectMongoRepo as Entity).storeName;
-                    if (storeName) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
-                        if (conn instanceof Connection) {
-                            obj[member] = conn.getMongoRepository(injectMongoRepo);
-                        } else {
-                            throw new Error("Unable to find database connection with name: " + storeName);
-                        }
-                    } else {
-                        throw new Error(
-                            "The model " + injectMongoRepo.name + " must defined as an entity in datastore config."
-                        );
-                    }
-                }
-
-                // Inject @RedisConnection
-                const injectRedisConn: string = Reflect.getMetadata("axr:injectRedisRepo", proto, member);
-                if (injectRedisConn) {
-                    const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(
-                        injectRedisConn
-                    );
-                    if (conn) {
-                        obj[member] = conn;
-                        // The `cache` datastore is a special case that we don't want to fail on if it's missing
-                    } else if (injectRedisConn !== "cache") {
-                        throw new Error("Unable to find database connection with name: " + injectRedisConn);
-                    }
-                }
-            }
-            proto = Object.getPrototypeOf(proto);
-        }
 
         // Set the cache TTL if set on the model
         if (clazz.modelClass && clazz.modelClass.cacheTTL) {

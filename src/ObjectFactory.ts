@@ -2,7 +2,15 @@
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
+import { Logger } from "@composer-js/core";
+import ConnectionManager from "./database/ConnectionManager";
+import { Connection } from "typeorm";
+import * as Redis from "ioredis";
 const uuid = require("uuid");
+
+interface Entity {
+    storeName?: any;
+}
 
 /**
  * The `ObjectFactory` is a manager for creating objects based on registered
@@ -15,8 +23,19 @@ export default class ObjectFactory {
     /** A map for string fully qualified class names to their class types. */
     private classes: Map<string, any> = new Map();
 
+    /** The global application configuration object. */
+    private config: any;
+
     /** A map for the unique name to the intance of a particular class type. */
     public readonly instances: Map<string, any> = new Map();
+
+    /** The application logging utility. */
+    private logger: any;
+
+    constructor(config?: any, logger?: any) {
+        this.config = config;
+        this.logger = logger ? logger : Logger();
+    }
 
     /**
      * Destroys the factory including all instantiated objects it is managing.
@@ -76,6 +95,71 @@ export default class ObjectFactory {
         while (proto) {
             // Search for each type of injectable property
             for (const member of Object.getOwnPropertyNames(proto)) {
+                // Inject @Config
+                const injectConfig: any = Reflect.getMetadata("axr:injectConfig", proto, member);
+                if (injectConfig) {
+                    obj[member] = this.config;
+                }
+
+                // Inject @Logger
+                const injectLogger: any = Reflect.getMetadata("axr:injectLogger", proto, member);
+                if (injectLogger) {
+                    obj[member] = this.logger;
+                }
+
+                // Inject @Repository
+                const injectRepo: any = Reflect.getMetadata("axr:injectRepo", proto, member);
+                if (injectRepo) {
+                    // Look up the connection name from the model class
+                    const storeName: string = (injectRepo as Entity).storeName;
+                    if (storeName) {
+                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
+                        if (conn instanceof Connection) {
+                            obj[member] = conn.getRepository(injectRepo);
+                        } else {
+                            throw new Error("Unable to find database connection with name: " + storeName);
+                        }
+                    } else {
+                        throw new Error(
+                            "The model " + injectRepo.name + " must defined as an entity in datastore config."
+                        );
+                    }
+                }
+
+                // Inject @MongoRepository
+                const injectMongoRepo: any = Reflect.getMetadata("axr:injectMongoRepo", proto, member);
+                if (injectMongoRepo) {
+                    // Look up the connection name from the model class
+                    const storeName: string = (injectMongoRepo as Entity).storeName;
+                    if (storeName) {
+                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(storeName);
+                        if (conn instanceof Connection) {
+                            obj[member] = conn.getMongoRepository(injectMongoRepo);
+                        } else {
+                            throw new Error("Unable to find database connection with name: " + storeName);
+                        }
+                    } else {
+                        throw new Error(
+                            "The model " + injectMongoRepo.name + " must defined as an entity in datastore config."
+                        );
+                    }
+                }
+
+                // Inject @RedisConnection
+                const injectRedisConn: string = Reflect.getMetadata("axr:injectRedisRepo", proto, member);
+                if (injectRedisConn) {
+                    const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(
+                        injectRedisConn
+                    );
+                    if (conn) {
+                        obj[member] = conn;
+                        // The `cache` datastore is a special case that we don't want to fail on if it's missing
+                    } else if (injectRedisConn !== "cache") {
+                        throw new Error("Unable to find database connection with name: " + injectRedisConn);
+                    }
+                }
+
+                // Inject @Inject
                 const injectObject: any = Reflect.getMetadata("axr:injectObject", proto, member);
                 if (injectObject) {
                     // First register the type just in case it hasn't been done yet
