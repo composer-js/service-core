@@ -1,7 +1,8 @@
 import BaseMongoEntity from "../../src/models/BaseMongoEntity";
 import { Entity, Column } from "typeorm";
-import { TrackChanges } from "../../src/decorators/ModelDecorators";
+import { Model, TrackChanges } from "../../src/decorators/ModelDecorators";
 
+@Model("mongodb")
 @Entity()
 @TrackChanges()
 export default class VersionedUser extends BaseMongoEntity {

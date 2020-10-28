@@ -48,15 +48,13 @@ class ConnectionManager {
                 if (datastore.type === "redis") {
                     connection = await new Redis(datastore.url, datastore.options);
                 } else {
-                    if (!datastore.entities) {
-                        throw new Error("Datastore must have entities defined.");
-                    }
-
                     // Make an array of all entities associated with this connection
                     const entities: any[] = [];
                     for (const className in models) {
                         const clazz = models[className];
-                        if (datastore.entities.includes(className)) {
+                        const ds: string = Reflect.getMetadata("axr:datastore", clazz);
+                        // Search for the associated datastore with the model via either config or @Model decorator
+                        if (ds === name || (datastore.entities && datastore.entities.includes(className))) {
                             const processedDatastore = processedModels.get(className);
                             if (processedDatastore) {
                                 throw new Error(
@@ -67,16 +65,6 @@ class ConnectionManager {
                             entities.push(clazz);
                             processedModels.set(className, name);
                         }
-                    }
-                    if (datastore.entities.length != entities.length) {
-                        const missingEntities: string[] = datastore.entities.filter(
-                            (left: any) => !entities.map(entity => entity.name).includes(left)
-                        );
-                        throw new Error(
-                            "Mismatched datastore entities. Following entities do not have Models defined : [" +
-                            missingEntities +
-                            "]"
-                        );
                     }
                     datastore.entities = entities;
 

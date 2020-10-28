@@ -31,7 +31,6 @@ conf.defaults({
             database: "accounts",
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            entities: ["User", "CacheUser", "VersionedUser"],
             synchronize: true,
         },
         sqlite: {

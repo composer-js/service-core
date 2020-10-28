@@ -1,7 +1,8 @@
 import BaseMongoEntity from "../../src/models/BaseMongoEntity";
 import { Entity, Column } from "typeorm";
-import { Cache } from "../../src/decorators/ModelDecorators";
+import { Cache, Model } from "../../src/decorators/ModelDecorators";
 
+@Model("mongodb")
 @Entity()
 @Cache()
 export default class CacheUser extends BaseMongoEntity {

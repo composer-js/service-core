@@ -1,6 +1,8 @@
 import BaseMongoEntity from "../../src/models/BaseMongoEntity";
 import { Entity, Column } from "typeorm";
+import { Model } from "../../src/decorators/ModelDecorators";
 
+@Model("mongodb")
 @Entity()
 export default class User extends BaseMongoEntity {
     @Column()
