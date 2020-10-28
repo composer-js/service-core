@@ -61,9 +61,16 @@ export default class ObjectFactory {
             }
 
             if (destroyFunc) {
-                const result: Promise<void> | void = destroyFunc();
-                if (result instanceof Promise) {
-                    await result;
+                try {
+                    this.logger.debug("Destroying object: " + name);
+                    const boundFunc: Function = destroyFunc.bind(obj);
+                    const result: any = boundFunc();
+                    if (result instanceof Promise) {
+                        await result;
+                    }
+                } catch (err) {
+                    this.logger.error("Failed to destroy object: " + name);
+                    this.logger.debug(err);
                 }
             }
         });
@@ -244,6 +251,7 @@ export default class ObjectFactory {
         }
 
         // Create the new instance using the provided params
+        this.logger.debug(`Creating new instance of class [${className}] with name [${name}]`);
         const instance: T = new clazz(...args);
 
         // Now initialize the object with any injectable defaults
@@ -265,6 +273,7 @@ export default class ObjectFactory {
     public register(clazz: any, fqn?: string): void {
         const name: string = fqn ? fqn : clazz.name;
         if (!this.classes.has(name)) {
+            this.logger.info(`Registering class ${name}`);
             this.classes.set(name, clazz);
         }
     }
