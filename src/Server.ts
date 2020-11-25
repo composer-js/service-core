@@ -153,30 +153,30 @@ class Server {
     ///////////////////////////////////////////////////////////////////////////
     // METRICS VARIABLES
     ///////////////////////////////////////////////////////////////////////////
-    protected static metricRequestPath: prom.Histogram = new prom.Histogram({
+    protected static metricRequestPath: prom.Histogram<string> = new prom.Histogram({
         name: "request_path",
         help: "A histogram of the number of handled requests by the requested path.",
         labelNames: ["path"],
     });
-    protected static metricRequestStatus: prom.Histogram = new prom.Histogram({
+    protected static metricRequestStatus: prom.Histogram<string> = new prom.Histogram({
         name: "request_status",
         help: "A histogram of the resulting status code of handled requests by the requested path.",
         labelNames: ["path", "code"],
     });
-    protected static metricRequestTime: prom.Summary = new prom.Summary({
+    protected static metricRequestTime: prom.Summary<string> = new prom.Summary({
         name: "request_time",
         help: "A histogram of the response time of handled requests by the requested path.",
         labelNames: ["path"],
     });
-    protected static metricCompletedRequests: prom.Counter = new prom.Counter({
+    protected static metricCompletedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_completed_requests",
         help: "The total number of successfully completed requests.",
     });
-    protected static metricFailedRequests: prom.Counter = new prom.Counter({
+    protected static metricFailedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_failed_requests",
         help: "The total number of failed requests.",
     });
-    protected static metricTotalRequests: prom.Counter = new prom.Counter({
+    protected static metricTotalRequests: prom.Counter<string> = new prom.Counter({
         name: "num_total_requests",
         help: "The total number of requests processed.",
     });
@@ -501,7 +501,7 @@ class Server {
     /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
-    public async start() {
+    public async start(): Promise<void> {
         return new Promise(async (resolve, reject) => {
             this.logger.info("Starting server...");
 
@@ -619,7 +619,7 @@ class Server {
     /**
      * Stops the HTTP listen server.
      */
-    public async stop() {
+    public async stop(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.server) {
                 this.logger.info("Stopping server...");
@@ -644,7 +644,7 @@ class Server {
     /**
      * Restarts the HTTP listen server using the provided configuration and OpenAPI specification.
      */
-    public async restart() {
+    public async restart(): Promise<void> {
         await this.stop();
         return this.start();
     }

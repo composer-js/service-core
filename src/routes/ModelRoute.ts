@@ -635,7 +635,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                         version: obj.version + 1,
                     } as any);
                 } else {
-                    await this.repo.update(query, {
+                    await this.repo.update(query.where, {
                         ...obj,
                         dateModified: new Date(),
                         version: obj.version + 1,
@@ -648,7 +648,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                     toSave.version += 1;
                     await this.repo.save(toSave);
                 } else {
-                    await this.repo.update(query, toSave);
+                    await this.repo.update(query.where, toSave);
                 }
             }
         }

@@ -51,9 +51,12 @@ describe("ModelRoute Tests [SQL]", () => {
         }
     });
 
-    afterAll(async () => {
+    afterAll(async (done: Function) => {
         await server.stop();
         await mongod.stop();
+        sqlite.close(err => {
+            done();
+        });
     });
 
     beforeEach(async () => {

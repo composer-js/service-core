@@ -21,15 +21,15 @@ export default abstract class BackgroundService {
     /**
      * The processing function to execute at each scheduled interval.
      */
-    public abstract run(): void;
+    public abstract run(): Promise<void> | void;
 
     /**
      * Initializes the background service with any defaults.
      */
-    public abstract async start(): Promise<void>;
+    public abstract start(): Promise<void> | void;
 
     /**
      * Shuts down the background allowing the service to complete any outstanding tasks.
      */
-    public abstract async stop(): Promise<void>;
+    public abstract stop(): Promise<void> | void;
 }

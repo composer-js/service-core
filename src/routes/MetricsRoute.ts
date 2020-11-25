@@ -14,13 +14,10 @@ import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
 @Route("/metrics")
 export default class MetricsRoute {
     private config: any;
-    private defaultIntervalId: NodeJS.Timeout;
     private registry: prom.Registry;
 
     constructor(config: any) {
         this.config = config;
-        const defaultInterval: number = this.config.get("metrics:defaultInterval");
-        this.defaultIntervalId = prom.collectDefaultMetrics({ timeout: defaultInterval ? defaultInterval : 5000 });
         this.registry = prom.register;
     }
 
