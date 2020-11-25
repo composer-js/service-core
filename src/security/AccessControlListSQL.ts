@@ -4,7 +4,7 @@
 import { AccessControlList, ACLRecord } from "./AccessControlList";
 import BaseEntity from "../models/BaseEntity";
 import { Column, Entity, Index } from "typeorm";
-import { Cache } from "../decorators/ModelDecorators";
+import { Cache, Model } from "../decorators/ModelDecorators";
 
 /**
  * Implementation of the `ACLRecord` interface for use with SQL databases.
@@ -51,6 +51,7 @@ export class ACLRecordSQL implements ACLRecord {
 /**
  * Implementation of the `AccessControlList` interface for use with SQL databases.
  */
+@Model("acl")
 @Entity()
 @Cache()
 export default class AccessControlListSQL extends BaseEntity implements AccessControlList {

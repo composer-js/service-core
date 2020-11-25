@@ -24,7 +24,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
 jest.setTimeout(60000);
 
-describe.skip("Server Tests", () => {
+describe("Server Tests", () => {
     const apiSpec: any = yamljs.safeLoad(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
     expect(apiSpec).toBeDefined();
 
@@ -109,7 +109,7 @@ describe.skip("Server Tests", () => {
 
     it("Can serve single metric.", async (done: Function) => {
         expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication()).get("/metrics/process_cpu_user_seconds_total");
+        const result = await request(server.getApplication()).get("/metrics/num_total_requests");
         expect(result).toHaveProperty("status");
         expect(result.status).toBe(200);
         expect(result).toHaveProperty("text");

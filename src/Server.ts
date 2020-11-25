@@ -515,11 +515,9 @@ class Server {
             // If ACL has been configured we need to make sure the proper models are configured and loaded
             if (datastores.acl) {
                 if (datastores.acl.type === "mongodb") {
-                    datastores.acl.entities = ["AccessControlListMongo"];
-                    models.AccessControlListMongo = AccessControlListMongo;
+                    models[AccessControlListMongo.name] = AccessControlListMongo;
                 } else {
-                    datastores.acl.entities = ["AccessControlListSQL"];
-                    models.AccessControlListSQL = AccessControlListSQL;
+                    models[AccessControlListSQL.name] = AccessControlListSQL;
                 }
             }
             await ConnectionManager.connect(datastores, models);

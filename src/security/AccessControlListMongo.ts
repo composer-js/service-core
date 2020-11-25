@@ -4,7 +4,7 @@
 import { AccessControlList, ACLRecord } from "./AccessControlList";
 import BaseMongoEntity from "../models/BaseMongoEntity";
 import { Column, Entity, Index } from "typeorm";
-import { Cache } from "../decorators/ModelDecorators";
+import { Cache, Model } from "../decorators/ModelDecorators";
 
 /**
  * Implementation of the `ACLRecord` interface for use with MongoDB databases.
@@ -51,6 +51,7 @@ export class ACLRecordMongo implements ACLRecord {
 /**
  * Implementation of the `AccessControlList` interface for use with MongoDB databases.
  */
+@Model("acl")
 @Entity()
 @Cache()
 export default class AccessControlListMongo extends BaseMongoEntity implements AccessControlList {
