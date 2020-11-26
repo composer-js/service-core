@@ -294,9 +294,6 @@ class Server {
      * @param obj The object whose dependencies will be injected.
      */
     protected injectProperties(clazz: any, obj: any): void {
-        // Initialize the object with the ObjectFactory
-        this.objectFactory.initialize(obj);
-
         // Set the cache TTL if set on the model
         if (clazz.modelClass && clazz.modelClass.cacheTTL) {
             obj.cacheTTL = clazz.modelClass.cacheTTL;
@@ -306,6 +303,9 @@ class Server {
         if (clazz.modelClass && clazz.modelClass.trackChanges) {
             obj.trackChanges = clazz.modelClass.trackChanges;
         }
+        
+        // Initialize the object with the ObjectFactory
+        this.objectFactory.initialize(obj);
     }
 
     /**
@@ -348,38 +348,6 @@ class Server {
         }
 
         return result;
-    }
-
-    /**
-     * Searches an route object for one or more functions that implement a `@Init` decorator.
-     *
-     * @param route The route object to search.
-     * @returns The list of functions that implements the `@Init` decorator if found, otherwise undefined.
-     */
-    protected getInitMethods(route: any): Function[] {
-        const results: Function[] = [];
-
-        for (const member in route) {
-            const initialize: boolean = Reflect.getMetadata("axr:initialize", route, member);
-            if (initialize) {
-                results.push(route[member]);
-                break;
-            }
-        }
-
-        let proto = Object.getPrototypeOf(route);
-        while (proto) {
-            for (const member of Object.getOwnPropertyNames(proto)) {
-                const initialize: boolean = Reflect.getMetadata("axr:initialize", proto, member);
-                if (initialize) {
-                    results.push(route[member]);
-                    break;
-                }
-            }
-            proto = Object.getPrototypeOf(proto);
-        }
-
-        return results;
     }
 
     /**
@@ -571,15 +539,6 @@ class Server {
                 reject("Failed to scan for routes.\n" + err);
             }
 
-            // Initialize all routes
-            this.logger.info("Initializing routes...");
-            for (const key in allRoutes) {
-                const route: any = allRoutes[key];
-                const initFuncs: Function[] = this.getInitMethods(route);
-                for (const func of initFuncs) {
-                    await func.bind(route)();
-                }
-            }
             // Error handling. NOTE: Must be defined last.
             this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
                 if (err) {
