@@ -64,9 +64,9 @@ describe("ObjectFactory Tests", () => {
         expect(instance).toBeInstanceOf(TestClassA);
     });
 
-    it("Can initialize existing objects.", () => {
+    it("Can initialize existing objects.", async () => {
         const instance2: TestClassC = new TestClassC();
-        factory.initialize(instance2);
+        await factory.initialize(instance2);
         expect(instance2.dep).toBeDefined();
         expect(instance2.dep).toBeInstanceOf(TestClassA);
     });

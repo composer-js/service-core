@@ -105,7 +105,18 @@ export default class ObjectFactory {
                 // Inject @Config
                 const injectConfig: any = Reflect.getMetadata("axr:injectConfig", proto, member);
                 if (injectConfig) {
-                    obj[member] = this.config;
+                    // If the value is a string, then it must be a path to a specific variable desired
+                    if (typeof injectConfig === "string") {
+                        const value: any = this.config.get(injectConfig);
+                        if (value) {
+                            obj[member] = value;
+                        } else {
+                            throw new Error("No configuration variable is defined at path: " + injectConfig);
+                        }
+                    } else {
+                        // No specific variable is desired, inject the whole config object
+                        obj[member] = this.config;
+                    }
                 }
 
                 // Inject @Logger

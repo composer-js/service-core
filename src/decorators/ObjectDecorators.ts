@@ -42,16 +42,21 @@ export function Init(target: any, propertyKey: string, descriptor: PropertyDescr
 }
 
 /**
- * Apply this to a property to have the global configuration object injected at instantiation.
+ * Apply this to a property to have a configuration variable be injected at instantiation. If no path is given, the 
+ * global configuration object is injected.
+ * 
+ * @param path The path to the configuration variable to inject.
  */
-export function Config(target: any, propertyKey: string | symbol) {
-    Reflect.defineMetadata("axr:injectConfig", true, target, propertyKey);
-    const key = `__${String(propertyKey)}`;
-    Object.defineProperty(target, propertyKey, {
-        enumerable: true,
-        writable: true,
-        value: undefined,
-    });
+export function Config(path?: string) {
+    return function(target: any, propertyKey: string | symbol) {
+        Reflect.defineMetadata("axr:injectConfig", path ? path : true, target, propertyKey);
+        const key = `__${String(propertyKey)}`;
+        Object.defineProperty(target, propertyKey, {
+            enumerable: true,
+            writable: true,
+            value: undefined,
+        });
+    }
 }
 
 /**

@@ -13,7 +13,7 @@ import { ACLUtils } from "../service_core";
 @Model(AccessControlListSQL)
 @Route("/acls")
 export default class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
-    @Config
+    @Config()
     private config?: any;
 
     @Repository(AccessControlListSQL)

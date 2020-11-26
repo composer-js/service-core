@@ -13,7 +13,7 @@ import { JWTUser, UserUtils } from "@composer-js/core";
 @Model(AccessControlListMongo)
 @Route("/acls")
 export default class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
-    @Config
+    @Config()
     private config?: any;
 
     @MongoRepository(AccessControlListMongo)
