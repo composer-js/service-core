@@ -33,6 +33,15 @@ export function Inject(type: any, name: string | undefined = "default", ...args:
 }
 
 /**
+ * Apply this to a function to be executed once a new object instance has been created and all dependencies injected.
+ * Note: If the decorated function returns a Promise it is not gauranteed to finish execution before the object is
+ * returned during the instantiation process.
+ */
+export function Init(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    Reflect.defineMetadata("axr:initialize", true, target, propertyKey);
+}
+
+/**
  * Apply this to a property to have the global configuration object injected at instantiation.
  */
 export function Config(target: any, propertyKey: string | symbol) {

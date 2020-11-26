@@ -180,6 +180,44 @@ export default class ObjectFactory {
 
             proto = Object.getPrototypeOf(proto);
         }
+
+        // Call any @Init functions
+        const initFuncs: Function[] = this.getInitMethods(obj);
+        for (const func of initFuncs) {
+            func.bind(obj)();
+        }
+    }
+
+    /**
+     * Searches an object for one or more functions that implement a `@Init` decorator.
+     *
+     * @param obj The object to search.
+     * @returns The list of functions that implements the `@Init` decorator if found, otherwise undefined.
+     */
+    public getInitMethods(obj: any): Function[] {
+        const results: Function[] = [];
+
+        for (const member in obj) {
+            const initialize: boolean = Reflect.getMetadata("axr:initialize", obj, member);
+            if (initialize) {
+                results.push(obj[member]);
+                break;
+            }
+        }
+
+        let proto = Object.getPrototypeOf(obj);
+        while (proto) {
+            for (const member of Object.getOwnPropertyNames(proto)) {
+                const initialize: boolean = Reflect.getMetadata("axr:initialize", proto, member);
+                if (initialize) {
+                    results.push(obj[member]);
+                    break;
+                }
+            }
+            proto = Object.getPrototypeOf(proto);
+        }
+
+        return results;
     }
 
     /**
