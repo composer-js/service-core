@@ -52,14 +52,14 @@ describe("ObjectFactory Tests", () => {
         await factory.destroy();
     })
 
-    it("Can create new class instances by name.", () => {
-        const instance: TestClassA = factory.newInstance(TestClassA.name, "myInstance");
+    it("Can create new class instances by name.", async () => {
+        const instance: TestClassA = await factory.newInstance(TestClassA.name, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
     });
 
-    it("Can create new class instances by type.", () => {
-        const instance: TestClassA = factory.newInstance(TestClassA, "myInstance");
+    it("Can create new class instances by type.", async () => {
+        const instance: TestClassA = await factory.newInstance(TestClassA, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
     });
@@ -71,34 +71,34 @@ describe("ObjectFactory Tests", () => {
         expect(instance2.dep).toBeInstanceOf(TestClassA);
     });
 
-    it("Can create new class instances with constructor arguments.", () => {
-        const instance: TestClassB = factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
+    it("Can create new class instances with constructor arguments.", async () => {
+        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassB);
         expect(instance.arg1).toBe("hello");
         expect(instance.arg2).toBe(1);
     });
 
-    it("Can force creation of new class instances.", () => {
-        const instance: TestClassB = factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
+    it("Can force creation of new class instances.", async () => {
+        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassB);
         expect(instance.arg1).toBe("hello");
         expect(instance.arg2).toBe(1);
 
-        const instance2: TestClassB = factory.newInstance(TestClassB.name, undefined, "world", 100);
+        const instance2: TestClassB = await factory.newInstance(TestClassB.name, undefined, "world", 100);
         expect(instance2).toBeDefined();
         expect(instance2).toBeInstanceOf(TestClassB);
         expect(instance2.arg1).toBe("world");
         expect(instance2.arg2).toBe(100);
     });
 
-    it("Can retrieve existing class instances by name.", () => {
-        const instance: TestClassA = factory.newInstance(TestClassA.name, "myInstance");
+    it("Can retrieve existing class instances by name.", async () => {
+        const instance: TestClassA = await factory.newInstance(TestClassA.name, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
 
-        const instance2: TestClassA = factory.newInstance(TestClassA.name, "myInstance");
+        const instance2: TestClassA = await factory.newInstance(TestClassA.name, "myInstance");
         expect(instance2).toBeDefined();
         expect(instance2).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance2);
@@ -109,8 +109,8 @@ describe("ObjectFactory Tests", () => {
         expect(instance).toBe(instance3);
     });
 
-    it("Can retrieve existing class instances by type.", () => {
-        const instance: TestClassA = factory.newInstance(TestClassA, "default");
+    it("Can retrieve existing class instances by type.", async () => {
+        const instance: TestClassA = await factory.newInstance(TestClassA, "default");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
 

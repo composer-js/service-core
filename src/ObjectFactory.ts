@@ -97,7 +97,7 @@ export default class ObjectFactory {
      * Scans the given object for any properties with the @Inject decorator and assigns the correct values.
      * @param obj The object to initialize with injected defaults
      */
-    public initialize(obj: any): void {
+    public async initialize(obj: any): Promise<void> {
         let proto = Object.getPrototypeOf(obj);
         while (proto) {
             // Search for each type of injectable property
@@ -172,7 +172,7 @@ export default class ObjectFactory {
                     // First register the type just in case it hasn't been done yet
                     this.register(injectObject.type);
                     // Now retrieve the instance for the given name
-                    const instance: any = this.newInstance(injectObject.type, injectObject.name, ...injectObject.args);
+                    const instance: any = await this.newInstance(injectObject.type, injectObject.name, ...injectObject.args);
 
                     obj[member] = instance;
                 }
@@ -184,7 +184,10 @@ export default class ObjectFactory {
         // Call any @Init functions
         const initFuncs: Function[] = this.getInitMethods(obj);
         for (const func of initFuncs) {
-            func.bind(obj)();
+            const result: any = func.bind(obj)();
+            if (result instanceof Promise) {
+                await result;
+            }
         }
     }
 
@@ -250,7 +253,7 @@ export default class ObjectFactory {
      *              is created.
      * @param args The set of constructor arguments to use during construction
      */
-    public newInstance<T>(type: any, name?: string, ...args: any): T {
+    public async newInstance<T>(type: any, name?: string, ...args: any): Promise<T> {
         // If an class type was given extract it's fqn
         const className = typeof type === "string"
             ? type
@@ -293,7 +296,7 @@ export default class ObjectFactory {
         const instance: T = new clazz(...args);
 
         // Now initialize the object with any injectable defaults
-        this.initialize(instance);
+        await this.initialize(instance);
 
         // Store the instance in our list of objects
         if (name) {

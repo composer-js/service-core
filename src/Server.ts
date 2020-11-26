@@ -293,7 +293,7 @@ class Server {
      * @param clazz The class type of the object to inject.
      * @param obj The object whose dependencies will be injected.
      */
-    protected injectProperties(clazz: any, obj: any): void {
+    protected injectProperties(clazz: any, obj: any): Promise<void> {
         // Set the cache TTL if set on the model
         if (clazz.modelClass && clazz.modelClass.cacheTTL) {
             obj.cacheTTL = clazz.modelClass.cacheTTL;
@@ -303,9 +303,9 @@ class Server {
         if (clazz.modelClass && clazz.modelClass.trackChanges) {
             obj.trackChanges = clazz.modelClass.trackChanges;
         }
-        
+
         // Initialize the object with the ObjectFactory
-        this.objectFactory.initialize(obj);
+        return this.objectFactory.initialize(obj);
     }
 
     /**
@@ -314,14 +314,14 @@ class Server {
      * @param classDef The class definition of the route to instantiate.
      * @returns A new instance of the provided class definition that implements the Route interface.
      */
-    protected instantiateRoute(classDef: any): any {
+    protected async instantiateRoute(classDef: any): Promise<any> {
         const obj: any = new classDef();
         Object.defineProperty(obj, "class", {
             enumerable: true,
             writable: false,
             value: classDef,
         });
-        this.injectProperties(classDef, obj);
+        await this.injectProperties(classDef, obj);
         return obj;
     }
 
@@ -469,7 +469,7 @@ class Server {
     /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
-    public async start(): Promise<void> {
+    public start(): Promise<void> {
         return new Promise(async (resolve, reject) => {
             this.logger.info("Starting server...");
 
@@ -504,11 +504,11 @@ class Server {
             const aclConn: any = ConnectionManager.connections.get("acl");
             if (aclConn instanceof Connection) {
                 if (aclConn.driver.constructor.name === "MongoDriver") {
-                    const aclRoute: ACLRouteMongo = this.instantiateRoute(ACLRouteMongo);
+                    const aclRoute: ACLRouteMongo = await this.instantiateRoute(ACLRouteMongo);
                     this.registerRoute(aclRoute);
                     allRoutes.push(aclRoute);
                 } else {
-                    const aclRoute: ACLRouteSQL = this.instantiateRoute(ACLRouteSQL);
+                    const aclRoute: ACLRouteSQL = await this.instantiateRoute(ACLRouteSQL);
                     this.registerRoute(aclRoute);
                     allRoutes.push(aclRoute);
                 }
@@ -531,12 +531,13 @@ class Server {
                 const routeScanner: RouteScanner = new RouteScanner(path.join(this.basePath, "routes"));
                 const routes: any[] = await routeScanner.scan();
                 for (const clazz of routes) {
-                    const route: any = this.instantiateRoute(clazz);
+                    const route: any = await this.instantiateRoute(clazz);
                     this.registerRoute(route);
                     allRoutes.push(route);
                 }
             } catch (err) {
                 reject("Failed to scan for routes.\n" + err);
+                return;
             }
 
             // Error handling. NOTE: Must be defined last.
@@ -564,6 +565,7 @@ class Server {
                 Server.metricRequestPath.labels(req.path).observe(1);
                 Server.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
             });
+            
             // Initialize the HTTP listen server
             this.server = http.createServer(this.app);
             this.server.listen(this.port, "0.0.0.0", () => {
@@ -576,7 +578,7 @@ class Server {
     /**
      * Stops the HTTP listen server.
      */
-    public async stop(): Promise<void> {
+    public stop(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.server) {
                 this.logger.info("Stopping server...");

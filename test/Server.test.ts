@@ -44,7 +44,9 @@ describe("Server Tests", () => {
     beforeEach(async (done: Function) => {
         expect(server).toBeInstanceOf(Server);
         await server.start();
-        done();
+        // Wait a bit longer each time. This allows objects to finish initialization before we proceed.
+        setTimeout(done, 1000);
+        //done();
     });
 
     afterEach(async (done: Function) => {
