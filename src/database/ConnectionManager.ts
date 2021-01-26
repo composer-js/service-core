@@ -37,7 +37,7 @@ class ConnectionManager {
             }
 
             if (connection) {
-                if (!connection.isConnected) {
+                if (connection instanceof typeorm.Connection && !connection.isConnected) {
                     await connection.connect();
                 }
             } else {

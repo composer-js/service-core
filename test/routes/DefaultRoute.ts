@@ -1,9 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Route, Get, User, Init, Auth } from "../../src/decorators/RouteDecorators";
+import { Route, Get, User, Init, Auth, WebSocket, Socket } from "../../src/decorators/RouteDecorators";
 import { Logger } from "@composer-js/core";
 import { AccessControlList } from "../../src/security/AccessControlList";
+import * as ws from "ws";
 
 const logger = Logger();
 
@@ -37,6 +38,29 @@ class DefaultRoute {
         let err: any = new Error("This is a test.");
         err.status = 400;
         throw err;
+    }
+
+    @WebSocket("connect")
+    protected wsConnect(@Socket ws: ws, @User user?: any): void {
+        ws.on("message", (msg) => {
+            ws.send(`echo ${msg}`);
+        });
+        ws.send(`hello ${user && user.uid ? user.uid : "guest"}`);
+    }
+
+    @Auth("jwt")
+    @WebSocket("connect-secure")
+    protected wsConnectSecure(@Socket ws: ws, @User user?: any): void {
+        if (user) {
+            ws.on("message", (msg) => {
+                ws.send(`echo ${msg}`);
+            });
+            ws.send(`hello ${user.uid}`);
+        } else {
+            const error: any = new Error("No user authenticated.");
+            error.status = 401;
+            throw error;
+        }
     }
 }
 

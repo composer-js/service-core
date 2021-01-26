@@ -10,6 +10,7 @@ import * as path from "path";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
+import requestws from "superwstest";
 
 import * as yamljs from "js-yaml";
 import { JWTUtils } from "@composer-js/core";
@@ -154,5 +155,51 @@ describe("Server Tests", () => {
         expect(result.status).toBe(400);
         expect(result.body.status).toBeDefined();
         done();
+    });
+
+    it("Can connect via unsecured WebSocket anonymous", async () => {
+        expect(server.isRunning()).toBe(true);
+        await requestws(server.getServer()).ws('/connect')
+            .expectText('hello guest')
+            .sendText('ping')
+            .expectText('echo ping')
+            .sendText('pong')
+            .expectText('echo pong')
+            .close()
+            .expectClosed();
+    });
+
+    it("Can connect via unsecured WebSocket [user]", async () => {
+        const user = { uid: uuid.v4() };
+        const token = JWTUtils.createToken(config.get("auth"), user);
+        expect(server.isRunning()).toBe(true);
+        await requestws(server.getServer()).ws('/connect', { headers: { Authorization: `jwt ${token}` }})
+            .expectText('hello ' + user.uid)
+            .sendText('ping')
+            .expectText('echo ping')
+            .sendText('pong')
+            .expectText('echo pong')
+            .close()
+            .expectClosed();
+    });
+
+    it("Cannot connect via secured WebSocket [anonymous]", async () => {
+        expect(server.isRunning()).toBe(true);
+        await requestws(server.getServer()).ws('/connect-secure')
+            .expectClosed();
+    });
+
+    it("Can connect via secured WebSocket [user]", async () => {
+        const user = { uid: uuid.v4() };
+        const token = JWTUtils.createToken(config.get("auth"), user);
+        expect(server.isRunning()).toBe(true);
+        await requestws(server.getServer()).ws('/connect-secure', { headers: { Authorization: `jwt ${token}` }})
+            .expectText('hello ' + user.uid)
+            .sendText('ping')
+            .expectText('echo ping')
+            .sendText('pong')
+            .expectText('echo pong')
+            .close()
+            .expectClosed();
     });
 });

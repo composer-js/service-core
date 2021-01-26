@@ -10,7 +10,7 @@ import "reflect-metadata";
  * @param func The function or list of functions to execute *after* the decorated function.
  */
 export function After(func: Function | string | (Function | string)[]) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
 
         // Ensure we always have an array of functions. Also, append the new list of functions to any existing list.
@@ -30,7 +30,7 @@ export function After(func: Function | string | (Function | string)[]) {
  *                proceed, otherwise set to `false`. Default is `true`.
  */
 export function Auth(strategies: string | string[], require: boolean = true) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
         route.authStrategies = strategies;
         route.authRequired = require;
@@ -44,7 +44,7 @@ export function Auth(strategies: string | string[], require: boolean = true) {
  * @param func The function or list of functions to execute *before* the decorated function.
  */
 export function Before(func: Function | string | (Function | string)[]) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
 
         // Ensure we always have an array of functions. Also, append the new list of functions to any existing list.
@@ -61,7 +61,7 @@ export function Before(func: Function | string | (Function | string)[]) {
  * @param type The content type that the function will return.
  */
 export function ContentType(type: string) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
         route.contentType = type;
         Reflect.defineMetadata("axr:route", route, target, propertyKey);
@@ -101,7 +101,7 @@ export function Head(path?: string) {
  * @param name The name of the header whose value will be injected.
  */
 export function Header(name: string) {
-    return function(target: any, propertyKey: string, index: number) {
+    return function (target: any, propertyKey: string, index: number) {
         let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
         args[index] = ["header", name];
         Reflect.defineMetadata("axr:args", args, target, propertyKey);
@@ -122,7 +122,7 @@ export function Init(target: any, propertyKey: string, descriptor: PropertyDescr
  * @param path The sub-path that the route handles requests for.
  */
 export function Method(method: string | string[], path?: string) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
         const pathFinal: string = path ? path : "";
 
@@ -145,7 +145,7 @@ export function Method(method: string | string[], path?: string) {
  * @param name The data model class type to associate the class with.
  */
 export function Model(type: any) {
-    return function<T extends { new (...args: any[]): {} }>(constructor: T) {
+    return function <T extends { new (...args: any[]): {} }>(constructor: T) {
         return class extends constructor {
             /** The class type of the data model type associated with this class. */
             public static readonly modelClass: any = type;
@@ -178,7 +178,7 @@ export function Post(path?: string) {
  * @param name The name of the URI parameter whose value will be injected.
  */
 export function Param(name: string | undefined = undefined) {
-    return function(target: any, propertyKey: string, index: number) {
+    return function (target: any, propertyKey: string, index: number) {
         let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
         args[index] = ["param", name];
         Reflect.defineMetadata("axr:args", args, target, propertyKey);
@@ -201,7 +201,7 @@ export function Put(path?: string) {
  * @param name THe name of the query parameter whose value will be injected.
  */
 export function Query(name: string | undefined = undefined) {
-    return function(target: any, propertyKey: string, index: number) {
+    return function (target: any, propertyKey: string, index: number) {
         let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
         args[index] = ["query", name];
         Reflect.defineMetadata("axr:args", args, target, propertyKey);
@@ -214,7 +214,7 @@ export function Query(name: string | undefined = undefined) {
  * @param {any} type The entity type whose repository will be injected.
  */
 export function MongoRepository(type: any) {
-    return function(target: any, propertyKey: string | symbol) {
+    return function (target: any, propertyKey: string | symbol) {
         Reflect.defineMetadata("axr:injectMongoRepo", type, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
@@ -231,7 +231,7 @@ export function MongoRepository(type: any) {
  * @param {any} type The entity type whose repository will be injected.
  */
 export function Repository(type: any) {
-    return function(target: any, propertyKey: string | symbol) {
+    return function (target: any, propertyKey: string | symbol) {
         Reflect.defineMetadata("axr:injectRepo", type, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
@@ -248,7 +248,7 @@ export function Repository(type: any) {
  * @param {string} name The name of the database connection to inject.
  */
 export function RedisConnection(name: string) {
-    return function(target: any, propertyKey: string | symbol) {
+    return function (target: any, propertyKey: string | symbol) {
         Reflect.defineMetadata("axr:injectRedisRepo", name, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
@@ -284,7 +284,7 @@ export function Response(target: any, propertyKey: string, index: number) {
  * @param roles The role(s) that an authenticated user must have to make the request.
  */
 export function RequiresRole(roles: string | string[]) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
         route.requiredRoles = Array.isArray(roles) ? roles : [roles];
         Reflect.defineMetadata("axr:route", route, target, propertyKey);
@@ -297,11 +297,22 @@ export function RequiresRole(roles: string | string[]) {
  * @param path The base path(s) that all route definitions will use.
  */
 export function Route(paths: string | string[]) {
-    return function(target: Function) {
+    return function (target: Function) {
         let routePaths: string[] = Reflect.getMetadata("axr:routePaths", target.prototype) || [];
         routePaths = routePaths.concat(Array.isArray(paths) ? paths : [paths]);
         Reflect.defineMetadata("axr:routePaths", routePaths, target.prototype);
     };
+}
+
+/**
+ * Injects the underlying Socket object associated with the request as the value of the decorated argument.
+ * When the handler function is for a WebSocket request, the returned socket will be the newly established
+ * WebSocket connection.
+ */
+export function Socket(target: any, propertyKey: string, index: number) {
+    let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+    args[index] = ["socket"];
+    Reflect.defineMetadata("axr:args", args, target, propertyKey);
 }
 
 /**
@@ -319,9 +330,18 @@ export function User(target: any, propertyKey: string, index: number) {
  * @param func The validation function to execute that will verify the request payload.
  */
 export function Validate(func: Function | string) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
         route.validator = func;
         Reflect.defineMetadata("axr:route", route, target, propertyKey);
     };
+}
+
+/**
+ * Indicates that the decorated function handles incoming `WebSocket` upgrade requests at the given sub-path.
+ *
+ * @param path The sub-path that the route will handle requests for.
+ */
+export function WebSocket(path?: string) {
+    return Method("ws", path);
 }
