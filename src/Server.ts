@@ -29,6 +29,7 @@ import { default as AccessControlListMongo } from "./security/AccessControlListM
 import ACLUtils from "./security/ACLUtils";
 import ObjectFactory from "./ObjectFactory";
 import RouteUtils from "./express/RouteUtils";
+import { Server as WebSocketServer } from "ws";
 import addWebSocket from "./express/WebSocket";
 
 /**
@@ -150,7 +151,9 @@ class Server {
     /** The port that the server is listening on. */
     public readonly port: number;
     /** The underlying HTTP server instance. */
-    protected server: http.Server;
+    protected server?: http.Server;
+    /** The underlying WebSocket server instance. */
+    protected wss?: WebSocketServer;
 
     ///////////////////////////////////////////////////////////////////////////
     // METRICS VARIABLES
@@ -199,54 +202,13 @@ class Server {
         logger: any = Logger(),
         objectFactory?: ObjectFactory
     ) {
+        this.app = express();
         this.config = config;
         this.apiSpec = apiSpec;
         this.basePath = basePath;
         this.logger = logger;
         this.objectFactory = objectFactory ? objectFactory : new ObjectFactory(config, logger);
         this.port = config.get("port") ? config.get("port") : 3000;
-
-        // Express configuration
-        this.app = express();
-        this.server = http.createServer(this.app);
-        this.app = addWebSocket(this.app, this.server);
-        this.app.use(express.static(path.join(__dirname, "public")));
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
-        this.app.use(cookieParser(this.config.get("cookie_secret")));
-        this.app.use(passport.initialize());
-        this.app.use(passport.session());
-
-        // cors
-        const corsOptions: CorsOptions = {
-            origin: this.config.get("cors:origins"),
-            credentials: true,
-            methods: "GET,HEAD,OPTIONS,PUT,POST,DELETE",
-            allowedHeaders: ["Accept", "Authorization", "Content-Type", "Origin", "X-Requested-With"],
-            preflightContinue: false,
-            optionsSuccessStatus: 204,
-        };
-        this.app.use(cors(corsOptions));
-
-        // passport (authentication) setup
-        passport.deserializeUser((profile: any, done: any) => {
-            done(null, profile);
-        });
-        passport.serializeUser((profile: any, done: any) => {
-            done(null, profile);
-        });
-        if (this.config.get("auth:strategy") === "JWTStrategy") {
-            const jwtOptions: JWTOptions = new JWTOptions();
-            jwtOptions.headerScheme = "(jwt|bearer)";
-            jwtOptions.config = this.config.get("auth");
-            passport.use("jwt", new JWTStrategy(jwtOptions));
-        }
-
-        // Set x-powered-by header
-        this.app.use((req: Request, res: Response, next: NextFunction) => {
-            res.setHeader("x-powered-by", "AcceleratXR");
-            return next();
-        });
     }
 
     /**
@@ -314,6 +276,51 @@ class Server {
     public start(): Promise<void> {
         return new Promise(async (resolve, reject) => {
             this.logger.info("Starting server...");
+
+            // Express configuration
+            this.app = express();
+            this.server = http.createServer(this.app);
+            this.wss = new WebSocketServer({
+                server: this.server,
+            });
+            this.app = addWebSocket(this.app, this.wss);
+            this.app.use(express.static(path.join(__dirname, "public")));
+            this.app.use(express.json());
+            this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
+            this.app.use(cookieParser(this.config.get("cookie_secret")));
+            this.app.use(passport.initialize());
+            this.app.use(passport.session());
+
+            // cors
+            const corsOptions: CorsOptions = {
+                origin: this.config.get("cors:origins"),
+                credentials: true,
+                methods: "GET,HEAD,OPTIONS,PUT,POST,DELETE",
+                allowedHeaders: ["Accept", "Authorization", "Content-Type", "Origin", "X-Requested-With"],
+                preflightContinue: false,
+                optionsSuccessStatus: 204,
+            };
+            this.app.use(cors(corsOptions));
+
+            // passport (authentication) setup
+            passport.deserializeUser((profile: any, done: any) => {
+                done(null, profile);
+            });
+            passport.serializeUser((profile: any, done: any) => {
+                done(null, profile);
+            });
+            if (this.config.get("auth:strategy") === "JWTStrategy") {
+                const jwtOptions: JWTOptions = new JWTOptions();
+                jwtOptions.headerScheme = "(jwt|bearer)";
+                jwtOptions.config = this.config.get("auth");
+                passport.use("jwt", new JWTStrategy(jwtOptions));
+            }
+
+            // Set x-powered-by header
+            this.app.use((req: Request, res: Response, next: NextFunction) => {
+                res.setHeader("x-powered-by", "AcceleratXR");
+                return next();
+            });
 
             // Load all models
             this.logger.info("Loading data models...");
@@ -421,13 +428,23 @@ class Server {
      */
     public stop(): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (this.server) {
+            if (this.server && this.wss) {
                 this.logger.info("Stopping server...");
-                this.server.close(async () => {
-                    this.logger.info("Closing database connections...");
-                    await ConnectionManager.disconnect();
+                this.wss.close(async (err: any) => {
+                    if (err) {
+                        reject(err);
+                    } else if (this.server) {
+                        this.server.close(async (err: any) => {
+                            this.logger.info("Closing database connections...");
+                            await ConnectionManager.disconnect();
 
-                    resolve();
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+                    }
                 });
 
                 setTimeout(() => {

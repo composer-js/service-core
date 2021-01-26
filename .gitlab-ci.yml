@@ -18,11 +18,7 @@ test:
     stage: test
     image: node:12
     script:
-        - yarn test --ci --testPathIgnorePatterns "WebSocket"
-        - yarn test --ci "test/Server.WebSocket.test.ts" -t "Server Tests Can connect via unsecured WebSocket \[anonymous\]"
-        - yarn test --ci "test/Server.WebSocket.test.ts" -t "Can connect via unsecured WebSocket \[user\]"
-        - yarn test --ci "test/Server.WebSocket.test.ts" -t "Cannot connect via secured WebSocket \[anonymous\]"
-        - yarn test --ci "test/Server.WebSocket.test.ts" -t "Can connect via secured WebSocket \[user\]"
+        - yarn test --ci
 
 publish:
     only:
