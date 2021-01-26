@@ -261,7 +261,7 @@ class RouteUtils {
                     let bodyInjected: boolean = false;
                     // Find the first argument without a decorator and insert the request body
                     for (let i = 0; i < args.length; i++) {
-                        if (!argMetadata[i]) {
+                        if (argMetadata && !argMetadata[i]) {
                             args[i] = result;
                             bodyInjected = true;
                             break;
