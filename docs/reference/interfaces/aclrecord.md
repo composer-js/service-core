@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLRecord](aclrecord.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLRecord
 
 # Interface: ACLRecord
 
@@ -38,72 +40,72 @@ Each permission can be one of the following actions:
 
 ## Properties
 
-###  create
+### create
 
-• **create**: *boolean | null*
+•  **create**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:42
+*Defined in src/security/AccessControlList.ts:42*
 
 Indicates that the user or role has permission to create new records of the entity.
 
 ___
 
-###  delete
+### delete
 
-• **delete**: *boolean | null*
+•  **delete**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:57
+*Defined in src/security/AccessControlList.ts:57*
 
 Indicates that the user or role has permission to delete existing records of the entity.
 
 ___
 
-###  full
+### full
 
-• **full**: *boolean | null*
+•  **full**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:69
+*Defined in src/security/AccessControlList.ts:69*
 
 Indicates that the user or role has total control over records of the entity. This supersedes all of the above
 permissions.
 
 ___
 
-###  read
+### read
 
-• **read**: *boolean | null*
+•  **read**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:47
+*Defined in src/security/AccessControlList.ts:47*
 
 Indicates that the user or role has permission to read records of the entity.
 
 ___
 
-###  special
+### special
 
-• **special**: *boolean | null*
+•  **special**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:63
+*Defined in src/security/AccessControlList.ts:63*
 
 Indicates that the user or role has special permission over records of the entity. The exact meaning of this
 may vary by service.
 
 ___
 
-###  update
+### update
 
-• **update**: *boolean | null*
+•  **update**: boolean \| null
 
-Defined in src/security/AccessControlList.ts:52
+*Defined in src/security/AccessControlList.ts:52*
 
 Indicates that the user or role has permission to modify existing records of the entity.
 
 ___
 
-###  userOrRoleId
+### userOrRoleId
 
-• **userOrRoleId**: *string*
+•  **userOrRoleId**: string
 
-Defined in src/security/AccessControlList.ts:37
+*Defined in src/security/AccessControlList.ts:37*
 
 The unique identifier of the user or role that the record belongs to.

@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLAction](aclaction.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLAction
 
 # Enumeration: ACLAction
 
@@ -19,48 +21,48 @@ Describes the various permission actions that can be performed against an entity
 
 ## Enumeration members
 
-###  CREATE
+### CREATE
 
-• **CREATE**: = "CREATE"
+•  **CREATE**:  = "CREATE"
 
-Defined in src/security/AccessControlList.ts:11
-
-___
-
-###  DELETE
-
-• **DELETE**: = "DELETE"
-
-Defined in src/security/AccessControlList.ts:12
+*Defined in src/security/AccessControlList.ts:11*
 
 ___
 
-###  FULL
+### DELETE
 
-• **FULL**: = "FULL"
+•  **DELETE**:  = "DELETE"
 
-Defined in src/security/AccessControlList.ts:13
-
-___
-
-###  READ
-
-• **READ**: = "READ"
-
-Defined in src/security/AccessControlList.ts:14
+*Defined in src/security/AccessControlList.ts:12*
 
 ___
 
-###  SPECIAL
+### FULL
 
-• **SPECIAL**: = "SPECIAL"
+•  **FULL**:  = "FULL"
 
-Defined in src/security/AccessControlList.ts:15
+*Defined in src/security/AccessControlList.ts:13*
 
 ___
 
-###  UPDATE
+### READ
 
-• **UPDATE**: = "UPDATE"
+•  **READ**:  = "READ"
 
-Defined in src/security/AccessControlList.ts:16
+*Defined in src/security/AccessControlList.ts:14*
+
+___
+
+### SPECIAL
+
+•  **SPECIAL**:  = "SPECIAL"
+
+*Defined in src/security/AccessControlList.ts:15*
+
+___
+
+### UPDATE
+
+•  **UPDATE**:  = "UPDATE"
+
+*Defined in src/security/AccessControlList.ts:16*

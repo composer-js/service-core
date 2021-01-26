@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [AccessControlList](accesscontrollist.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / AccessControlList
 
 # Interface: AccessControlList
 
@@ -41,79 +43,79 @@ easier.
 
 * [dateCreated](accesscontrollist.md#datecreated)
 * [dateModified](accesscontrollist.md#datemodified)
-* [parent](accesscontrollist.md#optional-parent)
-* [parentUid](accesscontrollist.md#optional-parentuid)
+* [parent](accesscontrollist.md#parent)
+* [parentUid](accesscontrollist.md#parentuid)
 * [records](accesscontrollist.md#records)
 * [uid](accesscontrollist.md#uid)
 * [version](accesscontrollist.md#version)
 
 ## Properties
 
-###  dateCreated
+### dateCreated
 
-• **dateCreated**: *Date*
+•  **dateCreated**: Date
 
-Defined in src/security/AccessControlList.ts:106
+*Defined in src/security/AccessControlList.ts:106*
 
 The date and time that the entity was created.
 
 ___
 
-###  dateModified
+### dateModified
 
-• **dateModified**: *Date*
+•  **dateModified**: Date
 
-Defined in src/security/AccessControlList.ts:111
+*Defined in src/security/AccessControlList.ts:111*
 
 The date and time that the entity was last modified.
 
 ___
 
-### `Optional` parent
+### parent
 
-• **parent**? : *[AccessControlList](accesscontrollist.md)*
+• `Optional` **parent**: [AccessControlList](accesscontrollist.md)
 
-Defined in src/security/AccessControlList.ts:121
+*Defined in src/security/AccessControlList.ts:121*
 
 The parent access control list that this instance inherits permissions from.
 
 ___
 
-### `Optional` parentUid
+### parentUid
 
-• **parentUid**? : *undefined | string*
+• `Optional` **parentUid**: undefined \| string
 
-Defined in src/security/AccessControlList.ts:127
+*Defined in src/security/AccessControlList.ts:127*
 
 The universally unique identifier of the parent `AccessControlList` that this object will inherit permissions
 from.
 
 ___
 
-###  records
+### records
 
-• **records**: *[ACLRecord](aclrecord.md)[]*
+•  **records**: [ACLRecord](aclrecord.md)[]
 
-Defined in src/security/AccessControlList.ts:132
+*Defined in src/security/AccessControlList.ts:132*
 
 The list of all permission records associated with this access control list.
 
 ___
 
-###  uid
+### uid
 
-• **uid**: *string*
+•  **uid**: string
 
-Defined in src/security/AccessControlList.ts:101
+*Defined in src/security/AccessControlList.ts:101*
 
 The universally unique identifier (`uuid`) of the entity that the access control list belongs to.
 
 ___
 
-###  version
+### version
 
-• **version**: *number*
+•  **version**: number
 
-Defined in src/security/AccessControlList.ts:116
+*Defined in src/security/AccessControlList.ts:116*
 
 The optimistic lock version.

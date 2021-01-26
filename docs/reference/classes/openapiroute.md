@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [OpenAPIRoute](openapiroute.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / OpenAPIRoute
 
 # Class: OpenAPIRoute
 
@@ -19,57 +21,57 @@ specification to requesting clients.
 
 ### Properties
 
-* [apiSpec](openapiroute.md#private-apispec)
+* [apiSpec](openapiroute.md#apispec)
 
 ### Methods
 
-* [get](openapiroute.md#private-get)
-* [getJSON](openapiroute.md#private-getjson)
+* [get](openapiroute.md#get)
+* [getJSON](openapiroute.md#getjson)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new OpenAPIRoute**(`apiSpec`: any): *[OpenAPIRoute](openapiroute.md)*
+\+ **new OpenAPIRoute**(`apiSpec`: any): [OpenAPIRoute](openapiroute.md)
 
-Defined in src/routes/OpenAPIRoute.ts:17
+*Defined in src/routes/OpenAPIRoute.ts:17*
 
 Constructs a new `OpenAPIController` object with the specified defaults.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `apiSpec` | any | The OpenAPI specification object to serve.  |
 
-**Returns:** *[OpenAPIRoute](openapiroute.md)*
+**Returns:** [OpenAPIRoute](openapiroute.md)
 
 ## Properties
 
-### `Private` apiSpec
+### apiSpec
 
-• **apiSpec**: *any*
+• `Private` **apiSpec**: any
 
-Defined in src/routes/OpenAPIRoute.ts:17
+*Defined in src/routes/OpenAPIRoute.ts:17*
 
 The underlying OpenAPI specification.
 
 ## Methods
 
-### `Private` get
+### get
 
-▸ **get**(): *any*
+▸ `Private`**get**(): any
 
-Defined in src/routes/OpenAPIRoute.ts:30
+*Defined in src/routes/OpenAPIRoute.ts:30*
 
-**Returns:** *any*
+**Returns:** any
 
 ___
 
-### `Private` getJSON
+### getJSON
 
-▸ **getJSON**(): *any*
+▸ `Private`**getJSON**(): any
 
-Defined in src/routes/OpenAPIRoute.ts:35
+*Defined in src/routes/OpenAPIRoute.ts:35*
 
-**Returns:** *any*
+**Returns:** any

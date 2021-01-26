@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [BackgroundServiceManager](backgroundservicemanager.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / BackgroundServiceManager
 
 # Class: BackgroundServiceManager
 
@@ -58,12 +60,12 @@ Example:
 
 ### Properties
 
-* [classLoader](backgroundservicemanager.md#private-classloader)
-* [config](backgroundservicemanager.md#private-readonly-config)
-* [jobs](backgroundservicemanager.md#private-jobs)
-* [loaded](backgroundservicemanager.md#private-loaded)
-* [logger](backgroundservicemanager.md#private-readonly-logger)
-* [services](backgroundservicemanager.md#private-services)
+* [classLoader](backgroundservicemanager.md#classloader)
+* [config](backgroundservicemanager.md#config)
+* [jobs](backgroundservicemanager.md#jobs)
+* [loaded](backgroundservicemanager.md#loaded)
+* [logger](backgroundservicemanager.md#logger)
+* [services](backgroundservicemanager.md#services)
 
 ### Methods
 
@@ -75,13 +77,13 @@ Example:
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new BackgroundServiceManager**(`basePath`: string, `config`: any, `logger`: any): *[BackgroundServiceManager](backgroundservicemanager.md)*
+\+ **new BackgroundServiceManager**(`basePath`: string, `config`: any, `logger`: any): [BackgroundServiceManager](backgroundservicemanager.md)
 
-Defined in src/BackgroundServiceManager.ts:60
+*Defined in src/BackgroundServiceManager.ts:60*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -89,130 +91,130 @@ Name | Type |
 `config` | any |
 `logger` | any |
 
-**Returns:** *[BackgroundServiceManager](backgroundservicemanager.md)*
+**Returns:** [BackgroundServiceManager](backgroundservicemanager.md)
 
 ## Properties
 
-### `Private` classLoader
+### classLoader
 
-• **classLoader**: *ClassLoader*
+• `Private` **classLoader**: ClassLoader
 
-Defined in src/BackgroundServiceManager.ts:55
-
-___
-
-### `Private` `Readonly` config
-
-• **config**: *any*
-
-Defined in src/BackgroundServiceManager.ts:56
+*Defined in src/BackgroundServiceManager.ts:55*
 
 ___
 
-### `Private` jobs
+### config
 
-• **jobs**: *any*
+• `Private` `Readonly` **config**: any
 
-Defined in src/BackgroundServiceManager.ts:57
-
-___
-
-### `Private` loaded
-
-• **loaded**: *boolean* = false
-
-Defined in src/BackgroundServiceManager.ts:58
+*Defined in src/BackgroundServiceManager.ts:56*
 
 ___
 
-### `Private` `Readonly` logger
+### jobs
 
-• **logger**: *any*
+• `Private` **jobs**: any
 
-Defined in src/BackgroundServiceManager.ts:59
+*Defined in src/BackgroundServiceManager.ts:57*
 
 ___
 
-### `Private` services
+### loaded
 
-• **services**: *any*
+• `Private` **loaded**: boolean = false
 
-Defined in src/BackgroundServiceManager.ts:60
+*Defined in src/BackgroundServiceManager.ts:58*
+
+___
+
+### logger
+
+• `Private` `Readonly` **logger**: any
+
+*Defined in src/BackgroundServiceManager.ts:59*
+
+___
+
+### services
+
+• `Private` **services**: any
+
+*Defined in src/BackgroundServiceManager.ts:60*
 
 ## Methods
 
-###  getService
+### getService
 
-▸ **getService**(`name`: string): *[BackgroundService](backgroundservice.md)*
+▸ **getService**(`name`: string): [BackgroundService](backgroundservice.md)
 
-Defined in src/BackgroundServiceManager.ts:73
+*Defined in src/BackgroundServiceManager.ts:73*
 
 Returns the service instance with the given name.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `name` | string | The name of the background service to retrieve.  |
 
-**Returns:** *[BackgroundService](backgroundservice.md)*
+**Returns:** [BackgroundService](backgroundservice.md)
 
 ___
 
-###  start
+### start
 
-▸ **start**(`serviceName`: string): *Promise‹void›*
+▸ **start**(`serviceName`: string): Promise\<void>
 
-Defined in src/BackgroundServiceManager.ts:106
+*Defined in src/BackgroundServiceManager.ts:106*
 
 Starts the background service with the given name.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `serviceName` | string | The name of the background service to start.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-###  startAll
+### startAll
 
-▸ **startAll**(): *Promise‹void›*
+▸ **startAll**(): Promise\<void>
 
-Defined in src/BackgroundServiceManager.ts:80
+*Defined in src/BackgroundServiceManager.ts:80*
 
 Starts all configured background services.
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-###  stop
+### stop
 
-▸ **stop**(`serviceName`: string): *Promise‹void›*
+▸ **stop**(`serviceName`: string): Promise\<void>
 
-Defined in src/BackgroundServiceManager.ts:153
+*Defined in src/BackgroundServiceManager.ts:153*
 
 Stops the background service with the given name.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `serviceName` | string | The name of the background service to stop.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-###  stopAll
+### stopAll
 
-▸ **stopAll**(): *Promise‹void›*
+▸ **stopAll**(): Promise\<void>
 
-Defined in src/BackgroundServiceManager.ts:138
+*Defined in src/BackgroundServiceManager.ts:138*
 
 Stops all currently active background services that are owned by the manager.
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>

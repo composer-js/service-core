@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLRecordSQL](aclrecordsql.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLRecordSQL
 
 # Class: ACLRecordSQL
 
@@ -30,86 +32,86 @@ Implementation of the `ACLRecord` interface for use with SQL databases.
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new ACLRecordSQL**(`other?`: any): *[ACLRecordSQL](aclrecordsql.md)*
+\+ **new ACLRecordSQL**(`other?`: any): [ACLRecordSQL](aclrecordsql.md)
 
-Defined in src/security/AccessControlListSQL.ts:34
+*Defined in src/security/AccessControlListSQL.ts:34*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `other?` | any |
 
-**Returns:** *[ACLRecordSQL](aclrecordsql.md)*
+**Returns:** [ACLRecordSQL](aclrecordsql.md)
 
 ## Properties
 
-###  create
+### create
 
-• **create**: *boolean | null*
+•  **create**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[create](../interfaces/aclrecord.md#create)*
 
-Defined in src/security/AccessControlListSQL.ts:19
+*Defined in src/security/AccessControlListSQL.ts:19*
 
 ___
 
-###  delete
+### delete
 
-• **delete**: *boolean | null*
+•  **delete**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[delete](../interfaces/aclrecord.md#delete)*
 
-Defined in src/security/AccessControlListSQL.ts:28
+*Defined in src/security/AccessControlListSQL.ts:28*
 
 ___
 
-###  full
+### full
 
-• **full**: *boolean | null*
+•  **full**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[full](../interfaces/aclrecord.md#full)*
 
-Defined in src/security/AccessControlListSQL.ts:34
+*Defined in src/security/AccessControlListSQL.ts:34*
 
 ___
 
-###  read
+### read
 
-• **read**: *boolean | null*
+•  **read**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[read](../interfaces/aclrecord.md#read)*
 
-Defined in src/security/AccessControlListSQL.ts:22
+*Defined in src/security/AccessControlListSQL.ts:22*
 
 ___
 
-###  special
+### special
 
-• **special**: *boolean | null*
+•  **special**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[special](../interfaces/aclrecord.md#special)*
 
-Defined in src/security/AccessControlListSQL.ts:31
+*Defined in src/security/AccessControlListSQL.ts:31*
 
 ___
 
-###  update
+### update
 
-• **update**: *boolean | null*
+•  **update**: boolean \| null
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[update](../interfaces/aclrecord.md#update)*
 
-Defined in src/security/AccessControlListSQL.ts:25
+*Defined in src/security/AccessControlListSQL.ts:25*
 
 ___
 
-###  userOrRoleId
+### userOrRoleId
 
-• **userOrRoleId**: *string*
+•  **userOrRoleId**: string
 
 *Implementation of [ACLRecord](../interfaces/aclrecord.md).[userOrRoleId](../interfaces/aclrecord.md#userorroleid)*
 
-Defined in src/security/AccessControlListSQL.ts:16
+*Defined in src/security/AccessControlListSQL.ts:16*

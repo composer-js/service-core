@@ -1,6 +1,6 @@
-[@composer-js/service-core](README.md) › [Globals](globals.md)
+**[@composer-js/service-core](README.md)**
 
-# @composer-js/service-core
+> [Globals](globals.md)
 
 # Composer: service_core
 

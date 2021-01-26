@@ -1,10 +1,12 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLRouteMongo](aclroutemongo.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLRouteMongo
 
 # Class: ACLRouteMongo
 
 ## Hierarchy
 
-* [ModelRoute](modelroute.md)‹[AccessControlListMongo](accesscontrollistmongo.md)›
+* [ModelRoute](modelroute.md)\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
   ↳ **ACLRouteMongo**
 
@@ -16,190 +18,205 @@
 
 ### Properties
 
-* [cacheClient](aclroutemongo.md#protected-optional-cacheclient)
-* [cacheTTL](aclroutemongo.md#protected-optional-cachettl)
-* [config](aclroutemongo.md#private-optional-config)
-* [defaultACLUid](aclroutemongo.md#protected-defaultacluid)
-* [logger](aclroutemongo.md#protected-logger)
-* [repo](aclroutemongo.md#protected-optional-repo)
-* [trackChanges](aclroutemongo.md#protected-trackchanges)
+* [cacheClient](aclroutemongo.md#cacheclient)
+* [cacheTTL](aclroutemongo.md#cachettl)
+* [config](aclroutemongo.md#config)
+* [defaultACLUid](aclroutemongo.md#defaultacluid)
+* [logger](aclroutemongo.md#logger)
+* [repo](aclroutemongo.md#repo)
+* [trackChanges](aclroutemongo.md#trackchanges)
 
 ### Accessors
 
-* [baseCacheKey](aclroutemongo.md#protected-basecachekey)
+* [baseCacheKey](aclroutemongo.md#basecachekey)
+* [modelClass](aclroutemongo.md#modelclass)
 
 ### Methods
 
-* [create](aclroutemongo.md#private-create)
-* [delete](aclroutemongo.md#private-delete)
-* [doCount](aclroutemongo.md#protected-docount)
-* [doCreate](aclroutemongo.md#protected-docreate)
-* [doDelete](aclroutemongo.md#protected-dodelete)
-* [doDeleteVersion](aclroutemongo.md#protected-dodeleteversion)
-* [doFindAll](aclroutemongo.md#protected-dofindall)
-* [doFindById](aclroutemongo.md#protected-dofindbyid)
-* [doFindByIdAndVersion](aclroutemongo.md#protected-dofindbyidandversion)
-* [doTruncate](aclroutemongo.md#protected-dotruncate)
-* [doUpdate](aclroutemongo.md#protected-doupdate)
-* [findAll](aclroutemongo.md#private-findall)
-* [findById](aclroutemongo.md#private-findbyid)
-* [getDefaultACL](aclroutemongo.md#protected-getdefaultacl)
-* [getObj](aclroutemongo.md#protected-getobj)
-* [hashQuery](aclroutemongo.md#protected-hashquery)
-* [update](aclroutemongo.md#private-update)
+* [create](aclroutemongo.md#create)
+* [delete](aclroutemongo.md#delete)
+* [doCount](aclroutemongo.md#docount)
+* [doCreate](aclroutemongo.md#docreate)
+* [doDelete](aclroutemongo.md#dodelete)
+* [doDeleteVersion](aclroutemongo.md#dodeleteversion)
+* [doFindAll](aclroutemongo.md#dofindall)
+* [doFindById](aclroutemongo.md#dofindbyid)
+* [doFindByIdAndVersion](aclroutemongo.md#dofindbyidandversion)
+* [doTruncate](aclroutemongo.md#dotruncate)
+* [doUpdate](aclroutemongo.md#doupdate)
+* [findAll](aclroutemongo.md#findall)
+* [findById](aclroutemongo.md#findbyid)
+* [getDefaultACL](aclroutemongo.md#getdefaultacl)
+* [getObj](aclroutemongo.md#getobj)
+* [hashQuery](aclroutemongo.md#hashquery)
+* [update](aclroutemongo.md#update)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new ACLRouteMongo**(): *[ACLRouteMongo](aclroutemongo.md)*
+\+ **new ACLRouteMongo**(): [ACLRouteMongo](aclroutemongo.md)
 
-*Overrides [ModelRoute](modelroute.md).[constructor](modelroute.md#protected-constructor)*
+*Overrides [ModelRoute](modelroute.md).[constructor](modelroute.md#constructor)*
 
-Defined in src/security/ACLRouteMongo.ts:21
+*Defined in src/security/ACLRouteMongo.ts:20*
 
-**Returns:** *[ACLRouteMongo](aclroutemongo.md)*
+**Returns:** [ACLRouteMongo](aclroutemongo.md)
 
 ## Properties
 
-### `Protected` `Optional` cacheClient
+### cacheClient
 
-• **cacheClient**? : *Redis*
+• `Protected` `Optional` **cacheClient**: Redis
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[cacheClient](aclroutemongo.md#protected-optional-cacheclient)*
+*Inherited from [ModelRoute](modelroute.md).[cacheClient](modelroute.md#cacheclient)*
 
-Defined in src/routes/ModelRoute.ts:33
+*Defined in src/routes/ModelRoute.ts:33*
 
 The redis client that will be used as a 2nd level cache for all cacheable models.
 
 ___
 
-### `Protected` `Optional` cacheTTL
+### cacheTTL
 
-• **cacheTTL**? : *undefined | number*
+• `Protected` `Optional` **cacheTTL**: undefined \| number
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[cacheTTL](aclroutemongo.md#protected-optional-cachettl)*
+*Inherited from [ModelRoute](modelroute.md).[cacheTTL](modelroute.md#cachettl)*
 
-Defined in src/routes/ModelRoute.ts:36
+*Defined in src/routes/ModelRoute.ts:36*
 
 The time, in milliseconds, that objects will be cached before being invalidated.
 
 ___
 
-### `Private` `Optional` config
+### config
 
-• **config**? : *any*
+• `Private` `Optional` **config**: any
 
-Defined in src/security/ACLRouteMongo.ts:18
+*Defined in src/security/ACLRouteMongo.ts:17*
 
 ___
 
-### `Protected` defaultACLUid
+### defaultACLUid
 
-• **defaultACLUid**: *string* = ""
+• `Protected` **defaultACLUid**: string = ""
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[defaultACLUid](aclroutemongo.md#protected-defaultacluid)*
+*Inherited from [ModelRoute](modelroute.md).[defaultACLUid](modelroute.md#defaultacluid)*
 
-Defined in src/routes/ModelRoute.ts:39
+*Defined in src/routes/ModelRoute.ts:39*
 
 The unique identifier of the default ACL for the model type.
 
 ___
 
-### `Protected` logger
+### logger
 
-• **logger**: *any*
+• `Protected` **logger**: any
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[logger](aclroutemongo.md#protected-logger)*
+*Inherited from [ModelRoute](modelroute.md).[logger](modelroute.md#logger)*
 
-Defined in src/routes/ModelRoute.ts:42
-
-___
-
-### `Protected` `Optional` repo
-
-• **repo**? : *Repo‹[AccessControlListMongo](accesscontrollistmongo.md)›*
-
-*Overrides [ModelRoute](modelroute.md).[repo](modelroute.md#protected-optional-abstract-repo)*
-
-Defined in src/security/ACLRouteMongo.ts:21
+*Defined in src/routes/ModelRoute.ts:42*
 
 ___
 
-### `Protected` trackChanges
+### repo
 
-• **trackChanges**: *number* = 0
+• `Protected` `Optional` **repo**: Repo\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[trackChanges](aclroutemongo.md#protected-trackchanges)*
+*Overrides [ModelRoute](modelroute.md).[repo](modelroute.md#repo)*
 
-Defined in src/routes/ModelRoute.ts:51
+*Defined in src/security/ACLRouteMongo.ts:20*
+
+___
+
+### trackChanges
+
+• `Protected` **trackChanges**: number = 0
+
+*Inherited from [ModelRoute](modelroute.md).[trackChanges](modelroute.md#trackchanges)*
+
+*Defined in src/routes/ModelRoute.ts:51*
 
 The number of previous document versions to store in the database. A negative value indicates storing all
 versions, a value of `0` stores no versions.
 
 ## Accessors
 
-### `Protected` baseCacheKey
+### baseCacheKey
 
-• **get baseCacheKey**(): *string*
+• `Protected`get **baseCacheKey**(): string
 
-*Overrides [ModelRoute](modelroute.md).[baseCacheKey](modelroute.md#protected-basecachekey)*
+*Overrides [ModelRoute](modelroute.md).[baseCacheKey](modelroute.md#basecachekey)*
 
-Defined in src/security/ACLRouteMongo.ts:30
+*Defined in src/security/ACLRouteMongo.ts:29*
 
 The base key used to get or set data in the cache.
 
-**Returns:** *string*
+**Returns:** string
+
+___
+
+### modelClass
+
+• `Protected`get **modelClass**(): any
+
+*Inherited from [ModelRoute](modelroute.md).[modelClass](modelroute.md#modelclass)*
+
+*Defined in src/routes/ModelRoute.ts:69*
+
+The class type of the model this route is associated with.
+
+**Returns:** any
 
 ## Methods
 
-### `Private` create
+### create
 
-▸ **create**(`obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: JWTUser): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+▸ `Private`**create**(`obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: JWTUser): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-Defined in src/security/ACLRouteMongo.ts:40
+*Defined in src/security/ACLRouteMongo.ts:39*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `obj` | [AccessControlListMongo](accesscontrollistmongo.md) |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
 ___
 
-### `Private` delete
+### delete
 
-▸ **delete**(`id`: string, `user?`: JWTUser): *Promise‹void›*
+▸ `Private`**delete**(`id`: string, `user?`: JWTUser): Promise\<void>
 
-Defined in src/security/ACLRouteMongo.ts:52
+*Defined in src/security/ACLRouteMongo.ts:51*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doCount
+### doCount
 
-▸ **doCount**(`params`: any, `query`: any, `user?`: any): *Promise‹any›*
+▸ `Protected`**doCount**(`params`: any, `query`: any, `user?`: any): Promise\<any>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doCount](aclroutemongo.md#protected-docount)*
+*Inherited from [ModelRoute](modelroute.md).[doCount](modelroute.md#docount)*
 
-Defined in src/routes/ModelRoute.ts:177
+*Defined in src/routes/ModelRoute.ts:199*
 
 Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
 request `query`. Any results that have been found are set to the `result` property of the `res` argument.
 `result` is never null.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -207,23 +224,23 @@ Name | Type |
 `query` | any |
 `user?` | any |
 
-**Returns:** *Promise‹any›*
+**Returns:** Promise\<any>
 
 ___
 
-### `Protected` doCreate
+### doCreate
 
-▸ **doCreate**(`obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: any, `acl?`: [AccessControlList](../interfaces/accesscontrollist.md)): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+▸ `Protected`**doCreate**(`obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: any, `acl?`: [AccessControlList](../interfaces/accesscontrollist.md)): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doCreate](aclroutemongo.md#protected-docreate)*
+*Inherited from [ModelRoute](modelroute.md).[doCreate](modelroute.md#docreate)*
 
-Defined in src/routes/ModelRoute.ts:199
+*Defined in src/routes/ModelRoute.ts:226*
 
 Attempts to store the object provided in `req.body` into the datastore. Upon success, sets the newly persisted
 object to the `result` property of the `res` argument, otherwise sends a `400 BAD REQUEST` response to the
 client.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -231,44 +248,44 @@ Name | Type |
 `user?` | any |
 `acl?` | [AccessControlList](../interfaces/accesscontrollist.md) |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
 ___
 
-### `Protected` doDelete
+### doDelete
 
-▸ **doDelete**(`id`: string, `user?`: any): *Promise‹void›*
+▸ `Protected`**doDelete**(`id`: string, `user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doDelete](aclroutemongo.md#protected-dodelete)*
+*Inherited from [ModelRoute](modelroute.md).[doDelete](modelroute.md#dodelete)*
 
-Defined in src/routes/ModelRoute.ts:260
+*Defined in src/routes/ModelRoute.ts:290*
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id`.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doDeleteVersion
+### doDeleteVersion
 
-▸ **doDeleteVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹void›*
+▸ `Protected`**doDeleteVersion**(`id`: string, `version`: number, `user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doDeleteVersion](aclroutemongo.md#protected-dodeleteversion)*
+*Inherited from [ModelRoute](modelroute.md).[doDeleteVersion](modelroute.md#dodeleteversion)*
 
-Defined in src/routes/ModelRoute.ts:304
+*Defined in src/routes/ModelRoute.ts:334*
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id` for a specified `version`.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -276,23 +293,23 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doFindAll
+### doFindAll
 
-▸ **doFindAll**(`params`: any, `query`: any, `user?`: any): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)[]›*
+▸ `Protected`**doFindAll**(`params`: any, `query`: any, `user?`: any): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)[]>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindAll](aclroutemongo.md#protected-dofindall)*
+*Inherited from [ModelRoute](modelroute.md).[doFindAll](modelroute.md#dofindall)*
 
-Defined in src/routes/ModelRoute.ts:349
+*Defined in src/routes/ModelRoute.ts:379*
 
 Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
 `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
 never null.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -300,42 +317,42 @@ Name | Type |
 `query` | any |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)[]›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)[]>
 
 ___
 
-### `Protected` doFindById
+### doFindById
 
-▸ **doFindById**(`id`: string, `user?`: any): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+▸ `Protected`**doFindById**(`id`: string, `user?`: any): Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindById](aclroutemongo.md#protected-dofindbyid)*
+*Inherited from [ModelRoute](modelroute.md).[doFindById](modelroute.md#dofindbyid)*
 
-Defined in src/routes/ModelRoute.ts:416
+*Defined in src/routes/ModelRoute.ts:448*
 
 Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
 ___
 
-### `Protected` doFindByIdAndVersion
+### doFindByIdAndVersion
 
-▸ **doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+▸ `Protected`**doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindByIdAndVersion](aclroutemongo.md#protected-dofindbyidandversion)*
+*Inherited from [ModelRoute](modelroute.md).[doFindByIdAndVersion](modelroute.md#dofindbyidandversion)*
 
-Defined in src/routes/ModelRoute.ts:452
+*Defined in src/routes/ModelRoute.ts:484*
 
 Attempts to retrieve a single data model object as identified by the `id` and `version` parameters in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -343,41 +360,41 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
 ___
 
-### `Protected` doTruncate
+### doTruncate
 
-▸ **doTruncate**(`user?`: any): *Promise‹void›*
+▸ `Protected`**doTruncate**(`user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doTruncate](aclroutemongo.md#protected-dotruncate)*
+*Inherited from [ModelRoute](modelroute.md).[doTruncate](modelroute.md#dotruncate)*
 
-Defined in src/routes/ModelRoute.ts:490
+*Defined in src/routes/ModelRoute.ts:522*
 
 Attempts to remove all entries of the data model type from the datastore.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `user?` | any | The authenticated user performing the action, otherwise undefined.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doUpdate
+### doUpdate
 
-▸ **doUpdate**(`id`: string, `obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: any): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+▸ `Protected`**doUpdate**(`id`: string, `obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: any): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doUpdate](aclroutemongo.md#protected-doupdate)*
+*Inherited from [ModelRoute](modelroute.md).[doUpdate](modelroute.md#doupdate)*
 
-Defined in src/routes/ModelRoute.ts:518
+*Defined in src/routes/ModelRoute.ts:550*
 
 Attempts to modify an existing data model object as identified by the `id` parameter in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -385,17 +402,17 @@ Name | Type |
 `obj` | [AccessControlListMongo](accesscontrollistmongo.md) |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
 ___
 
-### `Private` findAll
+### findAll
 
-▸ **findAll**(`params`: any, `query`: any, `user?`: JWTUser): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)[]›*
+▸ `Private`**findAll**(`params`: any, `query`: any, `user?`: JWTUser): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)[]>
 
-Defined in src/security/ACLRouteMongo.ts:73
+*Defined in src/security/ACLRouteMongo.ts:72*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -403,88 +420,88 @@ Name | Type |
 `query` | any |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)[]›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)[]>
 
 ___
 
-### `Private` findById
+### findById
 
-▸ **findById**(`id`: string, `user?`: any): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+▸ `Private`**findById**(`id`: string, `user?`: any): Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
-Defined in src/security/ACLRouteMongo.ts:88
+*Defined in src/security/ACLRouteMongo.ts:87*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
 ___
 
-### `Protected` getDefaultACL
+### getDefaultACL
 
-▸ **getDefaultACL**(): *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
+▸ `Protected`**getDefaultACL**(): [AccessControlList](../interfaces/accesscontrollist.md) \| undefined
 
-*Overrides [ModelRoute](modelroute.md).[getDefaultACL](modelroute.md#protected-abstract-getdefaultacl)*
+*Overrides [ModelRoute](modelroute.md).[getDefaultACL](modelroute.md#getdefaultacl)*
 
-Defined in src/security/ACLRouteMongo.ts:34
+*Defined in src/security/ACLRouteMongo.ts:33*
 
-**Returns:** *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
+**Returns:** [AccessControlList](../interfaces/accesscontrollist.md) \| undefined
 
 ___
 
-### `Protected` getObj
+### getObj
 
-▸ **getObj**(`id`: string, `version?`: undefined | number): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+▸ `Protected`**getObj**(`id`: string, `version?`: undefined \| number): Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[getObj](aclroutemongo.md#protected-getobj)*
+*Inherited from [ModelRoute](modelroute.md).[getObj](modelroute.md#getobj)*
 
-Defined in src/routes/ModelRoute.ts:129
+*Defined in src/routes/ModelRoute.ts:137*
 
 Retrieves the object with the given id from either the cache or the database. If retrieving from the database
 the cache is populated to speed up subsequent requests.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `id` | string | The unique identifier of the object to retrieve. |
-`version?` | undefined &#124; number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
+`version?` | undefined \| number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md) | undefined›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md) \| undefined>
 
 ___
 
-### `Protected` hashQuery
+### hashQuery
 
-▸ **hashQuery**(`query`: any): *string*
+▸ `Protected`**hashQuery**(`query`: any): string
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[hashQuery](aclroutemongo.md#protected-hashquery)*
+*Inherited from [ModelRoute](modelroute.md).[hashQuery](modelroute.md#hashquery)*
 
-Defined in src/routes/ModelRoute.ts:76
+*Defined in src/routes/ModelRoute.ts:84*
 
 Hashes the given query object to a unique string.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `query` | any | The query object to hash.  |
 
-**Returns:** *string*
+**Returns:** string
 
 ___
 
-### `Private` update
+### update
 
-▸ **update**(`id`: string, `obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: JWTUser): *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+▸ `Private`**update**(`id`: string, `obj`: [AccessControlListMongo](accesscontrollistmongo.md), `user?`: JWTUser): Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-Defined in src/security/ACLRouteMongo.ts:103
+*Defined in src/security/ACLRouteMongo.ts:102*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -492,4 +509,4 @@ Name | Type |
 `obj` | [AccessControlListMongo](accesscontrollistmongo.md) |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+**Returns:** Promise\<[AccessControlListMongo](accesscontrollistmongo.md)>

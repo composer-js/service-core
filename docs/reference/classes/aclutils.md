@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLUtils](aclutils.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLUtils
 
 # Class: ACLUtils
 
@@ -12,10 +14,10 @@ Common utility functions for working with `AccessControlList` objects and valida
 
 ### Properties
 
-* [cacheClient](aclutils.md#private-optional-cacheclient)
-* [cacheTTL](aclutils.md#private-cachettl)
-* [config](aclutils.md#private-config)
-* [repo](aclutils.md#private-optional-repo)
+* [cacheClient](aclutils.md#cacheclient)
+* [cacheTTL](aclutils.md#cachettl)
+* [config](aclutils.md#config)
+* [repo](aclutils.md#repo)
 
 ### Methods
 
@@ -27,213 +29,213 @@ Common utility functions for working with `AccessControlList` objects and valida
 * [populateParent](aclutils.md#populateparent)
 * [removeACL](aclutils.md#removeacl)
 * [saveACL](aclutils.md#saveacl)
-* [userMatchesId](aclutils.md#private-usermatchesid)
+* [userMatchesId](aclutils.md#usermatchesid)
 
 ## Properties
 
-### `Private` `Optional` cacheClient
+### cacheClient
 
-• **cacheClient**? : *Redis*
+• `Private` `Optional` **cacheClient**: Redis
 
-Defined in src/security/ACLUtils.ts:20
-
-___
-
-### `Private` cacheTTL
-
-• **cacheTTL**: *number* = 30
-
-Defined in src/security/ACLUtils.ts:21
+*Defined in src/security/ACLUtils.ts:20*
 
 ___
 
-### `Private` config
+### cacheTTL
 
-• **config**: *any*
+• `Private` **cacheTTL**: number = 30
 
-Defined in src/security/ACLUtils.ts:22
+*Defined in src/security/ACLUtils.ts:21*
 
 ___
 
-### `Private` `Optional` repo
+### config
 
-• **repo**? : *Repository‹[AccessControlListSQL](accesscontrollistsql.md)› | MongoRepository‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+• `Private` **config**: any
 
-Defined in src/security/ACLUtils.ts:23
+*Defined in src/security/ACLUtils.ts:22*
+
+___
+
+### repo
+
+• `Private` `Optional` **repo**: Repository\<[AccessControlListSQL](accesscontrollistsql.md)> \| MongoRepository\<[AccessControlListMongo](accesscontrollistmongo.md)>
+
+*Defined in src/security/ACLUtils.ts:23*
 
 ## Methods
 
-###  checkRequestPerms
+### checkRequestPerms
 
-▸ **checkRequestPerms**(`user`: JWTUser | undefined, `req`: Request): *Promise‹boolean›*
+▸ **checkRequestPerms**(`user`: JWTUser \| undefined, `req`: Request): Promise\<boolean>
 
-Defined in src/security/ACLUtils.ts:82
+*Defined in src/security/ACLUtils.ts:82*
 
 Validates that the user has permission to perform the request operation against the URL path for the
 provided request. If ACLUtils has not been initialized or the `acl` datastore has not been configured
 then always returns `true`.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`user` | JWTUser &#124; undefined | The user to validate. |
+`user` | JWTUser \| undefined | The user to validate. |
 `req` | Request | The request whose URL path and method will be verified.  |
 
-**Returns:** *Promise‹boolean›*
+**Returns:** Promise\<boolean>
 
 ___
 
-###  findACL
+### findACL
 
-▸ **findACL**(`entityId`: string): *Promise‹[AccessControlList](../interfaces/accesscontrollist.md) | undefined›*
+▸ **findACL**(`entityId`: string): Promise\<[AccessControlList](../interfaces/accesscontrollist.md) \| undefined>
 
-Defined in src/security/ACLUtils.ts:251
+*Defined in src/security/ACLUtils.ts:251*
 
 Retrieves the access control list with the associated identifier and populates the parent(s).
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `entityId` | string | The unique identifier of the ACL to retrieve.  |
 
-**Returns:** *Promise‹[AccessControlList](../interfaces/accesscontrollist.md) | undefined›*
+**Returns:** Promise\<[AccessControlList](../interfaces/accesscontrollist.md) \| undefined>
 
 ___
 
-###  getRecord
+### getRecord
 
-▸ **getRecord**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md), `user`: JWTUser | undefined): *[ACLRecord](../interfaces/aclrecord.md) | undefined*
+▸ **getRecord**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md), `user`: JWTUser \| undefined): [ACLRecord](../interfaces/aclrecord.md) \| undefined
 
-Defined in src/security/ACLUtils.ts:350
+*Defined in src/security/ACLUtils.ts:349*
 
 Retrieves the first available record in the provided ACL associated with the provided user.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `acl` | [AccessControlList](../interfaces/accesscontrollist.md) | The access control list that will be searched. |
-`user` | JWTUser &#124; undefined | The user to find a record for. |
+`user` | JWTUser \| undefined | The user to find a record for. |
 
-**Returns:** *[ACLRecord](../interfaces/aclrecord.md) | undefined*
+**Returns:** [ACLRecord](../interfaces/aclrecord.md) \| undefined
 
 The ACL record associated with the given user if found, otherwise `undefined`.
 
 ___
 
-###  hasPermission
+### hasPermission
 
-▸ **hasPermission**(`user`: JWTUser | undefined, `acl`: [AccessControlList](../interfaces/accesscontrollist.md) | string, `action`: [ACLAction](../enums/aclaction.md)): *Promise‹boolean›*
+▸ **hasPermission**(`user`: JWTUser \| undefined, `acl`: [AccessControlList](../interfaces/accesscontrollist.md) \| string, `action`: [ACLAction](../enums/aclaction.md)): Promise\<boolean>
 
-Defined in src/security/ACLUtils.ts:178
+*Defined in src/security/ACLUtils.ts:178*
 
 Validates that the user has permission to perform the provided action using the given access control list.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`user` | JWTUser &#124; undefined | The user to validate permissions of. |
-`acl` | [AccessControlList](../interfaces/accesscontrollist.md) &#124; string | The ACL or uid of an ACL to validate permissions against. |
+`user` | JWTUser \| undefined | The user to validate permissions of. |
+`acl` | [AccessControlList](../interfaces/accesscontrollist.md) \| string | The ACL or uid of an ACL to validate permissions against. |
 `action` | [ACLAction](../enums/aclaction.md) | The action that the user desires permission for. |
 
-**Returns:** *Promise‹boolean›*
+**Returns:** Promise\<boolean>
 
 `true` if the user has at least one of the permissions granted for the given entity, otherwise `false`.
 
 ___
 
-###  init
+### init
 
-▸ **init**(`config`: any): *void*
+▸ **init**(`config`: any): void
 
-Defined in src/security/ACLUtils.ts:28
+*Defined in src/security/ACLUtils.ts:28*
 
 Initializes the utility with the provided defaults.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `config` | any |
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  populateParent
+### populateParent
 
-▸ **populateParent**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md)): *Promise‹void›*
+▸ **populateParent**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md)): Promise\<void>
 
-Defined in src/security/ACLUtils.ts:365
+*Defined in src/security/ACLUtils.ts:364*
 
 Attempts to retrieve the parent access control list for the given ACL object.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `acl` | [AccessControlList](../interfaces/accesscontrollist.md) | The access control list whose parents will be populated.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-###  removeACL
+### removeACL
 
-▸ **removeACL**(`uid`: string): *Promise‹void›*
+▸ **removeACL**(`uid`: string): Promise\<void>
 
-Defined in src/security/ACLUtils.ts:297
+*Defined in src/security/ACLUtils.ts:296*
 
 Deletes the ACL with the given identifier from the database.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `uid` | string | The unique identifier of the ACL to remove.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-###  saveACL
+### saveACL
 
-▸ **saveACL**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md)): *Promise‹[AccessControlList](../interfaces/accesscontrollist.md) | undefined›*
+▸ **saveACL**(`acl`: [AccessControlList](../interfaces/accesscontrollist.md)): Promise\<[AccessControlList](../interfaces/accesscontrollist.md) \| undefined>
 
-Defined in src/security/ACLUtils.ts:315
+*Defined in src/security/ACLUtils.ts:314*
 
 Stores the given access control list into the ACL database.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `acl` | [AccessControlList](../interfaces/accesscontrollist.md) | The ACL to store. |
 
-**Returns:** *Promise‹[AccessControlList](../interfaces/accesscontrollist.md) | undefined›*
+**Returns:** Promise\<[AccessControlList](../interfaces/accesscontrollist.md) \| undefined>
 
 Returns the ACL that was stored in the database.
 
 ___
 
-### `Private` userMatchesId
+### userMatchesId
 
-▸ **userMatchesId**(`user`: JWTUser | undefined, `userOrRoleId`: string): *boolean*
+▸ `Private`**userMatchesId**(`user`: JWTUser \| undefined, `userOrRoleId`: string): boolean
 
-Defined in src/security/ACLUtils.ts:53
+*Defined in src/security/ACLUtils.ts:53*
 
 Checks to see if the provided user matches the providedUserOrRoleId.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`user` | JWTUser &#124; undefined | The user to check. |
+`user` | JWTUser \| undefined | The user to check. |
 `userOrRoleId` | string | The ACL record id to check against. |
 
-**Returns:** *boolean*
+**Returns:** boolean
 
 `true` if the user contains a `uid` or `role` that matches the `userOrRoleId`, otherwise `false`.

@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [RoutesScanner](routesscanner.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / RoutesScanner
 
 # Class: RoutesScanner
 
@@ -20,81 +22,81 @@ registered to an Express application.
 
 ### Properties
 
-* [apiSpec](routesscanner.md#protected-apispec)
-* [classLoader](routesscanner.md#protected-classloader)
+* [apiSpec](routesscanner.md#apispec)
+* [classLoader](routesscanner.md#classloader)
 
 ### Methods
 
-* [implementsRoute](routesscanner.md#private-implementsroute)
+* [implementsRoute](routesscanner.md#implementsroute)
 * [scan](routesscanner.md#scan)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new RoutesScanner**(`path`: string): *[RoutesScanner](routesscanner.md)*
+\+ **new RoutesScanner**(`path`: string): [RoutesScanner](routesscanner.md)
 
-Defined in src/RoutesScanner.ts:18
+*Defined in src/RoutesScanner.ts:18*
 
 Instantiates a new RoutesScanner with the given defaults.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `path` | string | The file path to use when searching for route classes.  |
 
-**Returns:** *[RoutesScanner](routesscanner.md)*
+**Returns:** [RoutesScanner](routesscanner.md)
 
 ## Properties
 
-### `Protected` apiSpec
+### apiSpec
 
-• **apiSpec**: *any* = null
+• `Protected` **apiSpec**: any = null
 
-Defined in src/RoutesScanner.ts:18
+*Defined in src/RoutesScanner.ts:18*
 
 The OpenAPI specification to reference.
 
 ___
 
-### `Protected` classLoader
+### classLoader
 
-• **classLoader**: *ClassLoader*
+• `Protected` **classLoader**: ClassLoader
 
-Defined in src/RoutesScanner.ts:16
+*Defined in src/RoutesScanner.ts:16*
 
 The class loader used to search and load route classes.
 
 ## Methods
 
-### `Private` implementsRoute
+### implementsRoute
 
-▸ **implementsRoute**(`clazz`: any): *boolean*
+▸ `Private`**implementsRoute**(`clazz`: any): boolean
 
-Defined in src/RoutesScanner.ts:34
+*Defined in src/RoutesScanner.ts:34*
 
 Determines if the provided class implements the `@Route` decorator.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `clazz` | any | The class to check. |
 
-**Returns:** *boolean*
+**Returns:** boolean
 
 `true` if the class implements the `@Route` decorator, otherwise `false`.
 
 ___
 
-###  scan
+### scan
 
-▸ **scan**(): *Promise‹Array‹any››*
+▸ **scan**(): Promise\<Array\<any>>
 
-Defined in src/RoutesScanner.ts:43
+*Defined in src/RoutesScanner.ts:43*
 
 Scans the file system for all classes that implement the `@Route` decorator and returns the list of all found
 route class definitions.
 
-**Returns:** *Promise‹Array‹any››*
+**Returns:** Promise\<Array\<any>>

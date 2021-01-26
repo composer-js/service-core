@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [IndexRoute](indexroute.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / IndexRoute
 
 # Class: IndexRoute
 
@@ -19,42 +21,42 @@ name, version.
 
 ### Properties
 
-* [config](indexroute.md#private-config)
+* [config](indexroute.md#config)
 
 ### Methods
 
-* [get](indexroute.md#private-get)
+* [get](indexroute.md#get)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new IndexRoute**(`config`: any): *[IndexRoute](indexroute.md)*
+\+ **new IndexRoute**(`config`: any): [IndexRoute](indexroute.md)
 
-Defined in src/routes/IndexRoute.ts:15
+*Defined in src/routes/IndexRoute.ts:15*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `config` | any |
 
-**Returns:** *[IndexRoute](indexroute.md)*
+**Returns:** [IndexRoute](indexroute.md)
 
 ## Properties
 
-### `Private` config
+### config
 
-• **config**: *any*
+• `Private` **config**: any
 
-Defined in src/routes/IndexRoute.ts:15
+*Defined in src/routes/IndexRoute.ts:15*
 
 ## Methods
 
-### `Private` get
+### get
 
-▸ **get**(): *any*
+▸ `Private`**get**(): any
 
-Defined in src/routes/IndexRoute.ts:22
+*Defined in src/routes/IndexRoute.ts:22*
 
-**Returns:** *any*
+**Returns:** any

@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [SimpleMongoEntity](simplemongoentity.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / SimpleMongoEntity
 
 # Class: SimpleMongoEntity
 
@@ -21,45 +23,45 @@ Provides a simple base class for all entity's that will be persisted with TypeOR
 
 ### Properties
 
-* [_id](simplemongoentity.md#optional-_id)
+* [\_id](simplemongoentity.md#_id)
 * [uid](simplemongoentity.md#uid)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new SimpleMongoEntity**(`other?`: any): *[SimpleMongoEntity](simplemongoentity.md)*
+\+ **new SimpleMongoEntity**(`other?`: any): [SimpleMongoEntity](simplemongoentity.md)
 
 *Overrides void*
 
-Defined in src/models/SimpleMongoEntity.ts:18
+*Defined in src/models/SimpleMongoEntity.ts:18*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `other?` | any |
 
-**Returns:** *[SimpleMongoEntity](simplemongoentity.md)*
+**Returns:** [SimpleMongoEntity](simplemongoentity.md)
 
 ## Properties
 
-### `Optional` _id
+### \_id
 
-• **_id**? : *ObjectID*
+• `Optional` **\_id**: ObjectID
 
-Defined in src/models/SimpleMongoEntity.ts:18
+*Defined in src/models/SimpleMongoEntity.ts:18*
 
 The internal unique identifier used by MongoDB.
 
 ___
 
-###  uid
+### uid
 
-• **uid**: *string* = uuid.v4()
+•  **uid**: string = uuid.v4()
 
 *Inherited from [SimpleMongoEntity](simplemongoentity.md).[uid](simplemongoentity.md#uid)*
 
-Defined in src/models/SimpleEntity.ts:21
+*Defined in src/models/SimpleEntity.ts:21*
 
 The universally unique identifier of the entity.

@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [JWTStrategy](jwtstrategy.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / JWTStrategy
 
 # Class: JWTStrategy
 
@@ -28,7 +30,7 @@ search for a token by one of the following methods (in order of precedence).
 
 ### Properties
 
-* [options](jwtstrategy.md#private-options)
+* [options](jwtstrategy.md#options)
 
 ### Methods
 
@@ -41,56 +43,56 @@ search for a token by one of the following methods (in order of precedence).
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new JWTStrategy**(`options`: Options): *[JWTStrategy](jwtstrategy.md)*
+\+ **new JWTStrategy**(`options`: Options): [JWTStrategy](jwtstrategy.md)
 
-Defined in src/passportjs/JWTStrategy.ts:40
+*Defined in src/passportjs/JWTStrategy.ts:40*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `options` | Options |
 
-**Returns:** *[JWTStrategy](jwtstrategy.md)*
+**Returns:** [JWTStrategy](jwtstrategy.md)
 
 ## Properties
 
-### `Private` options
+### options
 
-• **options**: *Options*
+• `Private` **options**: Options
 
-Defined in src/passportjs/JWTStrategy.ts:40
+*Defined in src/passportjs/JWTStrategy.ts:40*
 
 ## Methods
 
-###  authenticate
+### authenticate
 
-▸ **authenticate**(`req`: Request, `options?`: any): *void*
+▸ **authenticate**(`req`: Request, `options?`: any): void
 
 *Overrides void*
 
-Defined in src/passportjs/JWTStrategy.ts:48
+*Defined in src/passportjs/JWTStrategy.ts:48*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `req` | Request |
 `options?` | any |
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  error
+### error
 
-▸ **error**(`err`: Error): *void*
+▸ **error**(`err`: Error): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[error](jwtstrategy.md#error)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:96
+*Defined in node_modules/@types/passport-strategy/index.d.ts:96*
 
 Internal error while performing authentication.
 
@@ -100,23 +102,23 @@ user directory is not available.
 
 **`api`** public
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `err` | Error |
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  fail
+### fail
 
-▸ **fail**(`challenge`: any, `status`: number): *void*
+▸ **fail**(`challenge`: any, `status`: number): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[fail](jwtstrategy.md#fail)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:60
+*Defined in node_modules/@types/passport-strategy/index.d.ts:60*
 
 Fail authentication, with optional `challenge` and `status`, defaulting
 to 401.
@@ -125,38 +127,38 @@ Strategies should call this function to fail an authentication attempt.
 
 **`api`** public
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `challenge` | any | (Can also be an object with 'message' and 'type' fields). |
-`status` | number | - |
+`status` | number |  |
 
-**Returns:** *void*
+**Returns:** void
 
-▸ **fail**(`status`: number): *void*
+▸ **fail**(`status`: number): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[fail](jwtstrategy.md#fail)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:61
+*Defined in node_modules/@types/passport-strategy/index.d.ts:61*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `status` | number |
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  pass
+### pass
 
-▸ **pass**(): *void*
+▸ **pass**(): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[pass](jwtstrategy.md#pass)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:84
+*Defined in node_modules/@types/passport-strategy/index.d.ts:84*
 
 Pass without making a success or fail decision.
 
@@ -166,17 +168,17 @@ to be restored, for example from an HTTP session.
 
 **`api`** public
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  redirect
+### redirect
 
-▸ **redirect**(`url`: string, `status?`: undefined | number): *void*
+▸ **redirect**(`url`: string, `status?`: undefined \| number): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[redirect](jwtstrategy.md#redirect)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:73
+*Defined in node_modules/@types/passport-strategy/index.d.ts:73*
 
 Redirect to `url` with optional `status`, defaulting to 302.
 
@@ -185,24 +187,24 @@ user agent) to a third-party website for authentication.
 
 **`api`** public
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `url` | string |
-`status?` | undefined &#124; number |
+`status?` | undefined \| number |
 
-**Returns:** *void*
+**Returns:** void
 
 ___
 
-###  success
+### success
 
-▸ **success**(`user`: any, `info?`: any): *void*
+▸ **success**(`user`: any, `info?`: any): void
 
 *Inherited from [JWTStrategy](jwtstrategy.md).[success](jwtstrategy.md#success)*
 
-Defined in node_modules/@types/passport-strategy/index.d.ts:48
+*Defined in node_modules/@types/passport-strategy/index.d.ts:48*
 
 Authenticate `user`, with optional `info`.
 
@@ -215,11 +217,11 @@ details.
 
 **`api`** public
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `user` | any |
 `info?` | any |
 
-**Returns:** *void*
+**Returns:** void

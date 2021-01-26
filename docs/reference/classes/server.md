@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [Server](server.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / Server
 
 # Class: Server
 
@@ -114,435 +116,311 @@ export default ItemRoute;
 
 ### Properties
 
-* [aclRepo](server.md#protected-optional-readonly-aclrepo)
-* [apiSpec](server.md#protected-optional-readonly-apispec)
-* [app](server.md#protected-app)
-* [basePath](server.md#protected-readonly-basepath)
-* [config](server.md#protected-optional-readonly-config)
-* [logger](server.md#protected-readonly-logger)
-* [port](server.md#readonly-port)
-* [server](server.md#protected-optional-server)
-* [metricCompletedRequests](server.md#static-protected-metriccompletedrequests)
-* [metricFailedRequests](server.md#static-protected-metricfailedrequests)
-* [metricRequestPath](server.md#static-protected-metricrequestpath)
-* [metricRequestStatus](server.md#static-protected-metricrequeststatus)
-* [metricRequestTime](server.md#static-protected-metricrequesttime)
-* [metricTotalRequests](server.md#static-protected-metrictotalrequests)
+* [aclRepo](server.md#aclrepo)
+* [apiSpec](server.md#apispec)
+* [app](server.md#app)
+* [basePath](server.md#basepath)
+* [config](server.md#config)
+* [logger](server.md#logger)
+* [objectFactory](server.md#objectfactory)
+* [port](server.md#port)
+* [server](server.md#server)
+* [wss](server.md#wss)
+* [metricCompletedRequests](server.md#metriccompletedrequests)
+* [metricFailedRequests](server.md#metricfailedrequests)
+* [metricRequestPath](server.md#metricrequestpath)
+* [metricRequestStatus](server.md#metricrequeststatus)
+* [metricRequestTime](server.md#metricrequesttime)
+* [metricTotalRequests](server.md#metrictotalrequests)
 
 ### Methods
 
-* [checkRequiredPerms](server.md#protected-checkrequiredperms)
-* [checkRequiredRoles](server.md#protected-checkrequiredroles)
 * [getApplication](server.md#getapplication)
-* [getFuncArray](server.md#protected-getfuncarray)
-* [getInitMethods](server.md#protected-getinitmethods)
-* [getRouteMethods](server.md#protected-getroutemethods)
-* [injectProperties](server.md#protected-injectproperties)
-* [instantiateRoute](server.md#protected-instantiateroute)
+* [getServer](server.md#getserver)
+* [injectProperties](server.md#injectproperties)
+* [instantiateRoute](server.md#instantiateroute)
 * [isRunning](server.md#isrunning)
-* [registerRoute](server.md#registerroute)
 * [restart](server.md#restart)
 * [start](server.md#start)
 * [stop](server.md#stop)
-* [wrapRequestHandler](server.md#protected-wraprequesthandler)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new Server**(`config`: any, `apiSpec?`: any, `basePath`: string, `logger`: any): *[Server](server.md)*
+\+ **new Server**(`config`: any, `apiSpec?`: any, `basePath?`: string, `logger?`: any, `objectFactory?`: [ObjectFactory](objectfactory.md)): [Server](server.md)
 
-Defined in src/Server.ts:187
+*Defined in src/Server.ts:187*
 
 Creates a new instance of Server with the specified defaults.
 
-**Parameters:**
+#### Parameters:
 
-Name | Type | Default | Description |
+Name | Type | Default value | Description |
 ------ | ------ | ------ | ------ |
 `config` | any | - | The nconf-compatible configuration object to initialize the server with. |
 `apiSpec?` | any | - | The optional OpenAPI specification object to initialize the server with. |
 `basePath` | string | "." | The base file system path that models and routes will be searched from. |
-`logger` | any | Logger() | The logging utility to use for outputing to console/file.  |
+`logger` | any | Logger() | The logging utility to use for outputing to console/file. |
+`objectFactory?` | [ObjectFactory](objectfactory.md) | - | The object factory to use for automatic dependency injection (IOC).  |
 
-**Returns:** *[Server](server.md)*
+**Returns:** [Server](server.md)
 
 ## Properties
 
-### `Protected` `Optional` `Readonly` aclRepo
+### aclRepo
 
-• **aclRepo**? : *Repository‹[AccessControlListSQL](accesscontrollistsql.md)› | MongoRepository‹[AccessControlListMongo](accesscontrollistmongo.md)›*
+• `Protected` `Optional` `Readonly` **aclRepo**: Repository\<[AccessControlListSQL](accesscontrollistsql.md)> \| MongoRepository\<[AccessControlListMongo](accesscontrollistmongo.md)>
 
-Defined in src/Server.ts:142
+*Defined in src/Server.ts:138*
 
 The repository to the access control lists.
 
 ___
 
-### `Protected` `Optional` `Readonly` apiSpec
+### apiSpec
 
-• **apiSpec**? : *any*
+• `Protected` `Optional` `Readonly` **apiSpec**: any
 
-Defined in src/Server.ts:144
+*Defined in src/Server.ts:140*
 
 The OpenAPI specification object to use to construct the server with.
 
 ___
 
-### `Protected` app
+### app
 
-• **app**: *Application*
+• `Protected` **app**: Application
 
-Defined in src/Server.ts:146
+*Defined in src/Server.ts:142*
 
 The underlying ExpressJS application that provides HTTP processing services.
 
 ___
 
-### `Protected` `Readonly` basePath
+### basePath
 
-• **basePath**: *string*
+• `Protected` `Readonly` **basePath**: string
 
-Defined in src/Server.ts:148
+*Defined in src/Server.ts:144*
 
 The base file system path that will be searched for models and routes.
 
 ___
 
-### `Protected` `Optional` `Readonly` config
+### config
 
-• **config**? : *any*
+• `Protected` `Optional` `Readonly` **config**: any
 
-Defined in src/Server.ts:150
+*Defined in src/Server.ts:146*
 
 The global object containing configuration information to use.
 
 ___
 
-### `Protected` `Readonly` logger
+### logger
 
-• **logger**: *any*
+• `Protected` `Readonly` **logger**: any
 
-Defined in src/Server.ts:152
+*Defined in src/Server.ts:148*
 
 The logging utility to use when outputing to console/file.
 
 ___
 
-### `Readonly` port
+### objectFactory
 
-• **port**: *number*
+• `Protected` `Readonly` **objectFactory**: [ObjectFactory](objectfactory.md)
 
-Defined in src/Server.ts:154
+*Defined in src/Server.ts:150*
+
+The object factory to use when injecting dependencies.
+
+___
+
+### port
+
+• `Readonly` **port**: number
+
+*Defined in src/Server.ts:152*
 
 The port that the server is listening on.
 
 ___
 
-### `Protected` `Optional` server
+### server
 
-• **server**? : *http.Server*
+• `Protected` `Optional` **server**: http.Server
 
-Defined in src/Server.ts:156
+*Defined in src/Server.ts:154*
 
 The underlying HTTP server instance.
 
 ___
 
-### `Static` `Protected` metricCompletedRequests
+### wss
 
-▪ **metricCompletedRequests**: *Counter* = new prom.Counter({
-        name: "num_completed_requests",
-        help: "The total number of successfully completed requests.",
-    })
+• `Protected` `Optional` **wss**: WebSocketServer
 
-Defined in src/Server.ts:176
+*Defined in src/Server.ts:156*
 
-___
-
-### `Static` `Protected` metricFailedRequests
-
-▪ **metricFailedRequests**: *Counter* = new prom.Counter({
-        name: "num_failed_requests",
-        help: "The total number of failed requests.",
-    })
-
-Defined in src/Server.ts:180
+The underlying WebSocket server instance.
 
 ___
 
-### `Static` `Protected` metricRequestPath
+### metricCompletedRequests
 
-▪ **metricRequestPath**: *Histogram* = new prom.Histogram({
-        name: "request_path",
-        help: "A histogram of the number of handled requests by the requested path.",
-        labelNames: ["path"],
-    })
+▪ `Static` `Protected` **metricCompletedRequests**: Counter\<string> = new prom.Counter({ name: "num\_completed\_requests", help: "The total number of successfully completed requests.", })
 
-Defined in src/Server.ts:161
+*Defined in src/Server.ts:176*
 
 ___
 
-### `Static` `Protected` metricRequestStatus
+### metricFailedRequests
 
-▪ **metricRequestStatus**: *Histogram* = new prom.Histogram({
-        name: "request_status",
-        help: "A histogram of the resulting status code of handled requests by the requested path.",
-        labelNames: ["path", "code"],
-    })
+▪ `Static` `Protected` **metricFailedRequests**: Counter\<string> = new prom.Counter({ name: "num\_failed\_requests", help: "The total number of failed requests.", })
 
-Defined in src/Server.ts:166
+*Defined in src/Server.ts:180*
 
 ___
 
-### `Static` `Protected` metricRequestTime
+### metricRequestPath
 
-▪ **metricRequestTime**: *Summary* = new prom.Summary({
-        name: "request_time",
-        help: "A histogram of the response time of handled requests by the requested path.",
-        labelNames: ["path"],
-    })
+▪ `Static` `Protected` **metricRequestPath**: Histogram\<string> = new prom.Histogram({ name: "request\_path", help: "A histogram of the number of handled requests by the requested path.", labelNames: ["path"], })
 
-Defined in src/Server.ts:171
+*Defined in src/Server.ts:161*
 
 ___
 
-### `Static` `Protected` metricTotalRequests
+### metricRequestStatus
 
-▪ **metricTotalRequests**: *Counter* = new prom.Counter({
-        name: "num_total_requests",
-        help: "The total number of requests processed.",
-    })
+▪ `Static` `Protected` **metricRequestStatus**: Histogram\<string> = new prom.Histogram({ name: "request\_status", help: "A histogram of the resulting status code of handled requests by the requested path.", labelNames: ["path", "code"], })
 
-Defined in src/Server.ts:184
+*Defined in src/Server.ts:166*
+
+___
+
+### metricRequestTime
+
+▪ `Static` `Protected` **metricRequestTime**: Summary\<string> = new prom.Summary({ name: "request\_time", help: "A histogram of the response time of handled requests by the requested path.", labelNames: ["path"], })
+
+*Defined in src/Server.ts:171*
+
+___
+
+### metricTotalRequests
+
+▪ `Static` `Protected` **metricTotalRequests**: Counter\<string> = new prom.Counter({ name: "num\_total\_requests", help: "The total number of requests processed.", })
+
+*Defined in src/Server.ts:184*
 
 ## Methods
 
-### `Protected` checkRequiredPerms
+### getApplication
 
-▸ **checkRequiredPerms**(): *RequestHandler*
+▸ **getApplication**(): Application
 
-Defined in src/Server.ts:281
+*Defined in src/Server.ts:217*
 
-Creates an Express middleware function that verifies the incoming request is from a valid user with at least
-one of the specified roles.
+Returns the express app.
 
-**Returns:** *RequestHandler*
-
-___
-
-### `Protected` checkRequiredRoles
-
-▸ **checkRequiredRoles**(`requiredRoles`: string[]): *RequestHandler*
-
-Defined in src/Server.ts:265
-
-Creates an Express middleware function that verifies the incoming request is from a valid user with at least
-one of the specified roles.
-
-**Parameters:**
-
-Name | Type | Description |
------- | ------ | ------ |
-`requiredRoles` | string[] | The list of roles that the authenticated user must have.  |
-
-**Returns:** *RequestHandler*
+**Returns:** Application
 
 ___
 
-###  getApplication
+### getServer
 
-▸ **getApplication**(): *Application*
+▸ **getServer**(): Server \| undefined
 
-Defined in src/Server.ts:248
+*Defined in src/Server.ts:224*
 
-Returns the express app
+Returns the http server.
 
-**Returns:** *Application*
-
-___
-
-### `Protected` getFuncArray
-
-▸ **getFuncArray**(`route`: any, `funcs`: string | Function[], `send`: boolean): *RequestHandler[]*
-
-Defined in src/Server.ts:407
-
-Converts the given array of string or Function objects to functions bound to the given route object.
-
-**Parameters:**
-
-Name | Type | Default | Description |
------- | ------ | ------ | ------ |
-`route` | any | - | The route object that the list of functions is bound to. |
-`funcs` | string &#124; Function[] | - | The array of functions (or function names) to return. |
-`send` | boolean | false | Set to true to have the last wrapped function send its payload to the client. |
-
-**Returns:** *RequestHandler[]*
-
-An array of Function objects mapping to the route object.
+**Returns:** Server \| undefined
 
 ___
 
-### `Protected` getInitMethods
+### injectProperties
 
-▸ **getInitMethods**(`route`: any): *Function[]*
+▸ `Protected`**injectProperties**(`clazz`: any, `obj`: any): Promise\<void>
 
-Defined in src/Server.ts:430
-
-Searches an route object for one or more functions that implement a `@Init` decorator.
-
-**Parameters:**
-
-Name | Type | Description |
------- | ------ | ------ |
-`route` | any | The route object to search. |
-
-**Returns:** *Function[]*
-
-The list of functions that implements the `@Init` decorator if found, otherwise undefined.
-
-___
-
-### `Protected` getRouteMethods
-
-▸ **getRouteMethods**(`route`: any): *Map‹string, any›*
-
-Defined in src/Server.ts:462
-
-Searches an route object for any functions that implement a `@Method` decorator.
-
-**Parameters:**
-
-Name | Type | Description |
------- | ------ | ------ |
-`route` | any | The route object to search. |
-
-**Returns:** *Map‹string, any›*
-
-The list of `@Method` decorated functions that were found.
-
-___
-
-### `Protected` injectProperties
-
-▸ **injectProperties**(`clazz`: any, `obj`: any): *void*
-
-Defined in src/Server.ts:299
+*Defined in src/Server.ts:241*
 
 Injects all known dependencies into the given object based on the property decorators.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `clazz` | any | The class type of the object to inject. |
 `obj` | any | The object whose dependencies will be injected.  |
 
-**Returns:** *void*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` instantiateRoute
+### instantiateRoute
 
-▸ **instantiateRoute**(`classDef`: any): *any*
+▸ `Protected`**instantiateRoute**(`classDef`: any): Promise\<any>
 
-Defined in src/Server.ts:388
+*Defined in src/Server.ts:262*
 
 Intantiates the given route class definition into an object that can be registered to Express.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `classDef` | any | The class definition of the route to instantiate. |
 
-**Returns:** *any*
+**Returns:** Promise\<any>
 
 A new instance of the provided class definition that implements the Route interface.
 
 ___
 
-###  isRunning
+### isRunning
 
-▸ **isRunning**(): *boolean*
+▸ **isRunning**(): boolean
 
-Defined in src/Server.ts:255
+*Defined in src/Server.ts:231*
 
 Returns `true` if the server is running, otherwise `false`.
 
-**Returns:** *boolean*
+**Returns:** boolean
 
 ___
 
-###  registerRoute
+### restart
 
-▸ **registerRoute**(`route`: any): *void*
+▸ **restart**(): Promise\<void>
 
-Defined in src/Server.ts:490
-
-Registers the provided route object containing a set of decorated endpoints to the server.
-
-**Parameters:**
-
-Name | Type | Description |
------- | ------ | ------ |
-`route` | any | The route object to register with Express.  |
-
-**Returns:** *void*
-
-___
-
-###  restart
-
-▸ **restart**(): *Promise‹unknown›*
-
-Defined in src/Server.ts:718
+*Defined in src/Server.ts:462*
 
 Restarts the HTTP listen server using the provided configuration and OpenAPI specification.
 
-**Returns:** *Promise‹unknown›*
+**Returns:** Promise\<void>
 
 ___
 
-###  start
+### start
 
-▸ **start**(): *Promise‹unknown›*
+▸ **start**(): Promise\<void>
 
-Defined in src/Server.ts:575
+*Defined in src/Server.ts:276*
 
 Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
 
-**Returns:** *Promise‹unknown›*
+**Returns:** Promise\<void>
 
 ___
 
-###  stop
+### stop
 
-▸ **stop**(): *Promise‹unknown›*
+▸ **stop**(): Promise\<void>
 
-Defined in src/Server.ts:693
+*Defined in src/Server.ts:429*
 
 Stops the HTTP listen server.
 
-**Returns:** *Promise‹unknown›*
-
-___
-
-### `Protected` wrapRequestHandler
-
-▸ **wrapRequestHandler**(`obj`: any, `func`: Function, `send`: boolean): *RequestHandler*
-
-Defined in src/Server.ts:730
-
-Wraps the provided function with Express handling based on the function's defined decorators.
-
-**Parameters:**
-
-Name | Type | Default | Description |
------- | ------ | ------ | ------ |
-`obj` | any | - | The object whose scope will be bound to when executing the function. |
-`func` | Function | - | - |
-`send` | boolean | false | Set to true to have `func`'s result sent to the client.  |
-
-**Returns:** *RequestHandler*
+**Returns:** Promise\<void>

@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [MetricsRoute](metricsroute.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / MetricsRoute
 
 # Class: MetricsRoute
 
@@ -20,77 +22,68 @@ from the provided `prom-client` dependency. See the `prom-client` documentation 
 
 ### Properties
 
-* [config](metricsroute.md#private-config)
-* [defaultIntervalId](metricsroute.md#private-defaultintervalid)
-* [registry](metricsroute.md#private-registry)
+* [config](metricsroute.md#config)
+* [registry](metricsroute.md#registry)
 
 ### Methods
 
-* [getMetrics](metricsroute.md#private-getmetrics)
-* [getSingleMetric](metricsroute.md#private-getsinglemetric)
+* [getMetrics](metricsroute.md#getmetrics)
+* [getSingleMetric](metricsroute.md#getsinglemetric)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new MetricsRoute**(`config`: any): *[MetricsRoute](metricsroute.md)*
+\+ **new MetricsRoute**(`config`: any): [MetricsRoute](metricsroute.md)
 
-Defined in src/routes/MetricsRoute.ts:18
+*Defined in src/routes/MetricsRoute.ts:17*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `config` | any |
 
-**Returns:** *[MetricsRoute](metricsroute.md)*
+**Returns:** [MetricsRoute](metricsroute.md)
 
 ## Properties
 
-### `Private` config
+### config
 
-• **config**: *any*
+• `Private` **config**: any
 
-Defined in src/routes/MetricsRoute.ts:16
-
-___
-
-### `Private` defaultIntervalId
-
-• **defaultIntervalId**: *Timeout*
-
-Defined in src/routes/MetricsRoute.ts:17
+*Defined in src/routes/MetricsRoute.ts:16*
 
 ___
 
-### `Private` registry
+### registry
 
-• **registry**: *Registry*
+• `Private` **registry**: Registry
 
-Defined in src/routes/MetricsRoute.ts:18
+*Defined in src/routes/MetricsRoute.ts:17*
 
 ## Methods
 
-### `Private` getMetrics
+### getMetrics
 
-▸ **getMetrics**(): *Promise‹string›*
+▸ `Private`**getMetrics**(): Promise\<string>
 
-Defined in src/routes/MetricsRoute.ts:29
+*Defined in src/routes/MetricsRoute.ts:26*
 
-**Returns:** *Promise‹string›*
+**Returns:** Promise\<string>
 
 ___
 
-### `Private` getSingleMetric
+### getSingleMetric
 
-▸ **getSingleMetric**(`metric`: any): *string*
+▸ `Private`**getSingleMetric**(`metric`: any): string
 
-Defined in src/routes/MetricsRoute.ts:35
+*Defined in src/routes/MetricsRoute.ts:32*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `metric` | any |
 
-**Returns:** *string*
+**Returns:** string

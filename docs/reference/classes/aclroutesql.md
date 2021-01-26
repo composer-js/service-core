@@ -1,10 +1,12 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ACLRouteSQL](aclroutesql.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ACLRouteSQL
 
 # Class: ACLRouteSQL
 
 ## Hierarchy
 
-* [ModelRoute](modelroute.md)‹[AccessControlListSQL](accesscontrollistsql.md)›
+* [ModelRoute](modelroute.md)\<[AccessControlListSQL](accesscontrollistsql.md)>
 
   ↳ **ACLRouteSQL**
 
@@ -16,190 +18,205 @@
 
 ### Properties
 
-* [cacheClient](aclroutesql.md#protected-optional-cacheclient)
-* [cacheTTL](aclroutesql.md#protected-optional-cachettl)
-* [config](aclroutesql.md#private-optional-config)
-* [defaultACLUid](aclroutesql.md#protected-defaultacluid)
-* [logger](aclroutesql.md#protected-logger)
-* [repo](aclroutesql.md#protected-optional-repo)
-* [trackChanges](aclroutesql.md#protected-trackchanges)
+* [cacheClient](aclroutesql.md#cacheclient)
+* [cacheTTL](aclroutesql.md#cachettl)
+* [config](aclroutesql.md#config)
+* [defaultACLUid](aclroutesql.md#defaultacluid)
+* [logger](aclroutesql.md#logger)
+* [repo](aclroutesql.md#repo)
+* [trackChanges](aclroutesql.md#trackchanges)
 
 ### Accessors
 
-* [baseCacheKey](aclroutesql.md#protected-basecachekey)
+* [baseCacheKey](aclroutesql.md#basecachekey)
+* [modelClass](aclroutesql.md#modelclass)
 
 ### Methods
 
-* [create](aclroutesql.md#private-create)
-* [delete](aclroutesql.md#private-delete)
-* [doCount](aclroutesql.md#protected-docount)
-* [doCreate](aclroutesql.md#protected-docreate)
-* [doDelete](aclroutesql.md#protected-dodelete)
-* [doDeleteVersion](aclroutesql.md#protected-dodeleteversion)
-* [doFindAll](aclroutesql.md#protected-dofindall)
-* [doFindById](aclroutesql.md#protected-dofindbyid)
-* [doFindByIdAndVersion](aclroutesql.md#protected-dofindbyidandversion)
-* [doTruncate](aclroutesql.md#protected-dotruncate)
-* [doUpdate](aclroutesql.md#protected-doupdate)
-* [findAll](aclroutesql.md#private-findall)
-* [findById](aclroutesql.md#private-findbyid)
-* [getDefaultACL](aclroutesql.md#protected-getdefaultacl)
-* [getObj](aclroutesql.md#protected-getobj)
-* [hashQuery](aclroutesql.md#protected-hashquery)
-* [update](aclroutesql.md#private-update)
+* [create](aclroutesql.md#create)
+* [delete](aclroutesql.md#delete)
+* [doCount](aclroutesql.md#docount)
+* [doCreate](aclroutesql.md#docreate)
+* [doDelete](aclroutesql.md#dodelete)
+* [doDeleteVersion](aclroutesql.md#dodeleteversion)
+* [doFindAll](aclroutesql.md#dofindall)
+* [doFindById](aclroutesql.md#dofindbyid)
+* [doFindByIdAndVersion](aclroutesql.md#dofindbyidandversion)
+* [doTruncate](aclroutesql.md#dotruncate)
+* [doUpdate](aclroutesql.md#doupdate)
+* [findAll](aclroutesql.md#findall)
+* [findById](aclroutesql.md#findbyid)
+* [getDefaultACL](aclroutesql.md#getdefaultacl)
+* [getObj](aclroutesql.md#getobj)
+* [hashQuery](aclroutesql.md#hashquery)
+* [update](aclroutesql.md#update)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new ACLRouteSQL**(): *[ACLRouteSQL](aclroutesql.md)*
+\+ **new ACLRouteSQL**(): [ACLRouteSQL](aclroutesql.md)
 
-*Overrides [ModelRoute](modelroute.md).[constructor](modelroute.md#protected-constructor)*
+*Overrides [ModelRoute](modelroute.md).[constructor](modelroute.md#constructor)*
 
-Defined in src/security/ACLRouteSQL.ts:20
+*Defined in src/security/ACLRouteSQL.ts:20*
 
-**Returns:** *[ACLRouteSQL](aclroutesql.md)*
+**Returns:** [ACLRouteSQL](aclroutesql.md)
 
 ## Properties
 
-### `Protected` `Optional` cacheClient
+### cacheClient
 
-• **cacheClient**? : *Redis*
+• `Protected` `Optional` **cacheClient**: Redis
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[cacheClient](aclroutemongo.md#protected-optional-cacheclient)*
+*Inherited from [ModelRoute](modelroute.md).[cacheClient](modelroute.md#cacheclient)*
 
-Defined in src/routes/ModelRoute.ts:33
+*Defined in src/routes/ModelRoute.ts:33*
 
 The redis client that will be used as a 2nd level cache for all cacheable models.
 
 ___
 
-### `Protected` `Optional` cacheTTL
+### cacheTTL
 
-• **cacheTTL**? : *undefined | number*
+• `Protected` `Optional` **cacheTTL**: undefined \| number
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[cacheTTL](aclroutemongo.md#protected-optional-cachettl)*
+*Inherited from [ModelRoute](modelroute.md).[cacheTTL](modelroute.md#cachettl)*
 
-Defined in src/routes/ModelRoute.ts:36
+*Defined in src/routes/ModelRoute.ts:36*
 
 The time, in milliseconds, that objects will be cached before being invalidated.
 
 ___
 
-### `Private` `Optional` config
+### config
 
-• **config**? : *any*
+• `Private` `Optional` **config**: any
 
-Defined in src/security/ACLRouteSQL.ts:17
+*Defined in src/security/ACLRouteSQL.ts:17*
 
 ___
 
-### `Protected` defaultACLUid
+### defaultACLUid
 
-• **defaultACLUid**: *string* = ""
+• `Protected` **defaultACLUid**: string = ""
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[defaultACLUid](aclroutemongo.md#protected-defaultacluid)*
+*Inherited from [ModelRoute](modelroute.md).[defaultACLUid](modelroute.md#defaultacluid)*
 
-Defined in src/routes/ModelRoute.ts:39
+*Defined in src/routes/ModelRoute.ts:39*
 
 The unique identifier of the default ACL for the model type.
 
 ___
 
-### `Protected` logger
+### logger
 
-• **logger**: *any*
+• `Protected` **logger**: any
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[logger](aclroutemongo.md#protected-logger)*
+*Inherited from [ModelRoute](modelroute.md).[logger](modelroute.md#logger)*
 
-Defined in src/routes/ModelRoute.ts:42
-
-___
-
-### `Protected` `Optional` repo
-
-• **repo**? : *Repo‹[AccessControlListSQL](accesscontrollistsql.md)›*
-
-*Overrides [ModelRoute](modelroute.md).[repo](modelroute.md#protected-optional-abstract-repo)*
-
-Defined in src/security/ACLRouteSQL.ts:20
+*Defined in src/routes/ModelRoute.ts:42*
 
 ___
 
-### `Protected` trackChanges
+### repo
 
-• **trackChanges**: *number* = 0
+• `Protected` `Optional` **repo**: Repo\<[AccessControlListSQL](accesscontrollistsql.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[trackChanges](aclroutemongo.md#protected-trackchanges)*
+*Overrides [ModelRoute](modelroute.md).[repo](modelroute.md#repo)*
 
-Defined in src/routes/ModelRoute.ts:51
+*Defined in src/security/ACLRouteSQL.ts:20*
+
+___
+
+### trackChanges
+
+• `Protected` **trackChanges**: number = 0
+
+*Inherited from [ModelRoute](modelroute.md).[trackChanges](modelroute.md#trackchanges)*
+
+*Defined in src/routes/ModelRoute.ts:51*
 
 The number of previous document versions to store in the database. A negative value indicates storing all
 versions, a value of `0` stores no versions.
 
 ## Accessors
 
-### `Protected` baseCacheKey
+### baseCacheKey
 
-• **get baseCacheKey**(): *string*
+• `Protected`get **baseCacheKey**(): string
 
-*Overrides [ModelRoute](modelroute.md).[baseCacheKey](modelroute.md#protected-basecachekey)*
+*Overrides [ModelRoute](modelroute.md).[baseCacheKey](modelroute.md#basecachekey)*
 
-Defined in src/security/ACLRouteSQL.ts:29
+*Defined in src/security/ACLRouteSQL.ts:29*
 
 The base key used to get or set data in the cache.
 
-**Returns:** *string*
+**Returns:** string
+
+___
+
+### modelClass
+
+• `Protected`get **modelClass**(): any
+
+*Inherited from [ModelRoute](modelroute.md).[modelClass](modelroute.md#modelclass)*
+
+*Defined in src/routes/ModelRoute.ts:69*
+
+The class type of the model this route is associated with.
+
+**Returns:** any
 
 ## Methods
 
-### `Private` create
+### create
 
-▸ **create**(`obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: JWTUser): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+▸ `Private`**create**(`obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: JWTUser): Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
-Defined in src/security/ACLRouteSQL.ts:39
+*Defined in src/security/ACLRouteSQL.ts:39*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `obj` | [AccessControlListSQL](accesscontrollistsql.md) |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
 ___
 
-### `Private` delete
+### delete
 
-▸ **delete**(`id`: string, `user?`: JWTUser): *Promise‹void›*
+▸ `Private`**delete**(`id`: string, `user?`: JWTUser): Promise\<void>
 
-Defined in src/security/ACLRouteSQL.ts:51
+*Defined in src/security/ACLRouteSQL.ts:51*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doCount
+### doCount
 
-▸ **doCount**(`params`: any, `query`: any, `user?`: any): *Promise‹any›*
+▸ `Protected`**doCount**(`params`: any, `query`: any, `user?`: any): Promise\<any>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doCount](aclroutemongo.md#protected-docount)*
+*Inherited from [ModelRoute](modelroute.md).[doCount](modelroute.md#docount)*
 
-Defined in src/routes/ModelRoute.ts:177
+*Defined in src/routes/ModelRoute.ts:199*
 
 Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
 request `query`. Any results that have been found are set to the `result` property of the `res` argument.
 `result` is never null.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -207,23 +224,23 @@ Name | Type |
 `query` | any |
 `user?` | any |
 
-**Returns:** *Promise‹any›*
+**Returns:** Promise\<any>
 
 ___
 
-### `Protected` doCreate
+### doCreate
 
-▸ **doCreate**(`obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: any, `acl?`: [AccessControlList](../interfaces/accesscontrollist.md)): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+▸ `Protected`**doCreate**(`obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: any, `acl?`: [AccessControlList](../interfaces/accesscontrollist.md)): Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doCreate](aclroutemongo.md#protected-docreate)*
+*Inherited from [ModelRoute](modelroute.md).[doCreate](modelroute.md#docreate)*
 
-Defined in src/routes/ModelRoute.ts:199
+*Defined in src/routes/ModelRoute.ts:226*
 
 Attempts to store the object provided in `req.body` into the datastore. Upon success, sets the newly persisted
 object to the `result` property of the `res` argument, otherwise sends a `400 BAD REQUEST` response to the
 client.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -231,44 +248,44 @@ Name | Type |
 `user?` | any |
 `acl?` | [AccessControlList](../interfaces/accesscontrollist.md) |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
 ___
 
-### `Protected` doDelete
+### doDelete
 
-▸ **doDelete**(`id`: string, `user?`: any): *Promise‹void›*
+▸ `Protected`**doDelete**(`id`: string, `user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doDelete](aclroutemongo.md#protected-dodelete)*
+*Inherited from [ModelRoute](modelroute.md).[doDelete](modelroute.md#dodelete)*
 
-Defined in src/routes/ModelRoute.ts:260
+*Defined in src/routes/ModelRoute.ts:290*
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id`.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doDeleteVersion
+### doDeleteVersion
 
-▸ **doDeleteVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹void›*
+▸ `Protected`**doDeleteVersion**(`id`: string, `version`: number, `user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doDeleteVersion](aclroutemongo.md#protected-dodeleteversion)*
+*Inherited from [ModelRoute](modelroute.md).[doDeleteVersion](modelroute.md#dodeleteversion)*
 
-Defined in src/routes/ModelRoute.ts:304
+*Defined in src/routes/ModelRoute.ts:334*
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id` for a specified `version`.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -276,23 +293,23 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doFindAll
+### doFindAll
 
-▸ **doFindAll**(`params`: any, `query`: any, `user?`: any): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)[]›*
+▸ `Protected`**doFindAll**(`params`: any, `query`: any, `user?`: any): Promise\<[AccessControlListSQL](accesscontrollistsql.md)[]>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindAll](aclroutemongo.md#protected-dofindall)*
+*Inherited from [ModelRoute](modelroute.md).[doFindAll](modelroute.md#dofindall)*
 
-Defined in src/routes/ModelRoute.ts:349
+*Defined in src/routes/ModelRoute.ts:379*
 
 Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
 `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
 never null.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -300,42 +317,42 @@ Name | Type |
 `query` | any |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)[]›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)[]>
 
 ___
 
-### `Protected` doFindById
+### doFindById
 
-▸ **doFindById**(`id`: string, `user?`: any): *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+▸ `Protected`**doFindById**(`id`: string, `user?`: any): Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindById](aclroutemongo.md#protected-dofindbyid)*
+*Inherited from [ModelRoute](modelroute.md).[doFindById](modelroute.md#dofindbyid)*
 
-Defined in src/routes/ModelRoute.ts:416
+*Defined in src/routes/ModelRoute.ts:448*
 
 Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
 ___
 
-### `Protected` doFindByIdAndVersion
+### doFindByIdAndVersion
 
-▸ **doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+▸ `Protected`**doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doFindByIdAndVersion](aclroutemongo.md#protected-dofindbyidandversion)*
+*Inherited from [ModelRoute](modelroute.md).[doFindByIdAndVersion](modelroute.md#dofindbyidandversion)*
 
-Defined in src/routes/ModelRoute.ts:452
+*Defined in src/routes/ModelRoute.ts:484*
 
 Attempts to retrieve a single data model object as identified by the `id` and `version` parameters in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -343,41 +360,41 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
 ___
 
-### `Protected` doTruncate
+### doTruncate
 
-▸ **doTruncate**(`user?`: any): *Promise‹void›*
+▸ `Protected`**doTruncate**(`user?`: any): Promise\<void>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doTruncate](aclroutemongo.md#protected-dotruncate)*
+*Inherited from [ModelRoute](modelroute.md).[doTruncate](modelroute.md#dotruncate)*
 
-Defined in src/routes/ModelRoute.ts:490
+*Defined in src/routes/ModelRoute.ts:522*
 
 Attempts to remove all entries of the data model type from the datastore.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `user?` | any | The authenticated user performing the action, otherwise undefined.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Protected` doUpdate
+### doUpdate
 
-▸ **doUpdate**(`id`: string, `obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: any): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+▸ `Protected`**doUpdate**(`id`: string, `obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: any): Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[doUpdate](aclroutemongo.md#protected-doupdate)*
+*Inherited from [ModelRoute](modelroute.md).[doUpdate](modelroute.md#doupdate)*
 
-Defined in src/routes/ModelRoute.ts:518
+*Defined in src/routes/ModelRoute.ts:550*
 
 Attempts to modify an existing data model object as identified by the `id` parameter in the URI.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -385,17 +402,17 @@ Name | Type |
 `obj` | [AccessControlListSQL](accesscontrollistsql.md) |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
 ___
 
-### `Private` findAll
+### findAll
 
-▸ **findAll**(`params`: any, `query`: any, `user?`: JWTUser): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)[]›*
+▸ `Private`**findAll**(`params`: any, `query`: any, `user?`: JWTUser): Promise\<[AccessControlListSQL](accesscontrollistsql.md)[]>
 
-Defined in src/security/ACLRouteSQL.ts:72
+*Defined in src/security/ACLRouteSQL.ts:72*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -403,88 +420,88 @@ Name | Type |
 `query` | any |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)[]›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)[]>
 
 ___
 
-### `Private` findById
+### findById
 
-▸ **findById**(`id`: string, `user?`: any): *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+▸ `Private`**findById**(`id`: string, `user?`: any): Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
-Defined in src/security/ACLRouteSQL.ts:83
+*Defined in src/security/ACLRouteSQL.ts:83*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
 ___
 
-### `Protected` getDefaultACL
+### getDefaultACL
 
-▸ **getDefaultACL**(): *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
+▸ `Protected`**getDefaultACL**(): [AccessControlList](../interfaces/accesscontrollist.md) \| undefined
 
-*Overrides [ModelRoute](modelroute.md).[getDefaultACL](modelroute.md#protected-abstract-getdefaultacl)*
+*Overrides [ModelRoute](modelroute.md).[getDefaultACL](modelroute.md#getdefaultacl)*
 
-Defined in src/security/ACLRouteSQL.ts:33
+*Defined in src/security/ACLRouteSQL.ts:33*
 
-**Returns:** *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
+**Returns:** [AccessControlList](../interfaces/accesscontrollist.md) \| undefined
 
 ___
 
-### `Protected` getObj
+### getObj
 
-▸ **getObj**(`id`: string, `version?`: undefined | number): *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+▸ `Protected`**getObj**(`id`: string, `version?`: undefined \| number): Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[getObj](aclroutemongo.md#protected-getobj)*
+*Inherited from [ModelRoute](modelroute.md).[getObj](modelroute.md#getobj)*
 
-Defined in src/routes/ModelRoute.ts:129
+*Defined in src/routes/ModelRoute.ts:137*
 
 Retrieves the object with the given id from either the cache or the database. If retrieving from the database
 the cache is populated to speed up subsequent requests.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `id` | string | The unique identifier of the object to retrieve. |
-`version?` | undefined &#124; number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
+`version?` | undefined \| number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md) | undefined›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md) \| undefined>
 
 ___
 
-### `Protected` hashQuery
+### hashQuery
 
-▸ **hashQuery**(`query`: any): *string*
+▸ `Protected`**hashQuery**(`query`: any): string
 
-*Inherited from [ACLRouteMongo](aclroutemongo.md).[hashQuery](aclroutemongo.md#protected-hashquery)*
+*Inherited from [ModelRoute](modelroute.md).[hashQuery](modelroute.md#hashquery)*
 
-Defined in src/routes/ModelRoute.ts:76
+*Defined in src/routes/ModelRoute.ts:84*
 
 Hashes the given query object to a unique string.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `query` | any | The query object to hash.  |
 
-**Returns:** *string*
+**Returns:** string
 
 ___
 
-### `Private` update
+### update
 
-▸ **update**(`id`: string, `obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: JWTUser): *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+▸ `Private`**update**(`id`: string, `obj`: [AccessControlListSQL](accesscontrollistsql.md), `user?`: JWTUser): Promise\<[AccessControlListSQL](accesscontrollistsql.md)>
 
-Defined in src/security/ACLRouteSQL.ts:98
+*Defined in src/security/ACLRouteSQL.ts:98*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
@@ -492,4 +509,4 @@ Name | Type |
 `obj` | [AccessControlListSQL](accesscontrollistsql.md) |
 `user?` | JWTUser |
 
-**Returns:** *Promise‹[AccessControlListSQL](accesscontrollistsql.md)›*
+**Returns:** Promise\<[AccessControlListSQL](accesscontrollistsql.md)>

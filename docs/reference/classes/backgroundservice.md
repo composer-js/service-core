@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [BackgroundService](backgroundservice.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / BackgroundService
 
 # Class: BackgroundService
 
@@ -19,84 +21,84 @@ executes in the background on a set schedule (like a cron job) and performs addi
 
 ### Properties
 
-* [config](backgroundservice.md#protected-config)
-* [logger](backgroundservice.md#protected-logger)
+* [config](backgroundservice.md#config)
+* [logger](backgroundservice.md#logger)
 
 ### Methods
 
-* [run](backgroundservice.md#abstract-run)
-* [start](backgroundservice.md#abstract-start)
-* [stop](backgroundservice.md#abstract-stop)
+* [run](backgroundservice.md#run)
+* [start](backgroundservice.md#start)
+* [stop](backgroundservice.md#stop)
 
 ## Constructors
 
-###  constructor
+### constructor
 
-\+ **new BackgroundService**(`config`: any, `logger`: any): *[BackgroundService](backgroundservice.md)*
+\+ **new BackgroundService**(`config`: any, `logger`: any): [BackgroundService](backgroundservice.md)
 
-Defined in src/BackgroundService.ts:14
+*Defined in src/BackgroundService.ts:14*
 
-**Parameters:**
+#### Parameters:
 
 Name | Type |
 ------ | ------ |
 `config` | any |
 `logger` | any |
 
-**Returns:** *[BackgroundService](backgroundservice.md)*
+**Returns:** [BackgroundService](backgroundservice.md)
 
 ## Properties
 
-### `Protected` config
+### config
 
-• **config**: *any*
+• `Protected` **config**: any
 
-Defined in src/BackgroundService.ts:12
+*Defined in src/BackgroundService.ts:12*
 
 The global application configuration that the service can reference.
 
 ___
 
-### `Protected` logger
+### logger
 
-• **logger**: *any*
+• `Protected` **logger**: any
 
-Defined in src/BackgroundService.ts:14
+*Defined in src/BackgroundService.ts:14*
 
 The logging utility to use.
 
 ## Methods
 
-### `Abstract` run
+### run
 
-▸ **run**(): *void*
+▸ `Abstract`**run**(): Promise\<void> \| void
 
-Defined in src/BackgroundService.ts:24
+*Defined in src/BackgroundService.ts:24*
 
 The processing function to execute at each scheduled interval.
 
-**Returns:** *void*
+**Returns:** Promise\<void> \| void
 
 ___
 
-### `Abstract` start
+### start
 
-▸ **start**(): *Promise‹void›*
+▸ `Abstract`**start**(): Promise\<void> \| void
 
-Defined in src/BackgroundService.ts:29
+*Defined in src/BackgroundService.ts:29*
 
 Initializes the background service with any defaults.
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void> \| void
 
 ___
 
-### `Abstract` stop
+### stop
 
-▸ **stop**(): *Promise‹void›*
+▸ `Abstract`**stop**(): Promise\<void> \| void
 
-Defined in src/BackgroundService.ts:34
+*Defined in src/BackgroundService.ts:34*
 
 Shuts down the background allowing the service to complete any outstanding tasks.
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void> \| void

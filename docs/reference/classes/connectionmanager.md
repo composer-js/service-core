@@ -1,4 +1,6 @@
-[@composer-js/service-core](../README.md) › [Globals](../globals.md) › [ConnectionManager](connectionmanager.md)
+**[@composer-js/service-core](../README.md)**
+
+> [Globals](../globals.md) / ConnectionManager
 
 # Class: ConnectionManager
 
@@ -14,48 +16,48 @@ Provides database connection management.
 
 ### Properties
 
-* [connections](connectionmanager.md#static-connections)
+* [connections](connectionmanager.md#connections)
 
 ### Methods
 
-* [connect](connectionmanager.md#static-connect)
-* [disconnect](connectionmanager.md#static-disconnect)
+* [connect](connectionmanager.md#connect)
+* [disconnect](connectionmanager.md#disconnect)
 
 ## Properties
 
-### `Static` connections
+### connections
 
-▪ **connections**: *Map‹string, Connection | Redis.Redis›* = new Map()
+▪ `Static` **connections**: Map\<string, Connection \| Redis.Redis> = new Map()
 
-Defined in src/database/ConnectionManager.ts:16
+*Defined in src/database/ConnectionManager.ts:16*
 
 ## Methods
 
-### `Static` connect
+### connect
 
-▸ **connect**(`datastores`: any, `models`: any): *Promise‹void›*
+▸ `Static`**connect**(`datastores`: any, `models`: any): Promise\<void>
 
-Defined in src/database/ConnectionManager.ts:24
+*Defined in src/database/ConnectionManager.ts:24*
 
 Attempts to initiate all database connections as defined in the config.
 
-**Parameters:**
+#### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `datastores` | any | - |
 `models` | any | A map of model names and associated class definitions to establish database connections for.  |
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
 
 ___
 
-### `Static` disconnect
+### disconnect
 
-▸ **disconnect**(): *Promise‹void›*
+▸ `Static`**disconnect**(): Promise\<void>
 
-Defined in src/database/ConnectionManager.ts:97
+*Defined in src/database/ConnectionManager.ts:85*
 
 Attempts to disconnect all active database connections.
 
-**Returns:** *Promise‹void›*
+**Returns:** Promise\<void>
