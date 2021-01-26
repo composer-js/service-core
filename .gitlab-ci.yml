@@ -18,7 +18,7 @@ test:
     stage: test
     image: node:12
     script:
-        - yarn test
+        - yarn test --ci -i
 
 publish:
     only:
