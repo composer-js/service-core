@@ -428,12 +428,14 @@ class Server {
      */
     public stop(): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (this.server && this.wss) {
+            if (this.wss) {
                 this.logger.info("Stopping server...");
                 this.wss.close(async (err: any) => {
                     if (err) {
                         reject(err);
                     } else if (this.server) {
+                        this.wss = undefined;
+
                         this.server.close(async (err: any) => {
                             this.logger.info("Closing database connections...");
                             await ConnectionManager.disconnect();
@@ -441,6 +443,7 @@ class Server {
                             if (err) {
                                 reject(err);
                             } else {
+                                this.server = undefined;
                                 resolve();
                             }
                         });
