@@ -27,7 +27,7 @@ export interface RequestWS extends Request {
  * @param wss The WebSocketServer server that will be configured for Express.
  */
 export default function addWebSocket(app: Application, wss: WebSocketServer): any {
-    wss.on("connection", (socket: WebSocket, request: RequestWS) => {
+    wss.on("connection", async (socket: WebSocket, request: RequestWS) => {
         // Set the socket onto the request so that the Express handler has access to it
         request.websocket = socket;
         // We add `.websocket` to the url to let Express know this is a websocket specific request. Any handlers
@@ -37,7 +37,7 @@ export default function addWebSocket(app: Application, wss: WebSocketServer): an
         const response: ServerResponse = new ServerResponse(request);
         // Shouldn't need to cast `response` as any here but for some reason compiler isn't liking it
         // despite the function declaration clearly accepting the `ServerResponse` type.
-        app(request, response as any, (err: any) => {
+        await app(request, response as any, (err: any) => {
             // If `wsHandled` is not set to true or an error was thrown then we did not handle the WebSocket request properly.
             // Close the connection and exit.
             if (err || !request.wsHandled) {

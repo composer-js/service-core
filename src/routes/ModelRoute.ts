@@ -211,7 +211,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
             const result: AggregationCursorResult = await (this.repo as MongoRepository<T>).aggregate(searchQuery).next();
-            return result;
+            return result ? result : { count: 0 };
         } else {
             const result: number = await this.repo.count(searchQuery);
             return { count: result };

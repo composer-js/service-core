@@ -82,7 +82,7 @@ describe("Server Tests", () => {
             .expectClosed();
     });
 
-    it.skip("Cannot connect via secured WebSocket [anonymous]", async () => {
+    it("Cannot connect via secured WebSocket [anonymous]", async () => {
         expect(server.isRunning()).toBe(true);
         await requestws(server.getServer()).ws('/connect-secure')
             .expectClosed();
