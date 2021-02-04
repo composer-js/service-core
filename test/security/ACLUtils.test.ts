@@ -204,6 +204,73 @@ describe("ACLUtils Tests", () => {
             }
         });
 
+        it("Can find ACL with circular dependencies.", async () => {
+            const testACLs: AccessControlList[] = [
+                new AccessControlListMongo({
+                    uid: "parent",
+                    parentUid: "child2",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            full: true,
+                        }),
+                    ],
+                }),
+                new AccessControlListMongo({
+                    uid: "child",
+                    parentUid: "parent",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "god",
+                            full: true,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            create: true,
+                            read: true,
+                            update: false,
+                            delete: false,
+                        })
+                    ],
+                }),
+                new AccessControlListMongo({
+                    uid: "child2",
+                    parentUid: "child",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            full: true,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: ".*", // any user
+                            create: false,
+                            read: true,
+                            update: false,
+                            delete: false,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: "anonymous", // anonymous user
+                            create: false,
+                            read: false,
+                            update: false,
+                            delete: false,
+                        }),
+                    ],
+                }),
+            ];
+
+            const savedACLs: AccessControlList[] = [];
+            for (const acl of testACLs) {
+                savedACLs.push(await aclRepo.save(acl));
+            }
+
+            expect(savedACLs).toHaveLength(testACLs.length);
+            const child2: AccessControlList = await ACLUtils.findACL("child2");
+            if (child2) {
+                expect(child2.uid).toBe("child2");
+            }
+        });
+
         it("Can get record for anonymous user.", async () => {
             const acl: AccessControlList | undefined = await ACLUtils.findACL("/*");
             expect(acl).toBeDefined();
@@ -294,6 +361,74 @@ describe("ACLUtils Tests", () => {
             expect(acl.parent).toBeDefined();
             if (acl.parent) {
                 expect(acl.parent.uid).toBe("admin");
+            }
+        });
+
+        it("Can populate parent with circular dependencies.", async () => {
+            const testACLs: AccessControlList[] = [
+                new AccessControlListMongo({
+                    uid: "parent",
+                    parentUid: "child2",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            full: true,
+                        }),
+                    ],
+                }),
+                new AccessControlListMongo({
+                    uid: "child",
+                    parentUid: "parent",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "god",
+                            full: true,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            create: true,
+                            read: true,
+                            update: false,
+                            delete: false,
+                        })
+                    ],
+                }),
+                new AccessControlListMongo({
+                    uid: "child2",
+                    parentUid: "child",
+                    records: [
+                        new ACLRecordMongo({
+                            userOrRoleId: "admin",
+                            full: true,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: ".*", // any user
+                            create: false,
+                            read: true,
+                            update: false,
+                            delete: false,
+                        }),
+                        new ACLRecordMongo({
+                            userOrRoleId: "anonymous", // anonymous user
+                            create: false,
+                            read: false,
+                            update: false,
+                            delete: false,
+                        }),
+                    ],
+                }),
+            ];
+
+            const savedACLs: AccessControlList[] = [];
+            for (const acl of testACLs) {
+                savedACLs.push(await aclRepo.save(acl));
+            }
+
+            const child2: AccessControlList = testACLs[2];
+            await ACLUtils.populateParent(child2);
+            if (child2) {
+                expect(child2.uid).toBe("child2");
+                expect(child2.parent).toBeDefined();
             }
         });
 

@@ -247,8 +247,9 @@ class ACLUtils {
      * Retrieves the access control list with the associated identifier and populates the parent(s).
      *
      * @param entityId The unique identifier of the ACL to retrieve.
+     * @param parentUids The list of already found parent UIDs. This is used to break circular dependencies.
      */
-    public async findACL(entityId: string): Promise<AccessControlList | undefined> {
+    public async findACL(entityId: string, parentUids: string[] = []): Promise<AccessControlList | undefined> {
         if (!this.repo) {
             return undefined;
         }
@@ -275,9 +276,11 @@ class ACLUtils {
                 acl = await this.repo.findOne({ uid: entityId });
             }
 
-            // Retrieve the parent ACL and assign it if available
-            if (acl && acl.parentUid) {
-                acl.parent = await this.findACL(acl.parentUid);
+            // Retrieve the parent ACL and assign it if available. Don't populate parents we've
+            // already found to prevent a circular dependency.
+            if (acl && acl.parentUid && !parentUids.includes(acl.parentUid)) {
+                parentUids.push(acl.parentUid);
+                acl.parent = await this.findACL(acl.parentUid, parentUids);
             }
 
             // Store a copy in the cache for faster retrieval next time
@@ -360,10 +363,12 @@ class ACLUtils {
      * Attempts to retrieve the parent access control list for the given ACL object.
      *
      * @param acl The access control list whose parents will be populated.
+     * @param parentUids The list of already found parent UIDs. This is used to break circular dependencies.
      */
-    public async populateParent(acl: AccessControlList): Promise<void> {
+    public async populateParent(acl: AccessControlList, parentUids: string[] = []): Promise<void> {
         if (acl && acl.parentUid) {
-            acl.parent = await this.findACL(acl.parentUid);
+            parentUids.push(acl.parentUid);
+            acl.parent = await this.findACL(acl.parentUid, parentUids);
         }
     }
 }
