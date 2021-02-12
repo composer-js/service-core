@@ -20,3 +20,4 @@ export { default as IndexRoute } from "./routes/IndexRoute";
 export { default as ModelRoute } from "./routes/ModelRoute";
 export { default as OpenAPIRoute } from "./routes/OpenAPIRoute";
 export { default as ObjectFactory } from "./ObjectFactory";
+export * as sleep from "./utils/sleep";
