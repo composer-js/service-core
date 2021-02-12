@@ -271,8 +271,10 @@ class ACLUtils {
         if (!acl) {
             if (this.repo instanceof MongoRepository) {
                 acl = await this.repo.aggregate([{ $match: { uid: entityId }}]).limit(1).next();
+                acl = acl ? new AccessControlListMongo(acl) : undefined;
             } else {
                 acl = await this.repo.findOne({ uid: entityId });
+                acl = acl ? new AccessControlListSQL(acl) : undefined;
             }
 
             // Retrieve the parent ACL and assign it if available. Don't populate parents we've
@@ -382,6 +384,8 @@ class ACLUtils {
      * @return Returns the ACL that was stored in the database.
      */
     public async saveACL(acl: AccessControlList): Promise<AccessControlList | undefined> {
+        let result: AccessControlList | undefined = undefined;
+
         if (this.repo instanceof MongoRepository) {
             const existing: AccessControlListMongo | undefined = await this.repo.findOne({ uid: acl.uid });
             // If no changes have been made between versions ignore this request
@@ -397,7 +401,7 @@ class ACLUtils {
                 dateModifed: new Date(),
                 version: existing ? acl.version + 1 : acl.version,
             });
-            return this.repo.save(aclMongo);
+            result = await this.repo.save(aclMongo);
         } else if (this.repo) {
             const existing: AccessControlListSQL | undefined = await this.repo.findOne({ uid: acl.uid });
             // If no changes have been made between versions ignore this request
@@ -413,10 +417,15 @@ class ACLUtils {
                 dateModifed: new Date(),
                 version: existing ? acl.version + 1 : acl.version,
             });
-            return this.repo.save(aclSQL);
+            result = await this.repo.save(aclSQL);
         }
 
-        return undefined;
+        // Store a copy in the cache for faster retrieval next time
+        if (this.cacheClient && result) {
+            await this.cacheClient.setex(`${CACHE_BASE_KEY}.${result.uid}`, this.cacheTTL, JSON.stringify(result));
+        }
+
+        return result;
     }
 
     /**

@@ -675,7 +675,7 @@ describe("ACLUtils Tests", () => {
         });
 
         // This test works when run solo but for some reason fails when running all tests together
-        it.skip("Cannot update an existing ACL with incorrect version.", async () => {
+        it("Cannot update an existing ACL with incorrect version.", async () => {
             const acl: AccessControlList | undefined = await ACLUtils.findACL("bf98b869-cabe-452a-bf8d-674c48f2b5bd");
             expect(acl).toBeDefined();
             if (acl) {
@@ -698,6 +698,7 @@ describe("ACLUtils Tests", () => {
                 }
 
                 try {
+                    acl.records = acl.records.splice(0, 1);
                     expect(ACLUtils.saveACL(acl)).rejects.toThrow();
                 } catch (err) {
 
@@ -705,7 +706,7 @@ describe("ACLUtils Tests", () => {
             }
         });
 
-        it.skip("Ignores update if the ACL has no changes.", async () => {
+        it("Ignores update if the ACL has no changes.", async () => {
             let acl: AccessControlList | undefined = await ACLUtils.findACL("bf98b869-cabe-452a-bf8d-674c48f2b5bd");
             expect(acl).toBeDefined();
             if (acl) {
@@ -713,14 +714,14 @@ describe("ACLUtils Tests", () => {
                 expect(result).toBeDefined();
                 if (result) {
                     expect(result.uid).toBe(acl.uid);
-                    expect(result.version).toBeGreaterThan(acl.version);
+                    expect(result.version).toBe(acl.version);
                     expect(result.records).toEqual(acl.records);
                 }
 
                 acl = await ACLUtils.findACL("bf98b869-cabe-452a-bf8d-674c48f2b5bd");
                 if (acl) {
                     expect(result.uid).toBe(acl.uid);
-                    expect(result.version).toBeGreaterThan(acl.version);
+                    expect(result.version).toBe(acl.version);
                     expect(result.records).toEqual(acl.records);
                 }
             }
