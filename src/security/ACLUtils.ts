@@ -8,7 +8,6 @@ import { MongoRepository, Repository, Connection } from "typeorm";
 import ConnectionManager from "../database/ConnectionManager";
 import { Request } from "express";
 import { AccessControlList, ACLAction, ACLRecord } from "./AccessControlList";
-import ModelUtils from "../models/ModelUtils";
 import { Redis } from "ioredis";
 
 const CACHE_BASE_KEY: string = "db.cache.AccessControlList";
@@ -309,6 +308,74 @@ class ACLUtils {
     }
 
     /**
+     * Compares two ACLs to see if they have been modified and returns the total number of changes between them.
+     * 
+     * @param aclA The source ACL to compare against.
+     * @param aclB The new ACL to compare with.
+     * @returns The total number of changes between the two ACLs.
+     */
+    private diffACL(aclA: AccessControlList, aclB: AccessControlList): number {
+        let result: number = 0;
+
+        // Did the parent change?
+        if (aclA.parent !== aclB.parent) {
+            result++;
+        }
+
+        // Did any of the records change from A to B?
+        for (const recordA of aclA.records) {
+            let foundRecord: ACLRecord | undefined = undefined;
+
+            // Look for the same record in aclA
+            for (const recordB of aclB.records) {
+                if (recordA.userOrRoleId === recordB.userOrRoleId) {
+                    foundRecord = recordB;
+                    break;
+                }
+            }
+
+            if (foundRecord) {
+                // Check to see if any of the permissions changed for this record
+                result += foundRecord.create !== recordA.create ? 1 : 0;
+                result += foundRecord.delete !== recordA.delete ? 1 : 0;
+                result += foundRecord.full !== recordA.full ? 1 : 0;
+                result += foundRecord.read !== recordA.read ? 1 : 0;
+                result += foundRecord.special !== recordA.special ? 1 : 0;
+                result += foundRecord.update !== recordA.update ? 1 : 0;
+            } else {
+                result++;
+            }
+        }
+
+        // Did any of the records change from B to A?
+        for (const recordB of aclB.records) {
+            let foundRecord: ACLRecord | undefined = undefined;
+
+            // Look for the same record in aclA
+            for (const recordA of aclA.records) {
+                if (recordA.userOrRoleId === recordB.userOrRoleId) {
+                    foundRecord = recordA;
+                    break;
+                }
+            }
+
+            if (foundRecord) {
+                // Check to see if any of the permissions changed for this record
+                result += foundRecord.create !== recordB.create ? 1 : 0;
+                result += foundRecord.delete !== recordB.delete ? 1 : 0;
+                result += foundRecord.full !== recordB.full ? 1 : 0;
+                result += foundRecord.read !== recordB.read ? 1 : 0;
+                result += foundRecord.special !== recordB.special ? 1 : 0;
+                result += foundRecord.update !== recordB.update ? 1 : 0;
+            } else {
+                result++;
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Stores the given access control list into the ACL database.
      *
      * @param acl The ACL to store.
@@ -317,8 +384,13 @@ class ACLUtils {
     public async saveACL(acl: AccessControlList): Promise<AccessControlList | undefined> {
         if (this.repo instanceof MongoRepository) {
             const existing: AccessControlListMongo | undefined = await this.repo.findOne({ uid: acl.uid });
+            // If no changes have been made between versions ignore this request
+            if (existing && this.diffACL(existing, acl) === 0) {
+                return existing;
+            }
+            // Make sure that the versions match before we proceed
             if (existing && existing.version != acl.version) {
-                throw new Error("The acl to save must be of the same version.");
+                throw new Error(`The acl to save must be of the same version. ACL=${acl.uid}, Expected=${existing.version}, Actual=${acl.version}`);
             }
             const aclMongo: AccessControlListMongo = new AccessControlListMongo({
                 ...acl,
@@ -328,8 +400,13 @@ class ACLUtils {
             return this.repo.save(aclMongo);
         } else if (this.repo) {
             const existing: AccessControlListSQL | undefined = await this.repo.findOne({ uid: acl.uid });
+            // If no changes have been made between versions ignore this request
+            if (existing && this.diffACL(existing, acl) === 0) {
+                return existing;
+            }
+            // Make sure that the versions match before we proceed
             if (existing && existing.version != acl.version) {
-                throw new Error("The acl to save must be of the same version.");
+                throw new Error(`The acl to save must be of the same version. ACL=${acl.uid}, Expected=${existing.version}, Actual=${acl.version}`);
             }
             const aclSQL: AccessControlListSQL = new AccessControlListSQL({
                 ...acl,
