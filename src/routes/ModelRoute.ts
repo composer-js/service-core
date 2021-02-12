@@ -98,32 +98,48 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             this.defaultACLUid = defaultAcl.uid;
             defaultAcl.uid = `default_${defaultAcl.uid}`;
 
-            // Two documents are stored for each default ACL. A record named `default_<NAME>`
-            // and another named `<NAME>`. The `<NAME>` record stores the user-defined
-            // overrides that overlay the `default_<NAME>` document. The `default_<NAME>` is
-            // therefore always updated with whatever is returned from the above function.
-            const existing: AccessControlList | undefined = await ACLUtils.findACL(defaultAcl.uid);
+            // Attempt to update the default ACL record. If a version mismatch occurs we will try again.
+            const maxAttempts: number = 3;
+            let attempts: number = 0;
+            while (attempts++ < maxAttempts) {
+                try {
+                    // Two documents are stored for each default ACL. A record named `default_<NAME>`
+                    // and another named `<NAME>`. The `<NAME>` record stores the user-defined
+                    // overrides that overlay the `default_<NAME>` document. The `default_<NAME>` is
+                    // therefore always updated with whatever is returned from the above function.
+                    const existing: AccessControlList | undefined = await ACLUtils.findACL(defaultAcl.uid);
 
-            if (existing) {
-                // Copy over the new records from code
-                existing.records = defaultAcl.records;
-                defaultAcl = existing;
-            }
-            else {
-                // Create the user-defined override record
-                const acl: AccessControlList = {
-                    uid: this.defaultACLUid,
-                    dateCreated: new Date(),
-                    dateModified: new Date(),
-                    version: 0,
-                    parentUid: defaultAcl.uid,
-                    records: []
-                };
-                await ACLUtils.saveACL(acl);
-            }
+                    if (existing) {
+                        // Copy over the new records from code
+                        existing.records = defaultAcl.records;
+                        defaultAcl = existing;
+                    }
+                    else {
+                        // Create the user-defined override record
+                        const acl: AccessControlList = {
+                            uid: this.defaultACLUid,
+                            dateCreated: new Date(),
+                            dateModified: new Date(),
+                            version: 0,
+                            parentUid: defaultAcl.uid,
+                            records: []
+                        };
+                        await ACLUtils.saveACL(acl);
+                    }
 
-            // Always save the ACL into the datastore
-            await ACLUtils.saveACL(defaultAcl);
+                    // Always save the ACL into the datastore
+                    await ACLUtils.saveACL(defaultAcl);
+                    attempts = maxAttempts;
+                } catch (err) {
+                    if (attempts < maxAttempts) {
+                        // Wait a brief moment before we try again. Stagger the time to avoid race conditions.
+                        await sleep(Math.floor(Math.random() * 1000));
+                    } else {
+                        // Rethrow if we're out of retries
+                        throw err;
+                    }
+                }
+            }
         }
     }
 
