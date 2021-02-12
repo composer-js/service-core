@@ -179,11 +179,11 @@ class ACLUtils {
         acl: AccessControlList | string,
         action: ACLAction
     ): Promise<boolean> {
-        let result: boolean | null = true;
+        let result: boolean | null = null;
 
         // If the repo isn't available, no acl was provided or the ACL string is empty just return, assume always true
         if (!this.repo || !acl || acl === "") {
-            return result;
+            return true;
         }
 
         // First check if the user is trusted. Trusted users always have permission. We pass in the ACL uid as
@@ -195,7 +195,7 @@ class ACLUtils {
         // If a uid has been given look up the ACL associated with it and then process
         if (typeof acl === "string") {
             const entry: AccessControlList | undefined = await this.findACL(acl);
-            return entry ? this.hasPermission(user, entry, action) : result;
+            return entry ? this.hasPermission(user, entry, action) : true;
         }
 
         // Look for the first available record for the given user
