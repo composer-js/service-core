@@ -261,6 +261,9 @@ class ACLUtils {
             if (json) {
                 try {
                     acl = JSON.parse(json);
+                    if (acl) {
+                        await this.populateParent(acl);
+                    }
                 } catch (err) {
                     // We don't care if this fails
                 }
