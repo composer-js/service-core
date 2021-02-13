@@ -261,9 +261,6 @@ class ACLUtils {
             if (json) {
                 try {
                     acl = JSON.parse(json);
-                    if (acl) {
-                        await this.populateParent(acl);
-                    }
                 } catch (err) {
                     // We don't care if this fails
                 }
@@ -280,17 +277,17 @@ class ACLUtils {
                 acl = acl ? new AccessControlListSQL(acl) : undefined;
             }
 
-            // Retrieve the parent ACL and assign it if available. Don't populate parents we've
-            // already found to prevent a circular dependency.
-            if (acl && acl.parentUid && !parentUids.includes(acl.parentUid)) {
-                parentUids.push(acl.parentUid);
-                acl.parent = await this.findACL(acl.parentUid, parentUids);
-            }
-
             // Store a copy in the cache for faster retrieval next time
             if (this.cacheClient) {
                 await this.cacheClient.setex(`${CACHE_BASE_KEY}.${entityId}`, this.cacheTTL, JSON.stringify(acl));
             }
+        }
+
+        // Retrieve the parent ACL and assign it if available. Don't populate parents we've
+        // already found to prevent a circular dependency.
+        if (acl && acl.parentUid && !parentUids.includes(acl.parentUid)) {
+            parentUids.push(acl.parentUid);
+            acl.parent = await this.findACL(acl.parentUid, parentUids);
         }
 
         return acl;
