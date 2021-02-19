@@ -36,7 +36,7 @@ export default class ObjectFactory {
         this.config = config;
         this.logger = logger ? logger : Logger();
         // Add ourself so it can be injected/retrieved
-        this.instances.set(`${ObjectFactory.name}.default`, this);
+        this.instances.set(`${ObjectFactory.name}:default`, this);
     }
 
     /**
@@ -237,13 +237,21 @@ export default class ObjectFactory {
     }
 
     /**
-     * Returns the object instance with the given unique name.
+     * Returns the object instance with the given unique name. Unique names take the form `<ClassName>:<InstanceName>`.
+     * It is possible to only specifiy the `<ClassName>`, doing so will automatically look for the `<ClassName>:default`
+     * instance. It is also possible to pass the class type directly, in which case the instance will be searched by
+     * `<ClassName>:default`.
      * @param nameOrType The unique name or class type of the object to retrieve.
      * @returns The object instance associated with the given name if found, otherwise `undefined`.
      */
     public getInstance<T>(nameOrType: any): T {
-        if (typeof nameOrType !== "string") {
-            nameOrType = nameOrType && nameOrType.name ? `${nameOrType.name}.default` : (nameOrType.constructor ? `${nameOrType.constructor.name}.default` : undefined);
+        if (typeof nameOrType === "string") {
+            // Add `:default` to the name if no explicit name was provided
+            if (!nameOrType.includes(":")) {
+                nameOrType += ":default";
+            }
+        } else {
+            nameOrType = nameOrType && nameOrType.name ? `${nameOrType.name}:default` : (nameOrType.constructor ? `${nameOrType.constructor.name}:default` : undefined);
         }
 
         // Make sure we have a valid type name

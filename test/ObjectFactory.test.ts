@@ -119,7 +119,23 @@ describe("ObjectFactory Tests", () => {
         expect(instance2).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance2);
 
-        const instance3: TestClassA = factory.getInstance("TestClassA.default");
+        const instance3: TestClassA = factory.getInstance("TestClassA:default");
+        expect(instance3).toBeDefined();
+        expect(instance3).toBeInstanceOf(TestClassA);
+        expect(instance).toBe(instance3);
+    });
+
+    it("Can retrieve existing class instances by type name.", async () => {
+        const instance: TestClassA = await factory.newInstance(TestClassA, "default");
+        expect(instance).toBeDefined();
+        expect(instance).toBeInstanceOf(TestClassA);
+
+        const instance2: TestClassA = factory.getInstance(TestClassA.name);
+        expect(instance2).toBeDefined();
+        expect(instance2).toBeInstanceOf(TestClassA);
+        expect(instance).toBe(instance2);
+
+        const instance3: TestClassA = factory.getInstance("TestClassA:default");
         expect(instance3).toBeDefined();
         expect(instance3).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance3);
