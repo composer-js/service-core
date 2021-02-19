@@ -29,9 +29,11 @@ class ConnectionManager {
 
             // It's possible that the connection was already configured during a previous run. In that case we will
             // attempt to reconnect instead of creating a new connection.
-            let connection: typeorm.Connection | Redis.Redis | undefined = undefined;
+            let connection: typeorm.Connection | Redis.Redis | undefined = this.connections.get(name);
             try {
-                connection = typeorm.getConnection(name);
+                if (!connection) {
+                    connection = typeorm.getConnection(name);
+                }
             } catch (err) {
                 // We don't care if a connection was not found
             }
