@@ -320,7 +320,7 @@ class ACLUtils {
         let result: number = 0;
 
         // Did the parent change?
-        if (aclA.parent !== aclB.parent) {
+        if (aclA.parentUid !== aclB.parentUid) {
             result++;
         }
 
