@@ -288,7 +288,7 @@ export default class ObjectFactory {
 
         // Names are namespace specific by type. Prepend the type to the name if not already done.
         if (name && !name.includes(className)) {
-            name = `${className}.${name}`;
+            name = `${className}:${name}`;
         }
 
         // First check to see if an instance was already created for the given name

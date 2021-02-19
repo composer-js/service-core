@@ -103,7 +103,7 @@ describe("ObjectFactory Tests", () => {
         expect(instance2).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance2);
 
-        const instance3: TestClassA = factory.getInstance("TestClassA.myInstance");
+        const instance3: TestClassA = factory.getInstance("TestClassA:myInstance");
         expect(instance3).toBeDefined();
         expect(instance3).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance3);
