@@ -35,6 +35,8 @@ export default class ObjectFactory {
     constructor(config?: any, logger?: any) {
         this.config = config;
         this.logger = logger ? logger : Logger();
+        // Add ourself so it can be injected/retrieved
+        this.instances.set(`${ObjectFactory.name}.default`, this);
     }
 
     /**
