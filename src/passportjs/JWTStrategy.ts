@@ -47,26 +47,20 @@ export class JWTStrategy extends Strategy {
 
     public authenticate(req: Request, options?: any): void {
         options = options || {};
-
-        // The token may be embedded either in a cookie or as a query parameter
-        let token: string = "";
-        if (this.options.cookieSecure && this.options.cookieName && req.signedCookies) {
-            token = req.signedCookies[this.options.cookieName] as string;
-        }
-        if (!token && !this.options.cookieSecure && this.options.cookieName && req.cookies) {
-            token = req.cookies[this.options.cookieName] as string;
-        }
-        if (!token && this.options.queryKey && req.query && this.options.queryKey in req.query) {
-            token = req.query[this.options.queryKey] as string;
-        }
-
         let error: string = "";
         let user: JWTUser | undefined = undefined;
 
-        // If the token has been found, verify it.
-        if (token && token.length > 0) {
+        // Tokens should be found in this order: Query Parameter => Authorization => Cookie
+        // Check the query parameter
+        if (this.options.queryKey && req.query && this.options.queryKey in req.query) {
+            let token: string = req.query[this.options.queryKey] as string;
+
             try {
                 user = JWTUtils.decodeToken(this.options.config, token);
+                // If the verification succeeded clear out any existing error, we have success
+                if (user) {
+                    error = "";
+                }
             } catch (err) {
                 error = err;
             }
@@ -95,7 +89,7 @@ export class JWTStrategy extends Strategy {
                     continue;
                 }
 
-                token = parts[1];
+                let token: string = parts[1];
                 try {
                     user = JWTUtils.decodeToken(this.options.config, token);
                     // If the verification succeeded clear out any existing error, we have success
@@ -107,6 +101,29 @@ export class JWTStrategy extends Strategy {
                 } catch (err) {
                     error = err;
                 }
+            }
+        }
+
+        // Check the cookie header
+        let token: string = "";
+        if (!user && this.options.cookieSecure && this.options.cookieName && req.signedCookies) {
+            // TODO Decrypt the signed cookie
+            token = req.signedCookies[this.options.cookieName] as string;
+        }
+        if (!user && !this.options.cookieSecure && this.options.cookieName && req.cookies) {
+            token = req.cookies[this.options.cookieName] as string;
+        }
+
+        // If the token has been found, verify it.
+        if (!user && token && token.length > 0) {
+            try {
+                user = JWTUtils.decodeToken(this.options.config, token);
+                // If the verification succeeded clear out any existing error, we have success
+                if (user) {
+                    error = "";
+                }
+            } catch (err) {
+                error = err;
             }
         }
 
