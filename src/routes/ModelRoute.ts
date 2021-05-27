@@ -532,11 +532,14 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Attempts to remove all entries of the data model type from the datastore.
+     * Attempts to remove all entries of the data model type from the datastore matching the given
+     * parameters and query.
      *
+     * @param params The parameters to match.
+     * @param query The query parameters to match.
      * @param user The authenticated user performing the action, otherwise undefined.
      */
-    protected async doTruncate(user?: any): Promise<void> {
+    protected async doTruncate(params?: any, query?: any, user?: any): Promise<void> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
@@ -548,7 +551,23 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         try {
-            await this.repo.clear();
+            const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
+            let objs: T[] | undefined = undefined;
+            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
+                const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
+                const skip: number = query.skip ? query.skip : 0;
+                objs = await this.repo.aggregate(searchQuery).limit(limit).skip(skip).toArray();
+            }
+            else {
+                objs = await this.repo.find(searchQuery);
+            }
+
+            if (objs) {
+                for (const obj of objs) {
+                    await this.repo.remove(obj);
+                    await ACLUtils.removeACL(obj.uid);
+                }
+            }
         } catch (err) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
             if (err.message != "ns not found") {

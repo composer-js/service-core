@@ -58,8 +58,8 @@ class ItemRoute extends ModelRoute<Item> {
     }
 
     @Delete()
-    protected async truncate(@User user?: any): Promise<void> {
-        await super.doTruncate(user);
+    protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
+        await super.doTruncate(params, query, user);
     }
 
     @Put(":id")

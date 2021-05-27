@@ -150,12 +150,24 @@ describe("ModelRoute Tests [SQL]", () => {
             expect(result.body.count).toBe(items.length);
         });
 
-        it.skip("Can count documents with criteria (like). [SQL]", async () => {
+        it("Can count documents with criteria (eq). [SQL]", async () => {
             const items: Item[] = await createItems(15);
             await createItem("BFG", 1, 10000);
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
-            const result = await request(server.getApplication()).get("/items/count?name=like(Item)");
+            const result = await request(server.getApplication()).get("/items/count?name=B-Bomb");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(1);
+        });
+
+        it("Can count documents with criteria (like). [SQL]", async () => {
+            const items: Item[] = await createItems(15);
+            await createItem("BFG", 1, 10000);
+            await createItem("B-Bomb", 5, 50);
+            await createItem("Boomerang", 1, 100);
+            const result = await request(server.getApplication()).get("/items/count?name=like(Item%)");
             expect(result).toHaveProperty("body");
             console.log(result.body);
             expect(result.body).toHaveProperty("count");
@@ -169,12 +181,25 @@ describe("ModelRoute Tests [SQL]", () => {
             expect(result.body).toHaveLength(items.length);
         });
 
-        it.skip("Can find documents with criteria (like) [SQL].", async () => {
+        it("Can find documents with criteria (eq) [SQL].", async () => {
             const items: Item[] = await createItems(13);
             await createItem("BFG", 1, 10000);
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
-            const result = await request(server.getApplication()).get("/items?name=like(Item)");
+            const result = await request(server.getApplication()).get("/items?name=BFG");
+            expect(result).toHaveProperty("body");
+            expect(result.body).toHaveLength(1);
+            for (const item of result.body) {
+                expect(item.name).toContain("BFG");
+            }
+        });
+
+        it("Can find documents with criteria (like) [SQL].", async () => {
+            const items: Item[] = await createItems(13);
+            await createItem("BFG", 1, 10000);
+            await createItem("B-Bomb", 5, 50);
+            await createItem("Boomerang", 1, 100);
+            const result = await request(server.getApplication()).get("/items?name=like(Item%)");
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveLength(items.length);
             for (const item of result.body) {
@@ -184,11 +209,26 @@ describe("ModelRoute Tests [SQL]", () => {
 
         it("Can truncate datastore [SQL].", async () => {
             const items: Item[] = await createItems(25);
+            await createItem("BFG", 1, 10000);
+            await createItem("B-Bomb", 5, 50);
+            await createItem("Boomerang", 1, 100);
             const result = await request(server.getApplication()).delete("/items");
             expect(result.status).toBe(204);
 
             const count: number = await repo.count();
             expect(count).toBe(0);
+        });
+
+        it("Can truncate datastore with criteria (in) [SQL].", async () => {
+            const items: Item[] = await createItems(13);
+            await createItem("BFG", 1, 10000);
+            await createItem("B-Bomb", 5, 50);
+            await createItem("Boomerang", 1, 100);
+            const result = await request(server.getApplication()).delete("/items?name=in(BFG,B-Bomb,Boomerang)");
+            expect(result.status).toBe(204);
+
+            const count: number = await repo.count();
+            expect(count).toBe(items.length);
         });
     });
 });

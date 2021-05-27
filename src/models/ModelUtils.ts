@@ -6,9 +6,8 @@ import * as path from "path";
 
 import { Logger } from "@composer-js/core";
 import {
-    getMetadataArgsStorage,
     Repository,
-    Like,
+    ILike,
     LessThanOrEqual,
     MoreThanOrEqual,
     Not,
@@ -164,7 +163,7 @@ class ModelUtils {
                     return In(args);
                 }
                 case "like":
-                    return Like(value);
+                    return ILike(value);
                 case "lt":
                     return LessThan(value);
                 case "lte":
@@ -237,6 +236,10 @@ class ModelUtils {
                 case "in": {
                     const args: string[] = value.split(",");
                     return { $in: args };
+                }
+                case "nin": {
+                    const args: string[] = value.split(",");
+                    return { $nin: args };
                 }
                 case "like":
                     return { $regex: value, $options: "i" };

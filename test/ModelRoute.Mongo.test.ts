@@ -28,11 +28,11 @@ const createUser = async (firstName: string, lastName: string, age: number = 100
     return await repo.save(user);
 };
 
-const createUsers = async (num: number): Promise<User[]> => {
+const createUsers = async (num: number, lastName: string = "Doctor"): Promise<User[]> => {
     const results: User[] = [];
 
     for (let i = 1; i <= num; i++) {
-        results.push(await createUser(String(i), "Doctor", 100 * i));
+        results.push(await createUser(String(i), lastName, 100 * i));
     }
 
     return results;
@@ -163,6 +163,116 @@ describe("ModelRoute Tests [MongoDB]", () => {
             expect(result.body.count).toBe(users.length);
         });
 
+        it("Can count documents with criteria (like-regex). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?lastName=like(Doc.*)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(users.length);
+        });
+
+        it("Can count documents with criteria (ne). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?lastName=ne(Doctor)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(2);
+        });
+
+        it("Can count documents with criteria (like). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?lastName=like(Doc)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(users.length);
+        });
+
+        it("Can count documents with criteria (in). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?lastName=in(Tennant,Smith)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(2);
+        });
+
+        it("Can count documents with criteria (nin). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?lastName=nin(Tennant,Smith)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(users.length);
+        });
+
+        it("Can count documents with criteria (gt). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?age=gt(100)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(users.length - 1);
+        });
+
+        it("Can count documents with criteria (gte). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?age=gte(100)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(users.length);
+        });
+
+        it("Can count documents with criteria (lt). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?age=lt(100)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(2);
+        });
+
+        it("Can count documents with criteria (lte). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?age=lte(100)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(3);
+        });
+
+        it("Can count documents with criteria (range). [MongoDB]", async () => {
+            const users: User[] = await createUsers(13);
+            await createUser("David", "Tennant", 47);
+            await createUser("Matt", "Smith", 36);
+            const result = await request(server.getApplication()).get("/users/count?age=range(100,500)");
+            expect(result).toHaveProperty("body");
+            console.log(result.body);
+            expect(result.body).toHaveProperty("count");
+            expect(result.body.count).toBe(5);
+        });
+
         it("Can find all documents. [MongoDB]", async () => {
             const users: User[] = await createUsers(25);
             const result = await request(server.getApplication()).get("/users");
@@ -183,12 +293,23 @@ describe("ModelRoute Tests [MongoDB]", () => {
         });
 
         it("Can truncate datastore [MongoDB].", async () => {
-            const users: User[] = await createUsers(25);
+            const users: User[] = await createUsers(20, "Doctor");
+            await createUsers(5, "Skywalker");
             const result = await request(server.getApplication()).delete("/users");
             expect(result.status).toBe(204);
 
             const count: number = await repo.count();
             expect(count).toBe(0);
+        });
+
+        it("Can truncate datastore with criteria (eq) [MongoDB].", async () => {
+            const users: User[] = await createUsers(20, "Doctor");
+            await createUsers(5, "Skywalker");
+            const result = await request(server.getApplication()).delete("/users?lastName=Doctor");
+            expect(result.status).toBe(204);
+
+            const count: number = await repo.count();
+            expect(count).toBe(5);
         });
     });
 });

@@ -8,7 +8,7 @@ import { ModelUtils } from "../src/service_core";
 import { Identifier } from "../src/decorators/ModelDecorators";
 import {
     Not,
-    Like,
+    ILike,
     Equal,
     Between,
     MoreThan,
@@ -240,7 +240,7 @@ describe("ModelUtils Tests", () => {
             }}]);
         });
 
-        it("Can build search query with single param (like)", () => {
+        it("Can build search query with single param (ILike)", () => {
             const request: any = {};
             request.query = {
                 myParam: "like(myValue)",
@@ -319,7 +319,7 @@ describe("ModelUtils Tests", () => {
         it("Can build search query with multiple params with same name.", () => {
             const request: any = {};
             request.query = {
-                param: ["Eq(myValue)", "Not(myValue2)", "Like(myValue3)"],
+                param: ["Eq(myValue)", "Not(myValue2)", "like(myValue3)"],
             };
 
             const query = ModelUtils.buildSearchQueryMongo(undefined, request.params, request.query, true, request.user);
@@ -338,11 +338,10 @@ describe("ModelUtils Tests", () => {
             }}]);
         });
 
-        // TODO Fix me
         it("Can build search query with multiple params and with same name.", () => {
             const request: any = {};
             request.query = {
-                param: ["Eq(myValue)", "Not(myValue2)", "Like(myValue3)"],
+                param: ["eq(myValue)", "not(myValue2)", "like(myValue3)"],
                 param2: "range(0,100)",
                 param3: "hello",
             };
@@ -663,7 +662,7 @@ describe("ModelUtils Tests", () => {
             });
         });
 
-        it("Can build search query with single param (like)", () => {
+        it("Can build search query with single param (ILike)", () => {
             const request: any = {};
             request.query = {
                 myParam: "like(myValue)",
@@ -673,7 +672,7 @@ describe("ModelUtils Tests", () => {
             expect(query).toEqual({
                 where: [
                     {
-                        myParam: Like("myValue"),
+                        myParam: ILike("myValue"),
                     },
                 ],
                 skip: 0,
@@ -777,7 +776,7 @@ describe("ModelUtils Tests", () => {
         it("Can build search query with multiple params with same name.", () => {
             const request: any = {};
             request.query = {
-                param: ["Eq(myValue)", "Not(myValue2)", "Like(myValue3)"],
+                param: ["Eq(myValue)", "Not(myValue2)", "like(myValue3)"],
             };
 
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
@@ -790,7 +789,7 @@ describe("ModelUtils Tests", () => {
                         param: Not("myValue2"),
                     },
                     {
-                        param: Like("myValue3"),
+                        param: ILike("myValue3"),
                     },
                 ],
                 skip: 0,
@@ -820,7 +819,7 @@ describe("ModelUtils Tests", () => {
                         param3: Equal("hello"),
                     },
                     {
-                        param: Like("myValue3"),
+                        param: ILike("myValue3"),
                         param2: Between(0, 100),
                         param3: Equal("hello"),
                     },
