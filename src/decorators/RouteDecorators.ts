@@ -11,13 +11,13 @@ import "reflect-metadata";
  */
 export function After(func: Function | string | (Function | string)[]) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
 
         // Ensure we always have an array of functions. Also, append the new list of functions to any existing list.
         let funcs: (Function | string)[] = Array.isArray(func) ? func : [func];
         route.after = route.after ? route.after.concat(funcs) : funcs;
 
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -31,10 +31,10 @@ export function After(func: Function | string | (Function | string)[]) {
  */
 export function Auth(strategies: string | string[], require: boolean = true) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
         route.authStrategies = strategies;
         route.authRequired = require;
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -45,13 +45,13 @@ export function Auth(strategies: string | string[], require: boolean = true) {
  */
 export function Before(func: Function | string | (Function | string)[]) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
 
         // Ensure we always have an array of functions. Also, append the new list of functions to any existing list.
         let funcs: (Function | string)[] = Array.isArray(func) ? func : [func];
         route.before = route.before ? route.before.concat(funcs) : funcs;
 
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -62,9 +62,9 @@ export function Before(func: Function | string | (Function | string)[]) {
  */
 export function ContentType(type: string) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        const route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        const route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
         route.contentType = type;
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -102,9 +102,9 @@ export function Head(path?: string) {
  */
 export function Header(name: string) {
     return function (target: any, propertyKey: string, index: number) {
-        let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+        let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
         args[index] = ["header", name];
-        Reflect.defineMetadata("axr:args", args, target, propertyKey);
+        Reflect.defineMetadata("cjs:args", args, target, propertyKey);
     };
 }
 
@@ -112,7 +112,7 @@ export function Header(name: string) {
  * Indicates that the decorated function should be called during the initialization phase of server startup.
  */
 export function Init(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    Reflect.defineMetadata("axr:initialize", true, target, propertyKey);
+    Reflect.defineMetadata("cjs:initialize", true, target, propertyKey);
 }
 
 /**
@@ -123,7 +123,7 @@ export function Init(target: any, propertyKey: string, descriptor: PropertyDescr
  */
 export function Method(method: string | string[], path?: string) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
         const pathFinal: string = path ? path : "";
 
         if (!route.methods) {
@@ -135,7 +135,7 @@ export function Method(method: string | string[], path?: string) {
             route.methods.set(key, pathFinal);
         }
 
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -179,9 +179,9 @@ export function Post(path?: string) {
  */
 export function Param(name: string | undefined = undefined) {
     return function (target: any, propertyKey: string, index: number) {
-        let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+        let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
         args[index] = ["param", name];
-        Reflect.defineMetadata("axr:args", args, target, propertyKey);
+        Reflect.defineMetadata("cjs:args", args, target, propertyKey);
     };
 }
 
@@ -202,9 +202,9 @@ export function Put(path?: string) {
  */
 export function Query(name: string | undefined = undefined) {
     return function (target: any, propertyKey: string, index: number) {
-        let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+        let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
         args[index] = ["query", name];
-        Reflect.defineMetadata("axr:args", args, target, propertyKey);
+        Reflect.defineMetadata("cjs:args", args, target, propertyKey);
     };
 }
 
@@ -215,7 +215,7 @@ export function Query(name: string | undefined = undefined) {
  */
 export function MongoRepository(type: any) {
     return function (target: any, propertyKey: string | symbol) {
-        Reflect.defineMetadata("axr:injectMongoRepo", type, target, propertyKey);
+        Reflect.defineMetadata("cjs:injectMongoRepo", type, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
             enumerable: true,
@@ -232,7 +232,7 @@ export function MongoRepository(type: any) {
  */
 export function Repository(type: any) {
     return function (target: any, propertyKey: string | symbol) {
-        Reflect.defineMetadata("axr:injectRepo", type, target, propertyKey);
+        Reflect.defineMetadata("cjs:injectRepo", type, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
             enumerable: true,
@@ -249,7 +249,7 @@ export function Repository(type: any) {
  */
 export function RedisConnection(name: string) {
     return function (target: any, propertyKey: string | symbol) {
-        Reflect.defineMetadata("axr:injectRedisRepo", name, target, propertyKey);
+        Reflect.defineMetadata("cjs:injectRedisRepo", name, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
             enumerable: true,
@@ -263,18 +263,18 @@ export function RedisConnection(name: string) {
  * Injects the Express request object as the value of the decorated argument.
  */
 export function Request(target: any, propertyKey: string, index: number) {
-    let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
     args[index] = ["request"];
-    Reflect.defineMetadata("axr:args", args, target, propertyKey);
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
 }
 
 /**
  * Injects the Express response object as the value of the decorated argument.
  */
 export function Response(target: any, propertyKey: string, index: number) {
-    let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
     args[index] = ["response"];
-    Reflect.defineMetadata("axr:args", args, target, propertyKey);
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
 }
 
 /**
@@ -285,9 +285,9 @@ export function Response(target: any, propertyKey: string, index: number) {
  */
 export function RequiresRole(roles: string | string[]) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
         route.requiredRoles = Array.isArray(roles) ? roles : [roles];
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 
@@ -298,9 +298,9 @@ export function RequiresRole(roles: string | string[]) {
  */
 export function Route(paths: string | string[]) {
     return function (target: Function) {
-        let routePaths: string[] = Reflect.getMetadata("axr:routePaths", target.prototype) || [];
+        let routePaths: string[] = Reflect.getMetadata("cjs:routePaths", target.prototype) || [];
         routePaths = routePaths.concat(Array.isArray(paths) ? paths : [paths]);
-        Reflect.defineMetadata("axr:routePaths", routePaths, target.prototype);
+        Reflect.defineMetadata("cjs:routePaths", routePaths, target.prototype);
     };
 }
 
@@ -310,18 +310,18 @@ export function Route(paths: string | string[]) {
  * WebSocket connection.
  */
 export function Socket(target: any, propertyKey: string, index: number) {
-    let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
     args[index] = ["socket"];
-    Reflect.defineMetadata("axr:args", args, target, propertyKey);
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
 }
 
 /**
  * Injects the authenticated user object as the value of the decorated argument.
  */
 export function User(target: any, propertyKey: string, index: number) {
-    let args: any = Reflect.getMetadata("axr:args", target, propertyKey) || {};
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
     args[index] = ["user"];
-    Reflect.defineMetadata("axr:args", args, target, propertyKey);
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
 }
 
 /**
@@ -331,9 +331,9 @@ export function User(target: any, propertyKey: string, index: number) {
  */
 export function Validate(func: Function | string) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        let route: any = Reflect.getMetadata("axr:route", target, propertyKey) || {};
+        let route: any = Reflect.getMetadata("cjs:route", target, propertyKey) || {};
         route.validator = func;
-        Reflect.defineMetadata("axr:route", route, target, propertyKey);
+        Reflect.defineMetadata("cjs:route", route, target, propertyKey);
     };
 }
 

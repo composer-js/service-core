@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Server, ServerResponse } from "http";
-import { Application, Request, Response } from "express";
+import { ServerResponse } from "http";
+import { Application, Request } from "express";
 import WebSocket, { Server as WebSocketServer } from "ws";
 
 /**

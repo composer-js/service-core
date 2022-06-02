@@ -10,7 +10,7 @@ import "reflect-metadata";
  */
 export function Cache(ttl: number = 30) {
     return function(target: any) {
-        Reflect.defineMetadata("axr:cacheTTL", ttl, target);
+        Reflect.defineMetadata("cjs:cacheTTL", ttl, target);
         Object.defineProperty(target, "cacheTTL", {
             enumerable: true,
             writable: true,
@@ -23,7 +23,7 @@ export function Cache(ttl: number = 30) {
  * Apply this to a property that is considered a unique identifier.
  */
 export function Identifier(target: any, propertyKey: string | symbol) {
-    Reflect.defineMetadata("axr:isIdentifier", true, target, propertyKey);
+    Reflect.defineMetadata("cjs:isIdentifier", true, target, propertyKey);
     const key = `__${String(propertyKey)}`;
     Object.defineProperty(target, propertyKey, {
         enumerable: true,
@@ -39,7 +39,7 @@ export function Identifier(target: any, propertyKey: string | symbol) {
  */
 export function Model(datastore: string) {
     return function(target: any) {
-        Reflect.defineMetadata("axr:datastore", datastore, target);
+        Reflect.defineMetadata("cjs:datastore", datastore, target);
         Object.defineProperty(target, "datastore", {
             enumerable: true,
             writable: true,
@@ -56,7 +56,7 @@ export function Model(datastore: string) {
  */
 export function TrackChanges(versions: number = -1) {
     return function(target: any) {
-        Reflect.defineMetadata("axr:trackChanges", versions, target);
+        Reflect.defineMetadata("cjs:trackChanges", versions, target);
         Object.defineProperty(target, "trackChanges", {
             enumerable: true,
             writable: true,

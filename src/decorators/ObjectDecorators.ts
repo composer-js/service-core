@@ -7,7 +7,7 @@ import "reflect-metadata";
  * Apply this to a class function to mark it as a destructor to be called by the `ObjectFactory` during cleanup.
  */
 export function Destroy(target: any, propertyKey: string) {
-    Reflect.defineMetadata("axr:destructor", true, target, propertyKey);
+    Reflect.defineMetadata("cjs:destructor", true, target, propertyKey);
 }
 
 /**
@@ -19,7 +19,7 @@ export function Destroy(target: any, propertyKey: string) {
  */
 export function Inject(type: any, name: string | undefined = "default", ...args: any) {
     return function(target: any, propertyKey: string | symbol) {
-        Reflect.defineMetadata("axr:injectObject", {
+        Reflect.defineMetadata("cjs:injectObject", {
             args,
             name,
             type
@@ -38,7 +38,7 @@ export function Inject(type: any, name: string | undefined = "default", ...args:
  * returned during the instantiation process.
  */
 export function Init(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    Reflect.defineMetadata("axr:initialize", true, target, propertyKey);
+    Reflect.defineMetadata("cjs:initialize", true, target, propertyKey);
 }
 
 /**
@@ -46,10 +46,13 @@ export function Init(target: any, propertyKey: string, descriptor: PropertyDescr
  * global configuration object is injected.
  * 
  * @param path The path to the configuration variable to inject.
+ * @param defaultValue Set to the desired default value. If `undefined` is specified then an error is thrown if
+ *                      no config variable is found at the given path.
  */
-export function Config(path?: string) {
+export function Config(path?: string, defaultValue: any = undefined) {
     return function(target: any, propertyKey: string | symbol) {
-        Reflect.defineMetadata("axr:injectConfig", path ? path : true, target, propertyKey);
+        Reflect.defineMetadata("cjs:injectConfig", path ? path : true, target, propertyKey);
+        Reflect.defineMetadata("cjs:injectConfigDefault", defaultValue, target, propertyKey);
         const key = `__${String(propertyKey)}`;
         Object.defineProperty(target, propertyKey, {
             enumerable: true,
@@ -63,7 +66,7 @@ export function Config(path?: string) {
  * Apply this to a property to have the logger utility injected at instantiation.
  */
 export function Logger(target: any, propertyKey: string | symbol) {
-    Reflect.defineMetadata("axr:injectLogger", true, target, propertyKey);
+    Reflect.defineMetadata("cjs:injectLogger", true, target, propertyKey);
     const key = `__${String(propertyKey)}`;
     Object.defineProperty(target, propertyKey, {
         enumerable: true,

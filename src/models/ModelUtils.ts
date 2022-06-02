@@ -1,9 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import * as fs from "fs";
-import * as path from "path";
-
 import { Logger } from "@composer-js/core";
 import {
     Repository,
@@ -18,15 +15,21 @@ import {
     Between,
     MongoRepository,
 } from "typeorm";
+import "reflect-metadata";
 
 const logger = Logger();
+
+// Apparently calling JSON.stringify on RegExp returns an empty set. So the recommended way to
+// overcome this is by adding a `toJSON` method that uses the `toString` instead which will
+// give us what we want.
+(RegExp.prototype as any).toJSON = RegExp.prototype.toString;
 
 /**
  * Utility class for working with data model classes.
  *
  * @author Jean-Philippe Steinmetz
  */
-class ModelUtils {
+export class ModelUtils {
     /**
      * Retrieves a list of all of the specified class's properties that have the @Identifier decorator applied.
      *
@@ -42,7 +45,7 @@ class ModelUtils {
         while (proto) {
             const props: string[] = Object.getOwnPropertyNames(proto);
             for (const prop of props) {
-                const isIdentifier: boolean = Reflect.getMetadata("axr:isIdentifier", proto, prop);
+                const isIdentifier: boolean = Reflect.getMetadata("cjs:isIdentifier", proto, prop);
                 if (isIdentifier) {
                     results.push(prop);
                 }
@@ -61,12 +64,13 @@ class ModelUtils {
      * @param repo The repository to build the query for.
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
+     * @param version The version number of the document to search for.
      * @returns An object that can be passed to a TypeORM `find` function.
      */
     public static buildIdSearchQuery<T>(
         repo: Repository<T> | MongoRepository<T> | undefined,
         modelClass: any,
-        id: any,
+        id: any | any[],
         version?: number
     ): any {
         if (repo instanceof MongoRepository) {
@@ -85,14 +89,18 @@ class ModelUtils {
      * @param version The version number of the document to search for.
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuerySQL(modelClass: any, id: any, version?: number): any {
+    public static buildIdSearchQuerySQL(modelClass: any, id: any | any[], version?: number): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const where: any = [];
         for (const prop of props) {
-            where.push(version !== undefined ? { [prop]: id, version } : { [prop]: id });
+            const q: any = { [prop]: Array.isArray(id) ? In(id) : id };
+            if (version !== undefined) {
+                q.version = version;
+            }
+            where.push(q);
         }
 
         return { where };
@@ -107,18 +115,29 @@ class ModelUtils {
      * @param version The version number of the document to search for.
      * @returns An object that can be passed to a MongoDB `find` function.
      */
-    public static buildIdSearchQueryMongo(modelClass: any, id: any, version?: number): any {
+    public static buildIdSearchQueryMongo(modelClass: any, id: any | any[], version?: number): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
+
+        // We want to performa case-insensitive search. So convert all strings to regex.
+        if (Array.isArray(id)) {
+            for (let i = 0; i < id.length; i++) {
+                if (typeof id[i] === "string") {
+                    id[i] = new RegExp("^" + id[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+                }
+            }
+        } else if (typeof id === "string") {
+            id = new RegExp("^" + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+        }
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const query: any[] = [];
         for (const prop of props) {
+            const q: any = { [prop]: Array.isArray(id) ? { $in: id } : id };
             if (version !== undefined) {
-                query.push({ [prop]: id, version });
-            } else {
-                query.push({ [prop]: id });
+                q.version = version;
             }
+            query.push(q);
         }
 
         return { $or: query };
@@ -132,71 +151,75 @@ class ModelUtils {
      *
      * @param param
      */
-    private static getQueryParamValue(param: string): any {
-        // The value of each param can optionally have the operation included. If no operator is included Eq is
-        // always assumed.
-        // e.g. ?param1=eq(value)&param2=not(value)&param3=gt(value)
-        const matches: RegExpMatchArray | null = param.match(new RegExp(/^([a-zA-Z]+)\((.*)\)$/, "i"));
-        if (matches) {
-            const opName: string = matches[1].toLowerCase();
-            let value: any = matches[2];
-            try {
-                // Attempt to parse the value to a native type
-                value = JSON.parse(matches[2]);
-            } catch (err) {
-                // If an error occurred it's because the value is a string or date, not another type.
-                value = new Date(matches[2]);
-                if (isNaN(value)) {
-                    value = matches[2];
+    private static getQueryParamValue(param: any): any {
+        if (typeof param === "string") {
+            // The value of each param can optionally have the operation included. If no operator is included Eq is
+            // always assumed.
+            // e.g. ?param1=eq(value)&param2=not(value)&param3=gt(value)
+            const matches: RegExpMatchArray | null = param.match(new RegExp(/^([a-zA-Z]+)\((.*)\)$/, "i"));
+            if (matches) {
+                const opName: string = matches[1].toLowerCase();
+                let value: any = matches[2];
+                try {
+                    // Attempt to parse the value to a native type
+                    value = JSON.parse(matches[2]);
+                } catch (err) {
+                    // If an error occurred it's because the value is a string or date, not another type.
+                    value = new Date(matches[2]);
+                    if (isNaN(value)) {
+                        value = matches[2];
+                    }
                 }
-            }
 
-            switch (opName) {
-                case "eq":
-                    return Equal(value);
-                case "gt":
-                    return MoreThan(value);
-                case "gte":
-                    return MoreThanOrEqual(value);
-                case "in": {
-                    const args: string[] = value.split(",");
-                    return In(args);
-                }
-                case "like":
-                    return ILike(value);
-                case "lt":
-                    return LessThan(value);
-                case "lte":
-                    return LessThanOrEqual(value);
-                case "ne":
-                case "not":
-                    return Not(value);
-                case "range": {
-                    const args: string[] = value.split(",");
-                    if (args.length != 2) {
-                        throw new Error(
-                            "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
-                        );
+                switch (opName) {
+                    case "eq":
+                        return Equal(value);
+                    case "gt":
+                        return MoreThan(value);
+                    case "gte":
+                        return MoreThanOrEqual(value);
+                    case "in": {
+                        const args: string[] = value.split(",");
+                        return In(args);
                     }
-                    try {
-                        // Attempt to parse the range values to native types
-                        return Between(JSON.parse(args[0]), JSON.parse(args[1]));
-                    } catch (err) {
-                        return Between(args[0], args[1]);
+                    case "like":
+                        return ILike(value);
+                    case "lt":
+                        return LessThan(value);
+                    case "lte":
+                        return LessThanOrEqual(value);
+                    case "ne":
+                    case "not":
+                        return Not(value);
+                    case "range": {
+                        const args: string[] = value.split(",");
+                        if (args.length != 2) {
+                            throw new Error(
+                                "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
+                            );
+                        }
+                        try {
+                            // Attempt to parse the range values to native types
+                            return Between(JSON.parse(args[0]), JSON.parse(args[1]));
+                        } catch (err) {
+                            return Between(args[0], args[1]);
+                        }
                     }
+                    default:
+                        return Equal(value);
                 }
-                default:
-                    return Equal(value);
+            } else {
+                try {
+                    // Attempt to parse the value to a native type
+                    return Equal(JSON.parse(param));
+                } catch (err) {
+                    // If an error occurred it's because the value is a string, not another type.
+                    const date: Date = new Date(param);
+                    return Equal(!isNaN(date.valueOf()) ? date : param);
+                }
             }
         } else {
-            try {
-                // Attempt to parse the value to a native type
-                return Equal(JSON.parse(param));
-            } catch (err) {
-                // If an error occurred it's because the value is a string, not another type.
-                const date: Date = new Date(param);
-                return Equal(!isNaN(date.valueOf()) ? date : param);
-            }
+            return param;
         }
     }
 
@@ -208,75 +231,79 @@ class ModelUtils {
      *
      * @param param
      */
-    private static getQueryParamValueMongo(param: string): any {
-        // The value of each param can optionally have the operation included. If no operator is included Eq is
-        // always assumed.
-        // e.g. ?param1=eq(value)&param2=not(value)&param3=gt(value)
-        const matches: RegExpMatchArray | null = param.match(new RegExp(/^([a-zA-Z]+)\((.*)\)$/, "i"));
-        if (matches) {
-            const opName: string = matches[1].toLowerCase();
-            let value: any = matches[2];
-            try {
-                // Attempt to parse the value to a native type
-                value = JSON.parse(matches[2]);
-            } catch (err) {
-                // If an error occurred it's because the value is a string or date, not another type.
-                value = new Date(matches[2]);
-                if (isNaN(value)) {
-                    value = matches[2];
-                }
-            }
-            switch (opName) {
-                case "eq":
-                    return value;
-                case "gt":
-                    return { $gt: value };
-                case "gte":
-                    return { $gte: value };
-                case "in": {
-                    const args: string[] = value.split(",");
-                    return { $in: args };
-                }
-                case "nin": {
-                    const args: string[] = value.split(",");
-                    return { $nin: args };
-                }
-                case "like":
-                    return { $regex: value, $options: "i" };
-                case "lt":
-                    return { $lt: value };
-                case "lte":
-                    return { $lte: value };
-                case "ne":
-                    return { $ne: value };
-                case "not":
-                    return { $not: value };
-                case "range": {
-                    const args: string[] = value.split(",");
-                    if (args.length != 2) {
-                        throw new Error(
-                            "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
-                        );
-                    }
-                    try {
-                        // Attempt to parse the range values to native types
-                        return { $gte: JSON.parse(args[0]), $lte: JSON.parse(args[1]) };
-                    } catch (err) {
-                        return { $gte: args[0], $lte: args[1] };
+    private static getQueryParamValueMongo(param: any): any {
+        if (typeof param === "string") {
+            // The value of each param can optionally have the operation included. If no operator is included Eq is
+            // always assumed.
+            // e.g. ?param1=eq(value)&param2=not(value)&param3=gt(value)
+            const matches: RegExpMatchArray | null = param.match(new RegExp(/^([a-zA-Z]+)\((.*)\)$/, "i"));
+            if (matches) {
+                const opName: string = matches[1].toLowerCase();
+                let value: any = matches[2];
+                try {
+                    // Attempt to parse the value to a native type
+                    value = JSON.parse(matches[2]);
+                } catch (err) {
+                    // If an error occurred it's because the value is a string or date, not another type.
+                    value = new Date(matches[2]);
+                    if (isNaN(value)) {
+                        value = matches[2];
                     }
                 }
-                default:
-                    return value;
+                switch (opName) {
+                    case "eq":
+                        return value;
+                    case "gt":
+                        return { $gt: value };
+                    case "gte":
+                        return { $gte: value };
+                    case "in": {
+                        const args: string[] = value.split(",");
+                        return { $in: args };
+                    }
+                    case "nin": {
+                        const args: string[] = value.split(",");
+                        return { $nin: args };
+                    }
+                    case "like":
+                        return { $regex: value, $options: "i" };
+                    case "lt":
+                        return { $lt: value };
+                    case "lte":
+                        return { $lte: value };
+                    case "ne":
+                        return { $ne: value };
+                    case "not":
+                        return { $not: value };
+                    case "range": {
+                        const args: string[] = value.split(",");
+                        if (args.length != 2) {
+                            throw new Error(
+                                "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
+                            );
+                        }
+                        try {
+                            // Attempt to parse the range values to native types
+                            return { $gte: JSON.parse(args[0]), $lte: JSON.parse(args[1]) };
+                        } catch (err) {
+                            return { $gte: args[0], $lte: args[1] };
+                        }
+                    }
+                    default:
+                        return value;
+                }
+            } else {
+                try {
+                    // Attempt to parse the value to a native type
+                    return JSON.parse(param);
+                } catch (err) {
+                    // If an error occurred it's because the value is a string or date, not another type.
+                    const date: Date = new Date(param);
+                    return !isNaN(date.valueOf()) ? date : param;
+                }
             }
         } else {
-            try {
-                // Attempt to parse the value to a native type
-                return JSON.parse(param);
-            } catch (err) {
-                // If an error occurred it's because the value is a string or date, not another type.
-                const date: Date = new Date(param);
-                return !isNaN(date.valueOf()) ? date : param;
-            }
+            return param;
         }
     }
 
@@ -386,18 +413,18 @@ class ModelUtils {
         // add only one value to each query object.
         for (let key in queryParams) {
             // Ignore reserved query parameters
-            if (key.match(new RegExp("(jwt_|oauth_).*", "i"))) {
+            if (key.match(new RegExp("(jwt_|oauth_|cache).*", "i"))) {
                 continue;
             }
 
-            // Limit, skip and sort are reserved for specifying query limits
-            if (key.match(new RegExp("(limit|skip|sort).*", "i"))) {
+            // Limit, page and sort are reserved for specifying query limits
+            if (key.match(new RegExp("(limit|page|sort).*", "i"))) {
                 let value: any = queryParams[key];
 
                 if (key === "limit") {
                     key = "take";
                     query[key] = Number(value);
-                } else if (key === "skip") {
+                } else if (key === "page") {
                     query[key] = Number(value);
                 } else if (key === "sort") {
                     key = "order";
@@ -452,7 +479,7 @@ class ModelUtils {
         } else {
             query.take = 100;
         }
-        query.skip = query.skip ? query.skip : 0;
+        query.page = query.page ? query.page : 0;
 
         return query;
     }
@@ -510,8 +537,8 @@ class ModelUtils {
                 continue;
             }
 
-            // Limit, skip and sort are reserved for specifying query limits
-            if (key.match(new RegExp("(limit|skip|sort).*", "i"))) {
+            // Limit, page and sort are reserved for specifying query limits
+            if (key.match(new RegExp("(limit|page|sort).*", "i"))) {
                 let value: any = queryParams[key];
 
                 if (key === "sort") {
@@ -568,55 +595,4 @@ class ModelUtils {
         }
         return result;
     }
-
-    /**
-     * Loads all model schema files from the specified path and returns a map containing all the definitions.
-     *
-     * @param src The path to the model files to load.
-     * @returns A map containing of all loaded model names to their class definitions.
-     */
-    public static async loadModels(src: string, result: any = {}): Promise<any> {
-        return new Promise((resolve, reject) => {
-            try {
-                const fullPath = path.resolve(src);
-
-                fs.readdir(fullPath, { withFileTypes: true }, async (err: any, files: any) => {
-                    if (files) {
-                        files.forEach(async (file: any) => {
-                            let extension = path.extname(file.name);
-                            if (file.isDirectory()) {
-                                await this.loadModels(path.join(fullPath, file.name), result);
-                            } else if (extension === ".js") {
-                                let filePath = path.join(fullPath, file.name);
-                                let name = path.relative(src, filePath).replace(path.sep, ".");
-                                name = name.substr(0, name.length - 3);
-                                let clazz: any = require(filePath).default;
-                                if (clazz) {
-                                    clazz.fqn = name;
-                                    result[name] = clazz;
-                                    logger.info("Loaded model: " + name);
-                                }
-                            } else if (extension === ".ts") {
-                                let filePath = path.join(fullPath, file.name);
-                                let name = path.relative(src, filePath).replace(path.sep, ".");
-                                name = name.substr(0, name.length - 3);
-                                let clazz: any = require(filePath).default;
-                                if (clazz) {
-                                    clazz.fqn = name;
-                                    result[name] = clazz;
-                                    logger.info("Loaded model: " + name);
-                                }
-                            }
-                        });
-                    }
-
-                    resolve(result);
-                });
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
 }
-
-export default ModelUtils;

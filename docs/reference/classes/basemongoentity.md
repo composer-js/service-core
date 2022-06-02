@@ -14,8 +14,6 @@ Provides a common base class for all entity's that will be persisted with TypeOR
 
   ↳ **BaseMongoEntity**
 
-  ↳↳ [AccessControlListMongo](accesscontrollistmongo.md)
-
 ## Index
 
 ### Constructors
@@ -52,7 +50,7 @@ Name | Type |
 
 ### \_id
 
-• `Optional` **\_id**: ObjectID
+• `Optional` **\_id**: any
 
 *Defined in src/models/BaseMongoEntity.ts:18*
 

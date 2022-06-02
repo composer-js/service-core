@@ -2,6 +2,7 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import * as prom from "prom-client";
+import { Config } from "../decorators/ObjectDecorators";
 import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
 
 /**
@@ -12,12 +13,12 @@ import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
  * from the provided `prom-client` dependency. See the `prom-client` documentation for more details.
  */
 @Route("/metrics")
-export default class MetricsRoute {
+export class MetricsRoute {
+    @Config()
     private config: any;
     private registry: prom.Registry;
 
-    constructor(config: any) {
-        this.config = config;
+    constructor() {
         this.registry = prom.register;
     }
 
@@ -29,7 +30,7 @@ export default class MetricsRoute {
 
     @Get("/:metric")
     @ContentType(prom.register.contentType)
-    private getSingleMetric(@Param("metric") metric: any): string {
+    private async getSingleMetric(@Param("metric") metric: any): Promise<string> {
         return this.registry.getSingleMetricAsString(metric);
     }
 }

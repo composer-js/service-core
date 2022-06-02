@@ -13,6 +13,7 @@
 ### Properties
 
 * [datastore](entity.md#datastore)
+* [storeName](entity.md#storename)
 
 ## Properties
 
@@ -21,3 +22,11 @@
 • `Optional` **datastore**: any
 
 *Defined in src/ObjectFactory.ts:12*
+
+___
+
+### storeName
+
+• `Optional` **storeName**: any
+
+*Defined in src/Server.ts:29*

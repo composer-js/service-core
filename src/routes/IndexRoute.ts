@@ -2,7 +2,7 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Get, Route } from "../decorators/RouteDecorators";
-import { Request, Response } from "express";
+import { Config } from "../decorators/ObjectDecorators";
 
 /**
  * The `IndexRoute` provides a default `/` endpoint the returns metadata information about the service such as
@@ -11,12 +11,9 @@ import { Request, Response } from "express";
  * @author Jean-Philippe Steinmetz
  */
 @Route("/")
-class IndexRoute {
+export class IndexRoute {
+    @Config()
     private config: any;
-
-    constructor(config: any) {
-        this.config = config;
-    }
 
     @Get()
     private get(): any {
@@ -27,5 +24,3 @@ class IndexRoute {
         };
     }
 }
-
-export default IndexRoute;

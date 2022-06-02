@@ -34,7 +34,7 @@ specification to requesting clients.
 
 \+ **new OpenAPIRoute**(`apiSpec`: any): [OpenAPIRoute](openapiroute.md)
 
-*Defined in src/routes/OpenAPIRoute.ts:17*
+*Defined in src/routes/OpenAPIRoute.ts:16*
 
 Constructs a new `OpenAPIController` object with the specified defaults.
 
@@ -52,7 +52,7 @@ Name | Type | Description |
 
 • `Private` **apiSpec**: any
 
-*Defined in src/routes/OpenAPIRoute.ts:17*
+*Defined in src/routes/OpenAPIRoute.ts:16*
 
 The underlying OpenAPI specification.
 
@@ -62,7 +62,7 @@ The underlying OpenAPI specification.
 
 ▸ `Private`**get**(): any
 
-*Defined in src/routes/OpenAPIRoute.ts:30*
+*Defined in src/routes/OpenAPIRoute.ts:29*
 
 **Returns:** any
 
@@ -72,6 +72,6 @@ ___
 
 ▸ `Private`**getJSON**(): any
 
-*Defined in src/routes/OpenAPIRoute.ts:35*
+*Defined in src/routes/OpenAPIRoute.ts:34*
 
 **Returns:** any

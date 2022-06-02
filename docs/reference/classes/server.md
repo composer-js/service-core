@@ -24,7 +24,7 @@ authentication attempt failed.
 The following is an example of a simple route class.
 
 ```javascript
-import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, RouteDecorators } from "@composer-js/service_core";
 import { Get, Route } = RouteDecorators;
 
 @Route("/hello")
@@ -45,7 +45,7 @@ export default TestRoute;
 The following is an example of a route class that is bound to a data model providing basic CRUDS operations.
 
 ```javascript
-import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@composer-js/service_core";
 import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
 import { Model } = ModelDecorators;
 import { marshall } = DefaultBehaviors;
@@ -116,7 +116,6 @@ export default ItemRoute;
 
 ### Properties
 
-* [aclRepo](server.md#aclrepo)
 * [apiSpec](server.md#apispec)
 * [app](server.md#app)
 * [basePath](server.md#basepath)
@@ -124,7 +123,9 @@ export default ItemRoute;
 * [logger](server.md#logger)
 * [objectFactory](server.md#objectfactory)
 * [port](server.md#port)
+* [routeUtils](server.md#routeutils)
 * [server](server.md#server)
+* [serviceManager](server.md#servicemanager)
 * [wss](server.md#wss)
 * [metricCompletedRequests](server.md#metriccompletedrequests)
 * [metricFailedRequests](server.md#metricfailedrequests)
@@ -150,7 +151,7 @@ export default ItemRoute;
 
 \+ **new Server**(`config`: any, `apiSpec?`: any, `basePath?`: string, `logger?`: any, `objectFactory?`: [ObjectFactory](objectfactory.md)): [Server](server.md)
 
-*Defined in src/Server.ts:187*
+*Defined in src/Server.ts:188*
 
 Creates a new instance of Server with the specified defaults.
 
@@ -168,21 +169,11 @@ Name | Type | Default value | Description |
 
 ## Properties
 
-### aclRepo
-
-• `Protected` `Optional` `Readonly` **aclRepo**: Repository\<[AccessControlListSQL](accesscontrollistsql.md)> \| MongoRepository\<[AccessControlListMongo](accesscontrollistmongo.md)>
-
-*Defined in src/Server.ts:138*
-
-The repository to the access control lists.
-
-___
-
 ### apiSpec
 
 • `Protected` `Optional` `Readonly` **apiSpec**: any
 
-*Defined in src/Server.ts:140*
+*Defined in src/Server.ts:139*
 
 The OpenAPI specification object to use to construct the server with.
 
@@ -192,7 +183,7 @@ ___
 
 • `Protected` **app**: Application
 
-*Defined in src/Server.ts:142*
+*Defined in src/Server.ts:141*
 
 The underlying ExpressJS application that provides HTTP processing services.
 
@@ -202,7 +193,7 @@ ___
 
 • `Protected` `Readonly` **basePath**: string
 
-*Defined in src/Server.ts:144*
+*Defined in src/Server.ts:143*
 
 The base file system path that will be searched for models and routes.
 
@@ -212,7 +203,7 @@ ___
 
 • `Protected` `Optional` `Readonly` **config**: any
 
-*Defined in src/Server.ts:146*
+*Defined in src/Server.ts:145*
 
 The global object containing configuration information to use.
 
@@ -222,7 +213,7 @@ ___
 
 • `Protected` `Readonly` **logger**: any
 
-*Defined in src/Server.ts:148*
+*Defined in src/Server.ts:147*
 
 The logging utility to use when outputing to console/file.
 
@@ -232,7 +223,7 @@ ___
 
 • `Protected` `Readonly` **objectFactory**: [ObjectFactory](objectfactory.md)
 
-*Defined in src/Server.ts:150*
+*Defined in src/Server.ts:149*
 
 The object factory to use when injecting dependencies.
 
@@ -242,9 +233,17 @@ ___
 
 • `Readonly` **port**: number
 
-*Defined in src/Server.ts:152*
+*Defined in src/Server.ts:151*
 
 The port that the server is listening on.
+
+___
+
+### routeUtils
+
+• `Protected` `Optional` **routeUtils**: [RouteUtils](routeutils.md)
+
+*Defined in src/Server.ts:152*
 
 ___
 
@@ -258,11 +257,19 @@ The underlying HTTP server instance.
 
 ___
 
+### serviceManager
+
+• `Protected` `Optional` **serviceManager**: [BackgroundServiceManager](backgroundservicemanager.md)
+
+*Defined in src/Server.ts:155*
+
+___
+
 ### wss
 
 • `Protected` `Optional` **wss**: WebSocketServer
 
-*Defined in src/Server.ts:156*
+*Defined in src/Server.ts:157*
 
 The underlying WebSocket server instance.
 
@@ -272,7 +279,7 @@ ___
 
 ▪ `Static` `Protected` **metricCompletedRequests**: Counter\<string> = new prom.Counter({ name: "num\_completed\_requests", help: "The total number of successfully completed requests.", })
 
-*Defined in src/Server.ts:176*
+*Defined in src/Server.ts:177*
 
 ___
 
@@ -280,7 +287,7 @@ ___
 
 ▪ `Static` `Protected` **metricFailedRequests**: Counter\<string> = new prom.Counter({ name: "num\_failed\_requests", help: "The total number of failed requests.", })
 
-*Defined in src/Server.ts:180*
+*Defined in src/Server.ts:181*
 
 ___
 
@@ -288,7 +295,7 @@ ___
 
 ▪ `Static` `Protected` **metricRequestPath**: Histogram\<string> = new prom.Histogram({ name: "request\_path", help: "A histogram of the number of handled requests by the requested path.", labelNames: ["path"], })
 
-*Defined in src/Server.ts:161*
+*Defined in src/Server.ts:162*
 
 ___
 
@@ -296,7 +303,7 @@ ___
 
 ▪ `Static` `Protected` **metricRequestStatus**: Histogram\<string> = new prom.Histogram({ name: "request\_status", help: "A histogram of the resulting status code of handled requests by the requested path.", labelNames: ["path", "code"], })
 
-*Defined in src/Server.ts:166*
+*Defined in src/Server.ts:167*
 
 ___
 
@@ -304,7 +311,7 @@ ___
 
 ▪ `Static` `Protected` **metricRequestTime**: Summary\<string> = new prom.Summary({ name: "request\_time", help: "A histogram of the response time of handled requests by the requested path.", labelNames: ["path"], })
 
-*Defined in src/Server.ts:171*
+*Defined in src/Server.ts:172*
 
 ___
 
@@ -312,7 +319,7 @@ ___
 
 ▪ `Static` `Protected` **metricTotalRequests**: Counter\<string> = new prom.Counter({ name: "num\_total\_requests", help: "The total number of requests processed.", })
 
-*Defined in src/Server.ts:184*
+*Defined in src/Server.ts:185*
 
 ## Methods
 
@@ -320,7 +327,7 @@ ___
 
 ▸ **getApplication**(): Application
 
-*Defined in src/Server.ts:217*
+*Defined in src/Server.ts:218*
 
 Returns the express app.
 
@@ -332,7 +339,7 @@ ___
 
 ▸ **getServer**(): Server \| undefined
 
-*Defined in src/Server.ts:224*
+*Defined in src/Server.ts:225*
 
 Returns the http server.
 
@@ -344,7 +351,7 @@ ___
 
 ▸ `Protected`**injectProperties**(`clazz`: any, `obj`: any): Promise\<void>
 
-*Defined in src/Server.ts:241*
+*Defined in src/Server.ts:242*
 
 Injects all known dependencies into the given object based on the property decorators.
 
@@ -363,7 +370,7 @@ ___
 
 ▸ `Protected`**instantiateRoute**(`classDef`: any): Promise\<any>
 
-*Defined in src/Server.ts:262*
+*Defined in src/Server.ts:263*
 
 Intantiates the given route class definition into an object that can be registered to Express.
 
@@ -383,7 +390,7 @@ ___
 
 ▸ **isRunning**(): boolean
 
-*Defined in src/Server.ts:231*
+*Defined in src/Server.ts:232*
 
 Returns `true` if the server is running, otherwise `false`.
 
@@ -395,7 +402,7 @@ ___
 
 ▸ **restart**(): Promise\<void>
 
-*Defined in src/Server.ts:462*
+*Defined in src/Server.ts:508*
 
 Restarts the HTTP listen server using the provided configuration and OpenAPI specification.
 
@@ -407,7 +414,7 @@ ___
 
 ▸ **start**(): Promise\<void>
 
-*Defined in src/Server.ts:276*
+*Defined in src/Server.ts:277*
 
 Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
 
@@ -419,7 +426,7 @@ ___
 
 ▸ **stop**(): Promise\<void>
 
-*Defined in src/Server.ts:429*
+*Defined in src/Server.ts:469*
 
 Stops the HTTP listen server.
 

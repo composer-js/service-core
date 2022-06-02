@@ -2,7 +2,7 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Identifier } from "../decorators/ModelDecorators";
-import { Column, Index, PrimaryColumn } from "typeorm";
+import { Index, PrimaryColumn } from "typeorm";
 const uuid = require("uuid");
 
 /**
@@ -11,7 +11,7 @@ const uuid = require("uuid");
  *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
-export default abstract class BaseEntity {
+export abstract class SimpleEntity {
     /**
      * The universally unique identifier of the entity.
      */
@@ -22,7 +22,7 @@ export default abstract class BaseEntity {
 
     constructor(other?: any) {
         if (other) {
-            this.uid = other.uid ? other.uid : this.uid;
+            this.uid = 'uid' in other ? other.uid : this.uid;
         }
     }
 }

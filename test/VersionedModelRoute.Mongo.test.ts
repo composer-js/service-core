@@ -3,9 +3,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
-import { Server, ConnectionManager, ModelUtils } from "../src/service_core";
+import { Server, ConnectionManager, ModelUtils } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import User from "./models/VersionedUser";
+import User from "./server/models/VersionedUser";
 import { MongoRepository, Connection } from "typeorm";
 const uuid = require("uuid");
 
@@ -17,7 +17,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
     autoStart: false,
 });
 let repo: MongoRepository<User>;
-const server: Server = new Server(config, undefined, "./test");
+const server: Server = new Server(config, undefined, "./test/server");
 const baseUrl: string = "/versionedusers";
 
 const createUser = async (firstName: string, lastName: string, age: number = 100, versions: number = 1): Promise<User[]> => {
@@ -192,29 +192,29 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
     describe("Multiple Document Tests [MongoDB]", () => {
         it("Can count documents. [MongoDB]", async () => {
             const users: User[] = await createUsers(20);
-            const result = await request(server.getApplication()).get(`${baseUrl}/count`);
+            const result = await request(server.getApplication()).head(`${baseUrl}`);
             expect(result).toHaveProperty("body");
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(users.length);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe(String(users.length));
         });
 
         it("Can count documents with multiple versions. [MongoDB]", async () => {
             const users: User[] = await createUsers(20, 3);
-            const result = await request(server.getApplication()).get(`${baseUrl}/count`);
+            const result = await request(server.getApplication()).head(`${baseUrl}`);
             expect(result).toHaveProperty("body");
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(20);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe("20");
         });
 
         it("Can count documents with criteria (eq). [MongoDB]", async () => {
             const users: User[] = await createUsers(13, 2);
             await createUser("David", "Tennant", 47, 3);
             await createUser("Matt", "Smith", 36, 4);
-            const result = await request(server.getApplication()).get(`${baseUrl}/count?lastName=Doctor`);
+            const result = await request(server.getApplication()).head(`${baseUrl}?lastName=Doctor`);
             expect(result).toHaveProperty("body");
             console.log(result.body);
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(13);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe("13");
         });
 
         it("Can find all documents. [MongoDB]", async () => {

@@ -5,7 +5,7 @@
 # Class: BackgroundService
 
 The `BackgroundService` is an abstract base class for defining scheduled background services. A background service
-executes in the background on a set schedule (like a cron job) and performs additional processing.
+executes in the background once on startup or on a set schedule (like a cron job) and performs additional processing.
 
 **`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
 

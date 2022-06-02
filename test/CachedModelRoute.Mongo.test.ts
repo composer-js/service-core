@@ -4,11 +4,11 @@
 import { default as config } from "./config";
 import * as crypto from "crypto";
 import * as request from "supertest";
-import { Server, ConnectionManager, ModelUtils } from "../src/service_core";
+import { Server, ConnectionManager, ModelUtils } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import User from "./models/CacheUser";
+import User from "./server/models/CacheUser";
 import { MongoRepository, Connection } from "typeorm";
-import CacheUser from "./models/CacheUser";
+import CacheUser from "./server/models/CacheUser";
 import { start } from "repl";
 const Redis = require("ioredis-mock");
 
@@ -22,7 +22,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 });
 const redis: any = new Redis();
 let repo: MongoRepository<User>;
-const server: Server = new Server(config, undefined, "./test");
+const server: Server = new Server(config, undefined, "./test/server");
 
 const createUser = async (firstName: string, lastName: string, age: number = 100): Promise<User> => {
     const user: User = new User({
@@ -53,7 +53,7 @@ const getCacheKey = function(query: any): string {
         baseCacheKey +
         "." +
         crypto
-            .createHash("sha256")
+            .createHash("sha512")
             .update(JSON.stringify(query))
             .digest("hex")
     );
@@ -105,7 +105,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toEqual(user.lastName);
             expect(result.body.age).toEqual(user.age);
 
-            const stored: User | undefined = await repo.findOne({ uid: result.body.uid });
+            const stored: User | undefined = await repo.findOne({ uid: result.body.uid } as any);
             expect(stored).toBeDefined();
             if (stored) {
                 expect(stored.uid).toEqual(user.uid);
@@ -114,7 +114,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 expect(stored.lastName).toEqual(user.lastName);
                 expect(stored.age).toEqual(user.age);
 
-                const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, result.body.uid);
+                const query: any = ModelUtils.buildIdSearchQuery(repo, CacheUser, result.body.uid);
                 const cacheKey: string = getCacheKey(query);
                 const json: string = await redis.get(cacheKey);
                 expect(json).toBeDefined();
@@ -132,7 +132,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const result = await request(server.getApplication()).delete("/cachedusers/" + user.uid);
             expect(result.status).toBe(204);
 
-            const existing: User | undefined = await repo.findOne({ uid: user.uid });
+            const existing: User | undefined = await repo.findOne({ uid: user.uid } as any);
             expect(existing).toBeUndefined();
 
             const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, user.uid);
@@ -178,7 +178,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toBe(user.lastName);
             expect(result.body.age).toBe(user.age);
 
-            const existing: User | undefined = await repo.findOne({ uid: user.uid });
+            const existing: User | undefined = await repo.findOne({ uid: user.uid } as any);
             expect(existing).toBeDefined();
             if (existing) {
                 expect(existing.uid).toBe(result.body.uid);

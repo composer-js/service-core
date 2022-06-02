@@ -1,10 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import BackgroundService from "./BackgroundService";
-import * as schedule from "node-schedule";
+import { BackgroundService } from "./BackgroundService";
 import { ClassLoader } from "@composer-js/core";
-import * as path from "path";
+import * as schedule from "node-schedule";
+import { ObjectFactory } from "./ObjectFactory";
+import "reflect-metadata";
 
 /**
  * The `BackgroundServiceManager` manages all configured background services in the application. It is responsible for
@@ -16,9 +17,9 @@ import * as path from "path";
  * `startAll` function. When shutting your application down you should call the `stopAll` function.
  *
  * ```
- * import { BackgroundServiceManager } from "@acceleratxr/services_manager";
+ * import { BackgroundServiceManager } from "@composer-js/services_manager";
  *
- * const manager: BackgroundServiceManager = new BackgroundServiceManager(".", config, logger);
+ * const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, config, logger);
  * await manager.startAll();
  * ...
  * await manager.stopAll();
@@ -31,38 +32,21 @@ import * as path from "path";
  * ...
  * await manger.stop("MyService");
  * ```
- *
- * ## Configuration
- * Background services are defined in the global configuration file under the key `jobs`. The `jobs` object is a
- * standard map where the key is the service name (class/module name). Each configured service must have the
- * `schedule` property defined. If not, the `jobs.defaultSchedule` is applied for that service.
- *
- * Example:
- * ```
- * {
- *     jobs: {
- *         defaultSchedule: "* * * * * *",
- *         MyService: {
- *             schedule: "* * * * * *"
- *         },
- *     }
- * }
- * ```
- *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
-export default class BackgroundServiceManager {
+export class BackgroundServiceManager {
     private classLoader: ClassLoader;
     private readonly config: any;
     private jobs: any = {};
-    private loaded: boolean = false;
     private readonly logger: any;
+    private objectFactory: ObjectFactory;
     private services: any = {};
 
-    constructor(basePath: string, config: any, logger: any) {
+    constructor(classLoader: ClassLoader, objectFactory: ObjectFactory, config: any, logger: any) {
+        this.classLoader = classLoader;
         this.config = config;
         this.logger = logger;
-        this.classLoader = new ClassLoader(path.join(basePath, "jobs"));
+        this.objectFactory = objectFactory;
     }
 
     /**
@@ -70,31 +54,24 @@ export default class BackgroundServiceManager {
      *
      * @param name The name of the background service to retrieve.
      */
-    public getService(name: string): BackgroundService {
+    public getService(name: string): BackgroundService | undefined {
         return this.services[name];
     }
 
     /**
      * Starts all configured background services.
      */
-    public async startAll(): Promise<void> {
-        const jobConfig: any = this.config.get("jobs");
-
-        // Load all background service classes
-        if (!this.loaded) {
-            await this.classLoader.Load();
-            this.loaded = true;
-        }
-
-        // Go through all configured jobs. Each entry will correspond to a loaded class.
-        for (const jobName in jobConfig) {
-            // Ignore protected config variables
-            if (jobName === "defaultSchedule") {
-                continue;
+     public async startAll(): Promise<void> {
+        // Go through all loaded background job scripts and start each one
+        const classes: Map<string, any> | undefined = this.classLoader.getClasses();
+        if (classes) {
+            for (const pair of classes.entries()) {
+                // Is the class a background service?
+                const isJob: boolean = Reflect.getMetadata("cjs:job", pair[1]) || false;
+                if (isJob) {
+                    await this.start(pair[0], pair[1]);
+                }
             }
-
-            // Start the background service
-            await this.start(jobName);
         }
     }
 
@@ -102,33 +79,43 @@ export default class BackgroundServiceManager {
      * Starts the background service with the given name.
      *
      * @param serviceName The name of the background service to start.
+     * @param clazz The class type of the service to start. If not specified the name is used to lookup the
+     *                      class type.
+     * @param args The list of arguments to pass into the service constructor
      */
-    public async start(serviceName: string): Promise<void> {
-        const jobConfig: any = this.config.get("jobs:" + serviceName);
-        if (!jobConfig) {
-            throw new Error("No configuration for background service " + serviceName);
+     public async start(serviceName: string, clazz?: any, ...args: any): Promise<void> {
+        // Check that the job hasn't already been started
+        if (this.jobs[serviceName]) {
+            return;
         }
 
-        // Load all background service classes
-        if (!this.loaded) {
-            await this.classLoader.Load();
-            this.loaded = true;
-        }
+        // Look for the class definition with the given name if not already given
+        clazz = clazz ? clazz : this.classLoader.getClass(serviceName);
 
-        if (this.classLoader.HasClass(serviceName)) {
-            this.logger.info("Starting service " + serviceName + "...");
+        if (clazz) {
+            try {
+                this.logger.info("Starting service " + serviceName + "...");
 
-            // Instantiate the service class
-            const clazz: any = this.classLoader.GetClass(serviceName);
-            const service: BackgroundService = new clazz(this.config, this.logger) as BackgroundService;
-            this.services[serviceName] = service;
+                // Instantiate the service class
+                const service: BackgroundService = await this.objectFactory.newInstance(clazz, serviceName, this.config, this.logger, ...args) as BackgroundService;
+                this.services[serviceName] = service;
 
-            // Initialize the service
-            await service.start();
+                // Initialize the service
+                await service.start();
 
-            // Schedule the service for background execution
-            const interval: string = jobConfig.schedule ? jobConfig.schedule : this.config.get("jobs:defaultSchedule");
-            this.jobs[serviceName] = schedule.scheduleJob(interval, service.run.bind(service));
+                // Schedule the service for background execution
+                if (clazz.schedule) {
+                    this.jobs[serviceName] = schedule.scheduleJob(clazz.schedule, service.run.bind(service));
+                } else {
+                    // One time execution services are run once and then immediately cleaned up
+                    await service.run();
+                    await service.stop();
+                    await this.objectFactory.destroy(service);
+                }
+            } catch (err) {
+                this.logger.error(`Failed to start service: ${serviceName}`);
+                this.logger.debug(err);
+            }
         }
     }
 

@@ -34,15 +34,9 @@ from the provided `prom-client` dependency. See the `prom-client` documentation 
 
 ### constructor
 
-\+ **new MetricsRoute**(`config`: any): [MetricsRoute](metricsroute.md)
+\+ **new MetricsRoute**(): [MetricsRoute](metricsroute.md)
 
-*Defined in src/routes/MetricsRoute.ts:17*
-
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`config` | any |
+*Defined in src/routes/MetricsRoute.ts:19*
 
 **Returns:** [MetricsRoute](metricsroute.md)
 
@@ -52,7 +46,7 @@ Name | Type |
 
 • `Private` **config**: any
 
-*Defined in src/routes/MetricsRoute.ts:16*
+*Defined in src/routes/MetricsRoute.ts:18*
 
 ___
 
@@ -60,7 +54,7 @@ ___
 
 • `Private` **registry**: Registry
 
-*Defined in src/routes/MetricsRoute.ts:17*
+*Defined in src/routes/MetricsRoute.ts:19*
 
 ## Methods
 
@@ -68,7 +62,7 @@ ___
 
 ▸ `Private`**getMetrics**(): Promise\<string>
 
-*Defined in src/routes/MetricsRoute.ts:26*
+*Defined in src/routes/MetricsRoute.ts:27*
 
 **Returns:** Promise\<string>
 
@@ -76,9 +70,9 @@ ___
 
 ### getSingleMetric
 
-▸ `Private`**getSingleMetric**(`metric`: any): string
+▸ `Private`**getSingleMetric**(`metric`: any): Promise\<string>
 
-*Defined in src/routes/MetricsRoute.ts:32*
+*Defined in src/routes/MetricsRoute.ts:33*
 
 #### Parameters:
 
@@ -86,4 +80,4 @@ Name | Type |
 ------ | ------ |
 `metric` | any |
 
-**Returns:** string
+**Returns:** Promise\<string>

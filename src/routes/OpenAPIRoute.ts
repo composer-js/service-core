@@ -2,7 +2,6 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Get, Route, ContentType } from "../decorators/RouteDecorators";
-import { Request, Response } from "express";
 const swagger = require("swagger-ui-express");
 
 /**
@@ -12,7 +11,7 @@ const swagger = require("swagger-ui-express");
  * @author Jean-Philippe Steinmetz
  */
 @Route("/")
-class OpenAPIRoute {
+export class OpenAPIRoute {
     /** The underlying OpenAPI specification. */
     private apiSpec: any;
 
@@ -36,5 +35,3 @@ class OpenAPIRoute {
         return this.apiSpec;
     }
 }
-
-export default OpenAPIRoute;

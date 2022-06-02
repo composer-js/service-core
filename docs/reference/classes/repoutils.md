@@ -31,7 +31,7 @@ Verify object does not exist and update required fields for BaseEntity
 
 Name | Type |
 ------ | ------ |
-`T` | [BaseEntity](baseentity.md) \| SimpleEntity |
+`T` | [BaseEntity](baseentity.md) \| [SimpleEntity](simpleentity.md) |
 
 #### Parameters:
 
@@ -46,9 +46,9 @@ ___
 
 ### preprocessBeforeUpdate
 
-▸ `Static`**preprocessBeforeUpdate**\<T>(`repo`: Repository\<T> \| MongoRepository\<T>, `obj`: T): Promise\<T>
+▸ `Static`**preprocessBeforeUpdate**\<T>(`repo`: Repository\<T> \| MongoRepository\<T>, `modelClass`: any, `obj`: T, `old?`: T): Promise\<T>
 
-*Defined in src/models/RepoUtils.ts:49*
+*Defined in src/models/RepoUtils.ts:56*
 
 Verify object does exist and update required fields
 
@@ -56,13 +56,15 @@ Verify object does exist and update required fields
 
 Name | Type |
 ------ | ------ |
-`T` | [BaseEntity](baseentity.md) \| SimpleEntity |
+`T` | [BaseEntity](baseentity.md) \| [SimpleEntity](simpleentity.md) |
 
 #### Parameters:
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `repo` | Repository\<T> \| MongoRepository\<T> | Repository used to verify no existing object |
-`obj` | T | Object that exentds BaseEntity or SimpleEntity  |
+`modelClass` | any | - |
+`obj` | T | Object that exentds BaseEntity or SimpleEntity |
+`old?` | T | The original object to validate against  |
 
 **Returns:** Promise\<T>

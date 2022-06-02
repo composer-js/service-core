@@ -10,7 +10,7 @@ import { JWTUtils, JWTUtilsConfig, JWTUser } from "@composer-js/core";
  *
  * @author Jean-Philippe Steinmetz
  */
-export class Options {
+export class JWTStrategyOptions {
     /** Set to true to allow a failure to be processed as a success, otherwise set to false. Default value is `false`. */
     public allowFailure: boolean = false;
     /** The configuration options to pass to the JWTUtils library during token verification. */
@@ -37,9 +37,9 @@ export class Options {
  * @author Jean-Philippe Steinmetz
  */
 export class JWTStrategy extends Strategy {
-    private options: Options;
+    private options: JWTStrategyOptions;
 
-    constructor(options: Options) {
+    constructor(options: JWTStrategyOptions) {
         super();
         this.options = options;
         this.options.headerKey = options.headerKey.toLowerCase();
@@ -61,7 +61,7 @@ export class JWTStrategy extends Strategy {
                 if (user) {
                     error = "";
                 }
-            } catch (err) {
+            } catch (err: any) {
                 error = err;
             }
         }
@@ -98,7 +98,7 @@ export class JWTStrategy extends Strategy {
                         // No need to continue checking remaining headers. We have our success.
                         break;
                     }
-                } catch (err) {
+                } catch (err: any) {
                     error = err;
                 }
             }
@@ -122,7 +122,7 @@ export class JWTStrategy extends Strategy {
                 if (user) {
                     error = "";
                 }
-            } catch (err) {
+            } catch (err: any) {
                 error = err;
             }
         }

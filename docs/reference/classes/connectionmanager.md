@@ -20,6 +20,7 @@ Provides database connection management.
 
 ### Methods
 
+* [buildConnectionUri](connectionmanager.md#buildconnectionuri)
 * [connect](connectionmanager.md#connect)
 * [disconnect](connectionmanager.md#disconnect)
 
@@ -33,11 +34,29 @@ Provides database connection management.
 
 ## Methods
 
+### buildConnectionUri
+
+▸ `Static` `Private`**buildConnectionUri**(`config`: any): string
+
+*Defined in src/database/ConnectionManager.ts:21*
+
+Builds a compatible connection URI for the database by the provided configuration.
+
+#### Parameters:
+
+Name | Type |
+------ | ------ |
+`config` | any |
+
+**Returns:** string
+
+___
+
 ### connect
 
-▸ `Static`**connect**(`datastores`: any, `models`: any): Promise\<void>
+▸ `Static`**connect**(`datastores`: any, `models`: Map\<string, any>): Promise\<void>
 
-*Defined in src/database/ConnectionManager.ts:24*
+*Defined in src/database/ConnectionManager.ts:39*
 
 Attempts to initiate all database connections as defined in the config.
 
@@ -46,7 +65,7 @@ Attempts to initiate all database connections as defined in the config.
 Name | Type | Description |
 ------ | ------ | ------ |
 `datastores` | any | - |
-`models` | any | A map of model names and associated class definitions to establish database connections for.  |
+`models` | Map\<string, any> | A map of model names and associated class definitions to establish database connections for.  |
 
 **Returns:** Promise\<void>
 
@@ -56,7 +75,7 @@ ___
 
 ▸ `Static`**disconnect**(): Promise\<void>
 
-*Defined in src/database/ConnectionManager.ts:85*
+*Defined in src/database/ConnectionManager.ts:110*
 
 Attempts to disconnect all active database connections.
 

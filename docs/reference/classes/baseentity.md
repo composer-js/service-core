@@ -5,8 +5,6 @@
 # Class: BaseEntity
 
 Provides a common base class for all entity's that will be persisted with TypeORM.
-Provides a simple base class for all entity's that will be persisted with TypeORM. Unlike `BaseEntity` this class
-does not provide optimistic locking or date created and modified tracking.
 
 Note that the `@CreateDateColumn`, `@UpdateDateColumn`, and `@VersionColumn` decorators from TypeORM are not supported
 because they are not implemented in TypeORM's MongoDB support. They are instead implemented directly by this
@@ -14,13 +12,9 @@ library as part of `ModelRoute`.
 
 **`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
 
-**`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
-
 ## Hierarchy
 
 * **BaseEntity**
-
-  ↳ [AccessControlListSQL](accesscontrollistsql.md)
 
   ↳ [BaseMongoEntity](basemongoentity.md)
 
@@ -81,9 +75,6 @@ ___
 
 *Defined in src/models/BaseEntity.ts:24*
 
-*Defined in src/models/SimpleEntity.ts:21*
-
-The universally unique identifier of the entity.
 The universally unique identifier of the entity.
 
 ___

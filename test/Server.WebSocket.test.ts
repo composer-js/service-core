@@ -4,7 +4,7 @@
 const fs = require("fs");
 
 import { default as config } from "./config";
-import { Server } from "../src/service_core";
+import { Server } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as path from "path";
 import * as request from "supertest";
@@ -29,7 +29,7 @@ describe("Server Tests", () => {
     const apiSpec: any = yamljs.safeLoad(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
     expect(apiSpec).toBeDefined();
 
-    const server: Server = new Server(config, apiSpec, "./test");
+    const server: Server = new Server(config, apiSpec, "./test/server");
 
     beforeAll(async () => {
         await mongod.start();

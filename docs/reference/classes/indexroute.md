@@ -15,10 +15,6 @@ name, version.
 
 ## Index
 
-### Constructors
-
-* [constructor](indexroute.md#constructor)
-
 ### Properties
 
 * [config](indexroute.md#config)
@@ -27,29 +23,13 @@ name, version.
 
 * [get](indexroute.md#get)
 
-## Constructors
-
-### constructor
-
-\+ **new IndexRoute**(`config`: any): [IndexRoute](indexroute.md)
-
-*Defined in src/routes/IndexRoute.ts:15*
-
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`config` | any |
-
-**Returns:** [IndexRoute](indexroute.md)
-
 ## Properties
 
 ### config
 
 • `Private` **config**: any
 
-*Defined in src/routes/IndexRoute.ts:15*
+*Defined in src/routes/IndexRoute.ts:16*
 
 ## Methods
 
@@ -57,6 +37,6 @@ Name | Type |
 
 ▸ `Private`**get**(): any
 
-*Defined in src/routes/IndexRoute.ts:22*
+*Defined in src/routes/IndexRoute.ts:19*
 
 **Returns:** any

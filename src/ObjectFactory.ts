@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
 import { Logger } from "@composer-js/core";
-import ConnectionManager from "./database/ConnectionManager";
+import { ConnectionManager } from "./database/ConnectionManager";
 import { Connection } from "typeorm";
 import * as Redis from "ioredis";
 const uuid = require("uuid");
@@ -19,7 +19,7 @@ interface Entity {
  * 
  * @author Jean-Philippe Steinmetz
  */
-export default class ObjectFactory {
+export class ObjectFactory {
     /** A map for string fully qualified class names to their class types. */
     private classes: Map<string, any> = new Map();
 
@@ -40,16 +40,28 @@ export default class ObjectFactory {
     }
 
     /**
-     * Destroys the factory including all instantiated objects it is managing.
+     * Destroys the specified objects. If `undefined` is passed in, all objects managed by the factory are destroyed.
      */
-    public async destroy(): Promise<void> {
-        // Go through each managed instance and call its destructor, if available
-        this.instances.forEach(async (obj: any) => {
+    public async destroy(objs?: any | any[]): Promise<void> {
+        // If no set of objects was provided we want to destroy everything
+        if (!objs) {
+            objs = this.instances.values();
+        }
+
+        // If only a single object was passed in we need to convert this to an array
+        if (!Array.isArray(objs)) {
+            objs = [objs];
+        }
+
+        // Go through each object and call its destructor, if available
+        for (const obj of objs) {
+            const name: string = obj.name;
+
             let destroyFunc: Function | undefined = undefined;
             let proto = Object.getPrototypeOf(obj);
             while (proto) {
                 for (const member of Object.getOwnPropertyNames(proto)) {
-                    const hasDestructor: boolean = Reflect.getMetadata("axr:destructor", proto, member);
+                    const hasDestructor: boolean = Reflect.getMetadata("cjs:destructor", proto, member);
                     if (hasDestructor) {
                         destroyFunc = obj[member];
                         break;
@@ -75,9 +87,7 @@ export default class ObjectFactory {
                     this.logger.debug(err);
                 }
             }
-        });
-
-        this.clearAll();
+        }
     }
 
     /**
@@ -105,13 +115,16 @@ export default class ObjectFactory {
             // Search for each type of injectable property
             for (const member of Object.getOwnPropertyNames(proto)) {
                 // Inject @Config
-                const injectConfig: any = Reflect.getMetadata("axr:injectConfig", proto, member);
+                const injectConfig: any = Reflect.getMetadata("cjs:injectConfig", proto, member);
                 if (injectConfig) {
+                    const defaultValue: any = Reflect.getMetadata("cjs:injectConfigDefault", proto, member);
                     // If the value is a string, then it must be a path to a specific variable desired
                     if (typeof injectConfig === "string") {
                         const value: any = this.config.get(injectConfig);
-                        if (value) {
+                        if (value !== undefined) {
                             obj[member] = value;
+                        } else if (defaultValue !== undefined) {
+                            obj[member] = defaultValue;
                         } else {
                             throw new Error("No configuration variable is defined at path: " + injectConfig);
                         }
@@ -122,13 +135,13 @@ export default class ObjectFactory {
                 }
 
                 // Inject @Logger
-                const injectLogger: any = Reflect.getMetadata("axr:injectLogger", proto, member);
+                const injectLogger: any = Reflect.getMetadata("cjs:injectLogger", proto, member);
                 if (injectLogger) {
                     obj[member] = this.logger;
                 }
 
                 // Inject @Repository
-                const injectRepo: any = Reflect.getMetadata("axr:injectRepo", proto, member);
+                const injectRepo: any = Reflect.getMetadata("cjs:injectRepo", proto, member);
                 if (injectRepo) {
                     // Look up the connection name from the model class
                     const datastore: string = (injectRepo as Entity).datastore;
@@ -147,7 +160,7 @@ export default class ObjectFactory {
                 }
 
                 // Inject @MongoRepository
-                const injectMongoRepo: any = Reflect.getMetadata("axr:injectMongoRepo", proto, member);
+                const injectMongoRepo: any = Reflect.getMetadata("cjs:injectMongoRepo", proto, member);
                 if (injectMongoRepo) {
                     // Look up the connection name from the model class
                     const datastore: string = (injectMongoRepo as Entity).datastore;
@@ -166,13 +179,16 @@ export default class ObjectFactory {
                 }
 
                 // Inject @RedisConnection
-                const injectRedisConn: string = Reflect.getMetadata("axr:injectRedisRepo", proto, member);
+                const injectRedisConn: string = Reflect.getMetadata("cjs:injectRedisRepo", proto, member);
                 if (injectRedisConn) {
-                    const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(
+                    const conn: any = ConnectionManager.connections.get(
                         injectRedisConn
                     );
                     if (conn) {
-                        obj[member] = conn;
+                        // Always create a copy of the redis connection so that the user can subscribe/publish
+                        // to redis pubsub channels without error. We must also check that it is possible to duplicate
+                        // the connection.
+                        obj[member] = conn.duplicate ? conn.duplicate() : conn;
                         // The `cache` datastore is a special case that we don't want to fail on if it's missing
                     } else if (injectRedisConn !== "cache") {
                         throw new Error("Unable to find database connection with name: " + injectRedisConn);
@@ -180,7 +196,7 @@ export default class ObjectFactory {
                 }
 
                 // Inject @Inject
-                const injectObject: any = Reflect.getMetadata("axr:injectObject", proto, member);
+                const injectObject: any = Reflect.getMetadata("cjs:injectObject", proto, member);
                 if (injectObject) {
                     // First register the type just in case it hasn't been done yet
                     this.register(injectObject.type);
@@ -214,7 +230,7 @@ export default class ObjectFactory {
         const results: Function[] = [];
 
         for (const member in obj) {
-            const initialize: boolean = Reflect.getMetadata("axr:initialize", obj, member);
+            const initialize: boolean = Reflect.getMetadata("cjs:initialize", obj, member);
             if (initialize) {
                 results.push(obj[member]);
                 break;
@@ -224,7 +240,7 @@ export default class ObjectFactory {
         let proto = Object.getPrototypeOf(obj);
         while (proto) {
             for (const member of Object.getOwnPropertyNames(proto)) {
-                const initialize: boolean = Reflect.getMetadata("axr:initialize", proto, member);
+                const initialize: boolean = Reflect.getMetadata("cjs:initialize", proto, member);
                 if (initialize) {
                     results.push(obj[member]);
                     break;
@@ -316,6 +332,9 @@ export default class ObjectFactory {
         this.logger.debug(`Creating new instance of class [${className}] with name [${name}]`);
         const instance: T = new clazz(...args);
 
+        // Save the name to the object
+        (instance as any).name = name;
+
         // Now initialize the object with any injectable defaults
         await this.initialize(instance);
 
@@ -333,7 +352,7 @@ export default class ObjectFactory {
      * @param fqn The fully qualified name of the class to register. If not specified, the class name will be used.
      */
     public register(clazz: any, fqn?: string): void {
-        const name: string = fqn ? fqn : clazz.name;
+        const name: string = fqn ? fqn : (clazz.fqn ? clazz.fqn : clazz.name);
         if (!this.classes.has(name)) {
             this.logger.info(`Registering class ${name}`);
             this.classes.set(name, clazz);

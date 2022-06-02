@@ -11,7 +11,7 @@ Provides a simple base class for all entity's that will be persisted with TypeOR
 
 ## Hierarchy
 
-* BaseEntity
+* [SimpleEntity](simpleentity.md)
 
   ↳ **SimpleMongoEntity**
 
@@ -32,7 +32,7 @@ Provides a simple base class for all entity's that will be persisted with TypeOR
 
 \+ **new SimpleMongoEntity**(`other?`: any): [SimpleMongoEntity](simplemongoentity.md)
 
-*Overrides void*
+*Overrides [SimpleEntity](simpleentity.md).[constructor](simpleentity.md#constructor)*
 
 *Defined in src/models/SimpleMongoEntity.ts:18*
 
@@ -48,7 +48,7 @@ Name | Type |
 
 ### \_id
 
-• `Optional` **\_id**: ObjectID
+• `Optional` **\_id**: [ObjectID](../globals.md#objectid)
 
 *Defined in src/models/SimpleMongoEntity.ts:18*
 
@@ -60,7 +60,7 @@ ___
 
 •  **uid**: string = uuid.v4()
 
-*Inherited from [SimpleMongoEntity](simplemongoentity.md).[uid](simplemongoentity.md#uid)*
+*Inherited from [SimpleEntity](simpleentity.md).[uid](simpleentity.md#uid)*
 
 *Defined in src/models/SimpleEntity.ts:21*
 

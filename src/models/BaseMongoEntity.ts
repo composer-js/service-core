@@ -2,20 +2,20 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectIdColumn } from "typeorm";
-import { ObjectID } from "mongodb";
-import BaseEntity from "./BaseEntity";
+import { BaseEntity } from "./BaseEntity";
+const { ObjectID } = require("mongodb");
 
 /**
  * Provides a common base class for all entity's that will be persisted with TypeORM in a MongoDB database.
  *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
-export default abstract class BaseMongoEntity extends BaseEntity {
+export abstract class BaseMongoEntity extends BaseEntity {
     /**
      * The internal unique identifier used by MongoDB.
      */
     @ObjectIdColumn()
-    public _id?: ObjectID;
+    public _id?: any;
 
     constructor(other?: any) {
         super(other);

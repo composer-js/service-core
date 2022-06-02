@@ -4,7 +4,7 @@
 const fs = require("fs");
 import "reflect-metadata";
 
-import { ModelUtils } from "../src/service_core";
+import { ModelUtils } from "../src";
 import { Identifier } from "../src/decorators/ModelDecorators";
 import {
     Not,
@@ -20,6 +20,7 @@ import {
     PrimaryColumn,
     Column,
 } from "typeorm";
+const uuid = require("uuid");
 
 @Entity()
 class SingleIdentifierClass {
@@ -46,35 +47,49 @@ describe("ModelUtils Tests", () => {
         it("Can build id search query with single identifier.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID");
             expect(query).toEqual({
-                $or: [{ id: "MyID" }]
+                $or: [{ id: new RegExp(/^MyID$/, "i") }]
             });
         });
 
         it("Can build id search query with single identifier and version.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID", 2);
             expect(query).toEqual({
-                $or: [{ id: "MyID", version: 2 }]
+                $or: [{ id: new RegExp(/^MyID$/, "i"), version: 2 }]
             });
         });
 
         it("Can build id search query with single identifier and version 0.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(SingleIdentifierClass, "MyID", 0);
             expect(query).toEqual({
-                $or: [{ id: "MyID", version: 0 }]
+                $or: [{ id: new RegExp(/^MyID$/, "i"), version: 0 }]
             });
         });
 
         it("Can build id search query with multiple identifiers.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, "MyID");
             expect(query).toEqual({
-                $or: [{ id: "MyID" }, { id2: "MyID" }],
+                $or: [{ id: new RegExp(/^MyID$/, "i") }, { id2: new RegExp(/^MyID$/, "i") }],
             });
         });
 
         it("Can build id search query with multiple identifiers and version.", () => {
             const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, "MyID", 3);
             expect(query).toEqual({
-                $or: [{ id: "MyID", version: 3 }, { id2: "MyID", version: 3 }]
+                $or: [{ id: new RegExp(/^MyID$/, "i"), version: 3 }, { id2: new RegExp(/^MyID$/, "i"), version: 3 }]
+            });
+        });
+
+        it("Can build id search query with multiple identifiers and values.", () => {
+            const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, ["MyID", "MyID2"]);
+            expect(query).toEqual({
+                $or: [{ id: { $in: [new RegExp(/^MyID$/, "i"), new RegExp(/^MyID2$/, "i")] } }, { id2: { $in: [new RegExp(/^MyID$/, "i"), new RegExp(/^MyID2$/, "i")] } }],
+            });
+        });
+
+        it("Can build id search query with multiple identifiers and values and version.", () => {
+            const query: any = ModelUtils.buildIdSearchQueryMongo(DoubleIdentifierClass, ["MyID", "MyID2"], 3);
+            expect(query).toEqual({
+                $or: [{ id: { $in: [new RegExp(/^MyID$/, "i"), new RegExp(/^MyID2$/, "i")] }, version: 3 }, { id2: { $in: [new RegExp(/^MyID$/, "i"), new RegExp(/^MyID2$/, "i")] }, version: 3 }]
             });
         });
 
@@ -386,7 +401,7 @@ describe("ModelUtils Tests", () => {
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
                 take: 100,
-                skip: 0,
+                page: 0,
             });
         });
 
@@ -399,19 +414,19 @@ describe("ModelUtils Tests", () => {
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
                 take: 1000,
-                skip: 0,
+                page: 0,
             });
         });
 
-        it("Can build search query with skip.", () => {
+        it("Can build search query with page.", () => {
             const request: any = {};
             request.query = {
-                skip: 10,
+                page: 10,
             };
 
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
-                skip: 10,
+                page: 10,
                 take: 100,
             });
         });
@@ -427,7 +442,7 @@ describe("ModelUtils Tests", () => {
                 order: {
                     paramName: "ASC",
                 },
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -443,7 +458,7 @@ describe("ModelUtils Tests", () => {
                 order: {
                     paramName: "DESC",
                 },
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -459,7 +474,7 @@ describe("ModelUtils Tests", () => {
                 order: {
                     paramName: "DESC",
                 },
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -477,7 +492,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -495,7 +510,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal(true),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -508,7 +523,7 @@ describe("ModelUtils Tests", () => {
 
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
-                skip: 0,
+                page: 0,
                 take: 100,
                 where: [
                     {
@@ -531,7 +546,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal(105.56),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -549,7 +564,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -567,7 +582,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal(false),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -585,7 +600,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Equal(105.56),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -603,7 +618,7 @@ describe("ModelUtils Tests", () => {
                         myParam: MoreThan("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -616,7 +631,7 @@ describe("ModelUtils Tests", () => {
 
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
-                skip: 0,
+                page: 0,
                 take: 100,
                 where: [
                     {
@@ -639,7 +654,7 @@ describe("ModelUtils Tests", () => {
                         myParam: MoreThanOrEqual("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -657,7 +672,7 @@ describe("ModelUtils Tests", () => {
                         myParam: In(["myValue", "myValue2", "myValue3", "myValue4"]),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -675,7 +690,7 @@ describe("ModelUtils Tests", () => {
                         myParam: ILike("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -693,7 +708,7 @@ describe("ModelUtils Tests", () => {
                         myParam: LessThan("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -711,7 +726,7 @@ describe("ModelUtils Tests", () => {
                         myParam: LessThanOrEqual("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -729,7 +744,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Not("myValue"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -747,7 +762,7 @@ describe("ModelUtils Tests", () => {
                         myParam: Between(1, 100),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -768,7 +783,7 @@ describe("ModelUtils Tests", () => {
                         range: Between(1, 100),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -792,7 +807,7 @@ describe("ModelUtils Tests", () => {
                         param: ILike("myValue3"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -824,7 +839,7 @@ describe("ModelUtils Tests", () => {
                         param3: Equal("hello"),
                     },
                 ],
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
@@ -838,16 +853,9 @@ describe("ModelUtils Tests", () => {
 
             const query = ModelUtils.buildSearchQuerySQL(undefined, request.params, request.query, true, request.user);
             expect(query).toEqual({
-                skip: 0,
+                page: 0,
                 take: 100,
             });
         });
-    });
-
-    it("Can load models.", async () => {
-        const results: Map<string, any> = await ModelUtils.loadModels("./test/models");
-        expect(results).toBeDefined();
-        expect(results).toHaveProperty("Item");
-        expect(results).toHaveProperty("User");
     });
 });

@@ -2,16 +2,16 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Repository, MongoRepository, AggregationCursorResult } from "typeorm";
-import ModelUtils from "../models/ModelUtils";
-import RepoUtils from "../models/RepoUtils";
-import BaseEntity from "../models/BaseEntity";
-import { SimpleEntity, ACLUtils } from "../service_core";
+import { ModelUtils } from "../models/ModelUtils";
+import { RepoUtils } from "../models/RepoUtils";
+import { BaseEntity } from "../models/BaseEntity";
 import { Redis } from "ioredis";
 import { Init, RedisConnection } from "../decorators/RouteDecorators";
 import * as crypto from "crypto";
-import { Logger } from "../decorators/ObjectDecorators";
-import { AccessControlList, ACLAction } from "../security/AccessControlList";
-import sleep from "../utils/sleep";
+import { Logger, Config, Inject } from "../decorators/ObjectDecorators";
+import { Response as XResponse } from "express";
+import { SimpleEntity } from "../models/SimpleEntity";
+import { NetUtils } from "../NetUtils";
 
 /**
  * The `ModelRoute` is an abstract base class that provides a set of built-in route behavior functions for handling
@@ -28,13 +28,17 @@ import sleep from "../utils/sleep";
  *
  * @author Jean-Philippe Steinmetz
  */
-abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
+export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /** The redis client that will be used as a 2nd level cache for all cacheable models. */
     @RedisConnection("cache")
     protected cacheClient?: Redis;
 
     /** The time, in milliseconds, that objects will be cached before being invalidated. */
     protected cacheTTL?: number;
+
+    /** The global application configuration. */
+    @Config()
+    protected config?: any;
 
     /** The unique identifier of the default ACL for the model type. */
     protected defaultACLUid: string = "";
@@ -73,75 +77,15 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Returns the default access control list governing the model type. Returning a value of `undefined` will grant
-     * full acccess to any user (including unauthenticated anonymous users).
-     */
-    protected abstract getDefaultACL(): AccessControlList | undefined;
-
-    /**
      * Hashes the given query object to a unique string.
      * @param query The query object to hash.
      */
     protected hashQuery(query: any): string {
+        const queryStr: string = JSON.stringify(query);
         return crypto
-            .createHash("sha256")
-            .update(JSON.stringify(query))
+            .createHash("sha512")
+            .update(queryStr)
             .digest("hex");
-    }
-
-    /**
-     * Called on server startup to initialize the route with any defaults.
-     */
-    @Init
-    private async superInitialize() {
-        let defaultAcl: AccessControlList | undefined = this.getDefaultACL();
-        if (defaultAcl) {
-            this.defaultACLUid = defaultAcl.uid;
-            defaultAcl.uid = `default_${defaultAcl.uid}`;
-
-            // Attempt to update the default ACL record. If a version mismatch occurs we will try again.
-            const maxAttempts: number = 3;
-            let attempts: number = 0;
-            while (attempts++ < maxAttempts) {
-                try {
-                    // Two documents are stored for each default ACL. A record named `default_<NAME>`
-                    // and another named `<NAME>`. The `<NAME>` record stores the user-defined
-                    // overrides that overlay the `default_<NAME>` document. The `default_<NAME>` is
-                    // therefore always updated with whatever is returned from the above function.
-                    const existing: AccessControlList | undefined = await ACLUtils.findACL(defaultAcl.uid);
-
-                    if (existing) {
-                        // Copy over the new records from code
-                        existing.records = defaultAcl.records;
-                        defaultAcl = existing;
-                    }
-                    else {
-                        // Create the user-defined override record
-                        const acl: AccessControlList = {
-                            uid: this.defaultACLUid,
-                            dateCreated: new Date(),
-                            dateModified: new Date(),
-                            version: 0,
-                            parentUid: defaultAcl.uid,
-                            records: []
-                        };
-                        await ACLUtils.saveACL(acl);
-                    }
-
-                    // Always save the ACL into the datastore
-                    await ACLUtils.saveACL(defaultAcl);
-                    attempts = maxAttempts;
-                } catch (err) {
-                    if (attempts < maxAttempts) {
-                        // Wait a brief moment before we try again. Stagger the time to avoid race conditions.
-                        await sleep(Math.floor(Math.random() * 1000));
-                    } else {
-                        // Rethrow if we're out of retries
-                        throw err;
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -202,7 +146,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Search for existing object based on passed in id and version
+     * Search for existing object based on passed in id and version and product uid.
      */
     private searchIdQuery(id: string, version?: number): any {
         return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, version);
@@ -210,49 +154,41 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
-     * request `query`. Any results that have been found are set to the `result` property of the `res` argument.
-     * `result` is never null.
+     * request `query`. Any results that have been found are set to the `content-length` header of the `res` argument.
      */
-    protected async doCount(params: any, query: any, user?: any): Promise<any> {
+    protected async doCount(params: any, query: any, res: XResponse, user?: any): Promise<XResponse> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
-        }
-
-        if (!(await ACLUtils.hasPermission(user, this.defaultACLUid, ACLAction.READ))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
         }
 
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
             const result: AggregationCursorResult = await (this.repo as MongoRepository<T>).aggregate(searchQuery).next();
-            return result ? result : { count: 0 };
+            res.setHeader('content-length', result ? result.count : 0);
         } else {
             const result: number = await this.repo.count(searchQuery);
-            return { count: result };
+            res.setHeader('content-length', result);
         }
+
+        return res.status(200);
     }
 
     /**
      * Attempts to store the object provided in `req.body` into the datastore. Upon success, sets the newly persisted
      * object to the `result` property of the `res` argument, otherwise sends a `400 BAD REQUEST` response to the
      * client.
+     * 
+     * @param obj The object to store in the database.
+     * @param user The authenticated user performing the action.
      */
-    protected async doCreate(obj: T, user?: any, acl?: AccessControlList): Promise<T> {
+    protected async doCreate(obj: T, user?: any): Promise<T> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         // Make sure the provided object has the correct typing
         obj = new this.modelClass(obj);
-
-        if (!(await ACLUtils.hasPermission(user, this.defaultACLUid, ACLAction.CREATE))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
 
         obj = await RepoUtils.preprocessBeforeSave(this.repo, obj);
 
@@ -272,37 +208,15 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             this.cacheClient.setex(cacheKey, this.cacheTTL, JSON.stringify(result));
         }
 
-        // If ACLs are enabled but no ACL was given create one using the default
-        if (!acl && this.defaultACLUid !== "") {
-            acl = this.getDefaultACL();
-            if (acl) {
-                acl.uid = result.uid;
-
-                // Grant the creator CRUD access
-                if (user) {
-                    acl.records.unshift({
-                        userOrRoleId: user.uid,
-                        create: true,
-                        read: true,
-                        update: true,
-                        delete: true,
-                        special: false,
-                        full: false,
-                    });
-                }
-            }
-        }
-        if (acl) {
-            acl.parentUid = this.defaultACLUid;
-            await ACLUtils.saveACL(acl);
-        }
-
         return result;
     }
 
     /**
      * Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
      * `id`.
+     * 
+     * @param id The unique identifier of the object to delete.
+     * @param user The authenticated user performing the action.
      */
     protected async doDelete(id: string, user?: any): Promise<void> {
         if (!this.repo) {
@@ -324,13 +238,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const objs: T[] | undefined = await this.repo.find(query);
         const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
 
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(uid ? uid : id);
-        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.DELETE))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         if (uid && objs) {
             await this.repo.remove(objs);
 
@@ -339,8 +246,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
                 this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
             }
-
-            await ACLUtils.removeACL(id);
         }
     }
 
@@ -368,13 +273,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const objs: T[] | undefined = await this.repo.find(query);
         const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
 
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(uid ? uid : id);
-        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.DELETE))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         if (uid && objs) {
             await this.repo.remove(objs);
 
@@ -383,8 +281,34 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
                 this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
             }
+        }
+    }
 
-            await ACLUtils.removeACL(id);
+    /**
+     * Attempts to determine if an existing object with the given unique identifier exists.
+     */
+    protected async doExists(id: string, res: XResponse, user?: any): Promise<any> {
+        if (!this.repo) {
+            throw new Error("Repository not set or could not be found.");
+        }
+
+        // When id === `me` this is a special keyword meaning the authenticated user
+        if (id.toLowerCase() === "me") {
+            if (user) {
+                id = user.uid;
+            } else {
+                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                error.status = 403;
+                throw error;
+            }
+        }
+
+        const query: any = this.searchIdQuery(id);
+        const result: number = await this.repo.count(query);
+        if (result > 0) {
+            return res.status(200).setHeader('content-length', result);
+        } else {
+            return res.status(404);
         }
     }
 
@@ -400,18 +324,22 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new Error("Repository not set or could not be found.");
         }
 
-        if (!(await ACLUtils.hasPermission(user, this.defaultACLUid, ACLAction.READ))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
+        const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
+        const page: number = query.page ? Number(query.page) : 0;
+
+        // When we hash the seach query we need to ensure we're including the pagination information to preserve
+        // like queries and results.
+        const searchQueryHash: string = this.hashQuery({
+            ...searchQuery,
+            limit,
+            page
+        });
 
         // Pull from the cache if available
         if (this.cacheClient && this.cacheTTL) {
             const json: string | null = await this.cacheClient.get(
-                `${this.baseCacheKey}.${this.hashQuery(searchQuery)}`
+                `${this.baseCacheKey}.${searchQueryHash}`
             );
             if (json) {
                 try {
@@ -431,10 +359,9 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         // If the query wasn't cached retrieve from the database
         if (results.length === 0) {
-            const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
-            const skip: number = query.skip ? query.skip : 0;
             if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                results = await this.repo.aggregate(searchQuery).limit(limit).skip(skip).toArray();
+                const skip: number = page * limit;
+                results = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
             }
             else {
                 results = await this.repo.find(searchQuery);
@@ -449,7 +376,7 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 }
 
                 this.cacheClient.setex(
-                    `${this.baseCacheKey}.${this.hashQuery(searchQuery)}`,
+                    `${this.baseCacheKey}.${searchQueryHash}`,
                     this.cacheTTL,
                     JSON.stringify(uids)
                 );
@@ -485,13 +412,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(result.uid);
-        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.READ))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         return result;
     }
 
@@ -521,13 +441,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(result.uid);
-        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.READ))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         return result;
     }
 
@@ -544,19 +457,14 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new Error("Repository not set or could not be found.");
         }
 
-        if (!(await ACLUtils.hasPermission(user, this.defaultACLUid, ACLAction.DELETE))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
-
         try {
             const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
             let objs: T[] | undefined = undefined;
             if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
                 const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
-                const skip: number = query.skip ? query.skip : 0;
-                objs = await this.repo.aggregate(searchQuery).limit(limit).skip(skip).toArray();
+                const page: number = query.page ? query.page : 0;
+                const skip: number = page * limit;
+                objs = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
             }
             else {
                 objs = await this.repo.find(searchQuery);
@@ -565,10 +473,9 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (objs) {
                 for (const obj of objs) {
                     await this.repo.remove(obj);
-                    await ACLUtils.removeACL(obj.uid);
                 }
             }
-        } catch (err) {
+        } catch (err: any) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
             if (err.message != "ns not found") {
                 throw err;
@@ -588,9 +495,6 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new Error("Repository not set or could not be found.");
         }
         
-        // Make sure the provided object has the correct typing
-        obj = new this.modelClass(obj);
-
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
             if (user) {
@@ -603,34 +507,28 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         let query: any = this.searchIdQuery(obj.uid);
-        obj = await RepoUtils.preprocessBeforeUpdate(this.repo, obj);
-
-        const acl: AccessControlList | undefined = await ACLUtils.findACL(obj.uid);
-        if (!(await ACLUtils.hasPermission(user, acl ? acl : this.defaultACLUid, ACLAction.UPDATE))) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
-        }
+        obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj);
 
         const keepPrevious: boolean = this.trackChanges != 0;
+        const testObj: T = new this.modelClass();
 
         if (this.repo instanceof MongoRepository) {
-            if (obj instanceof BaseEntity) {
+            if (testObj instanceof BaseEntity) {
                 if (keepPrevious) {
                     obj = new this.modelClass(await this.repo.save({
                         ...obj,
                         _id: undefined, // Ensure we save a new document
                         dateModified: new Date(),
-                        version: obj.version + 1,
+                        version: (obj as BaseEntity).version + 1,
                     } as any));
                 } else {
                     await this.repo.updateOne(
-                        { uid: obj.uid, version: obj.version },
+                        { uid: obj.uid, version: (obj as BaseEntity).version },
                         {
                             $set: {
                                 ...obj,
                                 dateModified: new Date(),
-                                version: obj.version + 1,
+                                version: (obj as BaseEntity).version + 1,
                             },
                         }
                     );
@@ -663,18 +561,18 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 }
             }
         } else {
-            if (obj instanceof BaseEntity) {
+            if (testObj instanceof BaseEntity) {
                 if (keepPrevious) {
                     await this.repo.insert({
                         ...obj,
                         dateModified: new Date(),
-                        version: obj.version + 1,
+                        version: (obj as BaseEntity).version + 1,
                     } as any);
                 } else {
                     await this.repo.update(query.where, {
                         ...obj,
                         dateModified: new Date(),
-                        version: obj.version + 1,
+                        version: (obj as BaseEntity).version + 1,
                     } as any);
                 }
             } else {
@@ -708,5 +606,3 @@ abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         return obj;
     }
 }
-
-export default ModelRoute;

@@ -12,8 +12,23 @@ const logger = Logger();
  *
  * @author Jean-Philippe Steinmetz
  */
-class ConnectionManager {
+export class ConnectionManager {
     public static connections: Map<string, typeorm.Connection | Redis.Redis> = new Map();
+
+    /**
+     * Builds a compatible connection URI for the database by the provided configuration.
+     */
+    private static buildConnectionUri(config: any): string {
+        // If a url is provided use that verbatim. We assume it's correct.
+        if (config.url) {
+            return config.url;
+        } else {
+            if (!config.type || !config.host) {
+                throw new Error(`Invalid datastore config: ${JSON.stringify(config)}.`);
+            }
+            return `${config.protocol ? config.protocol : config.type}://${config.username && config.password ? `${config.username}:${config.password}@` : ""}${config.host}${config.port ? `:${config.port}` : ""}${config.database ? `/${config.database}` : ""}${config.options ? `?${config.options}` : ""}`;
+        }
+    }
 
     /**
      * Attempts to initiate all database connections as defined in the config.
@@ -21,7 +36,7 @@ class ConnectionManager {
      * @param datastore A map of configured datastores to be passed to the underlying engine.
      * @param models A map of model names and associated class definitions to establish database connections for.
      */
-    public static async connect(datastores: any, models: any): Promise<void> {
+    public static async connect(datastores: any, models: Map<string, any>): Promise<void> {
         const processedModels: Map<string, string> = new Map();
         // Go through each datastore in the configuration and attempt to make a connection
         for (const name in datastores) {
@@ -40,37 +55,43 @@ class ConnectionManager {
 
             if (connection) {
                 if (connection instanceof typeorm.Connection && !connection.isConnected) {
+                    logger.info(`Reconnecting to database ${name}...`);
                     await connection.connect();
                 }
             } else {
                 datastore.name = name;
+                const url: string = ConnectionManager.buildConnectionUri(datastore);
 
-                logger.info("Connecting to database " + name + "...");
+                logger.info(`Connecting to database ${name} [${url.replace(datastore.username, "****").replace(datastore.password, "****")}]...`);
 
                 if (datastore.type === "redis") {
-                    connection = await new Redis(datastore.url, datastore.options);
+                    connection = await new Redis(url);
                 } else {
                     // Make an array of all entities associated with this connection
                     const entities: any[] = [];
-                    for (const className in models) {
-                        const clazz = models[className];
-                        const ds: string = Reflect.getMetadata("axr:datastore", clazz);
+                    for (const className of models.keys()) {
+                        // Get the class type
+                        const clazz = models.get(className);
+                        const ds: string = Reflect.getMetadata("cjs:datastore", clazz);
                         // Search for the associated datastore with the model via either config or @Model decorator
                         if (ds === name || (datastore.entities && datastore.entities.includes(className))) {
-                            const processedDatastore = processedModels.get(className);
+                            const processedDatastore = processedModels.get(clazz.name);
                             if (processedDatastore) {
                                 throw new Error(
-                                    `Model ${className} already defined as an entity for ${processedDatastore}`
+                                    `Model ${clazz.name} already defined as an entity for ${processedDatastore}`
                                 );
                             }
                             clazz.datastore = name;
                             entities.push(clazz);
-                            processedModels.set(className, name);
+                            processedModels.set(clazz.name, name);
                         }
                     }
-                    datastore.entities = entities;
 
-                    connection = await typeorm.createConnection(datastore);
+                    connection = await typeorm.createConnection({
+                        ...datastore,
+                        entities,
+                        url,
+                    });
                     if (datastore.runMigrations) {
                         await connection.runMigrations();
                     }
@@ -79,6 +100,8 @@ class ConnectionManager {
 
             this.connections.set(name, connection);
         }
+
+        logger.info(`Successfully connected to all configured databases.`);
     }
 
     /**
@@ -96,7 +119,6 @@ class ConnectionManager {
         }
 
         this.connections.clear();
+        logger.info(`Successfully disconnected from all configured databases.`);
     }
 }
-
-export default ConnectionManager;

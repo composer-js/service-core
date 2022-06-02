@@ -1,8 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import ObjectFactory from "../src/ObjectFactory";
+import config from "./config";
+import { ObjectFactory } from "../src/ObjectFactory";
 import { Inject, Destroy } from "../src/decorators/ObjectDecorators";
+import { Logger } from "@composer-js/core";
 
 class TestClassA {
     @Destroy
@@ -40,7 +42,7 @@ class TestClassC {
 }
 
 describe("ObjectFactory Tests", () => {
-    const factory: ObjectFactory = new ObjectFactory();
+    const factory: ObjectFactory = new ObjectFactory(config, Logger());
 
     beforeEach(() => {
         factory.register(TestClassA);

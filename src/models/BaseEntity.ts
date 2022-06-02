@@ -14,7 +14,7 @@ const uuid = require("uuid");
  *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
-export default abstract class BaseEntity {
+export abstract class BaseEntity {
     /**
      * The universally unique identifier of the entity.
      */
@@ -43,10 +43,10 @@ export default abstract class BaseEntity {
 
     constructor(other?: any) {
         if (other) {
-            this.uid = other.uid ? other.uid : this.uid;
-            this.dateCreated = other.dateCreated ? new Date(other.dateCreated) : this.dateCreated;
-            this.dateModified = other.dateModified ? new Date(other.dateModified) : this.dateModified;
-            this.version = other.version ? other.version : this.version;
+            this.uid = 'uid' in other ? other.uid : this.uid;
+            this.dateCreated = 'dateCreated' in other ? new Date(other.dateCreated) : this.dateCreated;
+            this.dateModified = 'dateModified' in other ? new Date(other.dateModified) : this.dateModified;
+            this.version = 'version' in other ? other.version : this.version;
         }
     }
 }

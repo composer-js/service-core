@@ -3,8 +3,8 @@
 /////////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
-import { Server, ConnectionManager } from "../src/service_core";
-import Item from "./models/Item";
+import { Server, ConnectionManager } from "../src";
+import Item from "./server/models/Item";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";
 import { Repository, Connection } from "typeorm";
@@ -18,7 +18,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 });
 let repo: Repository<Item>;
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
-const server: Server = new Server(config, undefined, "./test");
+const server: Server = new Server(config, undefined, "./test/server");
 
 const createItem = async (name: string, quantity: number = 1, cost: number = 100): Promise<Item> => {
     const item: Item = new Item({
@@ -144,10 +144,10 @@ describe("ModelRoute Tests [SQL]", () => {
     describe("Multiple Document Tests [SQL]", () => {
         it("Can count documents. [SQL]", async () => {
             const items: Item[] = await createItems(20);
-            const result = await request(server.getApplication()).get("/items/count");
+            const result = await request(server.getApplication()).head("/items");
             expect(result).toHaveProperty("body");
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(items.length);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe(String(items.length));
         });
 
         it("Can count documents with criteria (eq). [SQL]", async () => {
@@ -155,11 +155,11 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("BFG", 1, 10000);
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
-            const result = await request(server.getApplication()).get("/items/count?name=B-Bomb");
+            const result = await request(server.getApplication()).head("/items?name=B-Bomb");
             expect(result).toHaveProperty("body");
             console.log(result.body);
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(1);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe("1");
         });
 
         it("Can count documents with criteria (like). [SQL]", async () => {
@@ -167,11 +167,11 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("BFG", 1, 10000);
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
-            const result = await request(server.getApplication()).get("/items/count?name=like(Item%)");
+            const result = await request(server.getApplication()).head("/items?name=like(Item%)");
             expect(result).toHaveProperty("body");
             console.log(result.body);
-            expect(result.body).toHaveProperty("count");
-            expect(result.body.count).toBe(items.length);
+            expect(result.headers).toHaveProperty("content-length");
+            expect(result.headers["content-length"]).toBe(String(items.length));
         });
 
         it("Can find all documents. [SQL]", async () => {

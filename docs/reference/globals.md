@@ -6,19 +6,8 @@
 
 ## Index
 
-### Enumerations
-
-* [ACLAction](enums/aclaction.md)
-
 ### Classes
 
-* [ACLRecordMongo](classes/aclrecordmongo.md)
-* [ACLRecordSQL](classes/aclrecordsql.md)
-* [ACLRouteMongo](classes/aclroutemongo.md)
-* [ACLRouteSQL](classes/aclroutesql.md)
-* [ACLUtils](classes/aclutils.md)
-* [AccessControlListMongo](classes/accesscontrollistmongo.md)
-* [AccessControlListSQL](classes/accesscontrollistsql.md)
 * [BackgroundService](classes/backgroundservice.md)
 * [BackgroundServiceManager](classes/backgroundservicemanager.md)
 * [BaseEntity](classes/baseentity.md)
@@ -26,33 +15,32 @@
 * [ConnectionManager](classes/connectionmanager.md)
 * [IndexRoute](classes/indexroute.md)
 * [JWTStrategy](classes/jwtstrategy.md)
+* [JWTStrategyOptions](classes/jwtstrategyoptions.md)
 * [MetricsRoute](classes/metricsroute.md)
 * [ModelRoute](classes/modelroute.md)
 * [ModelUtils](classes/modelutils.md)
+* [NetUtils](classes/netutils.md)
 * [NotificationUtils](classes/notificationutils.md)
 * [ObjectFactory](classes/objectfactory.md)
 * [OpenAPIRoute](classes/openapiroute.md)
-* [Options](classes/options.md)
 * [RepoUtils](classes/repoutils.md)
 * [RouteUtils](classes/routeutils.md)
-* [RoutesScanner](classes/routesscanner.md)
 * [Server](classes/server.md)
+* [SimpleEntity](classes/simpleentity.md)
 * [SimpleMongoEntity](classes/simplemongoentity.md)
 
 ### Interfaces
 
-* [ACLRecord](interfaces/aclrecord.md)
-* [AccessControlList](interfaces/accesscontrollist.md)
 * [Entity](interfaces/entity.md)
+* [Model](interfaces/model.md)
 * [RequestWS](interfaces/requestws.md)
 
 ### Variables
 
-* [CACHE\_BASE\_KEY](globals.md#cache_base_key)
+* [ObjectID](globals.md#objectid)
 * [cookieParser](globals.md#cookieparser)
 * [cors](globals.md#cors)
 * [express](globals.md#express)
-* [instance](globals.md#instance)
 * [logger](globals.md#logger)
 * [passport](globals.md#passport)
 * [swagger](globals.md#swagger)
@@ -74,10 +62,12 @@
 * [Identifier](globals.md#identifier)
 * [Init](globals.md#init)
 * [Inject](globals.md#inject)
+* [Job](globals.md#job)
 * [Logger](globals.md#logger)
 * [Method](globals.md#method)
 * [Model](globals.md#model)
 * [MongoRepository](globals.md#mongorepository)
+* [Options](globals.md#options)
 * [Param](globals.md#param)
 * [Post](globals.md#post)
 * [Put](globals.md#put)
@@ -94,15 +84,14 @@
 * [Validate](globals.md#validate)
 * [WebSocket](globals.md#websocket)
 * [addWebSocket](globals.md#addwebsocket)
-* [marshall](globals.md#marshall)
 
 ## Variables
 
-### CACHE\_BASE\_KEY
+### ObjectID
 
-• `Const` **CACHE\_BASE\_KEY**: string = "db.cache.AccessControlList"
+•  **ObjectID**: any
 
-*Defined in src/security/ACLUtils.ts:14*
+*Defined in src/models/BaseMongoEntity.ts:6*
 
 ___
 
@@ -130,21 +119,13 @@ ___
 
 ___
 
-### instance
-
-• `Const` **instance**: [ACLUtils](classes/aclutils.md) = new ACLUtils()
-
-*Defined in src/security/ACLUtils.ts:371*
-
-___
-
 ### logger
 
 • `Const` **logger**: any = Logger()
 
 *Defined in src/database/ConnectionManager.ts:8*
 
-*Defined in src/models/ModelUtils.ts:23*
+*Defined in src/models/ModelUtils.ts:20*
 
 ___
 
@@ -152,9 +133,9 @@ ___
 
 • `Const` **passport**: any = require("passport")
 
-*Defined in src/Server.ts:8*
+*Defined in src/express/RouteUtils.ts:9*
 
-*Defined in src/express/RouteUtils.ts:8*
+*Defined in src/Server.ts:8*
 
 ___
 
@@ -162,7 +143,7 @@ ___
 
 • `Const` **swagger**: any = require("swagger-ui-express")
 
-*Defined in src/routes/OpenAPIRoute.ts:6*
+*Defined in src/routes/OpenAPIRoute.ts:5*
 
 ___
 
@@ -170,11 +151,11 @@ ___
 
 • `Const` **uuid**: any = require("uuid")
 
+*Defined in src/ObjectFactory.ts:9*
+
 *Defined in src/models/BaseEntity.ts:6*
 
 *Defined in src/models/SimpleEntity.ts:6*
-
-*Defined in src/ObjectFactory.ts:9*
 
 ## Functions
 
@@ -255,18 +236,19 @@ ___
 
 ### Config
 
-▸ **Config**(`path?`: undefined \| string): (Anonymous function)
+▸ **Config**(`path?`: undefined \| string, `defaultValue?`: any): (Anonymous function)
 
-*Defined in src/decorators/ObjectDecorators.ts:50*
+*Defined in src/decorators/ObjectDecorators.ts:52*
 
 Apply this to a property to have a configuration variable be injected at instantiation. If no path is given, the
 global configuration object is injected.
 
 #### Parameters:
 
-Name | Type | Description |
------- | ------ | ------ |
-`path?` | undefined \| string | The path to the configuration variable to inject.  |
+Name | Type | Default value | Description |
+------ | ------ | ------ | ------ |
+`path?` | undefined \| string | - | The path to the configuration variable to inject. |
+`defaultValue` | any | undefined | Set to the desired default value. If `undefined` is specified then an error is thrown if                      no config variable is found at the given path.  |
 
 **Returns:** (Anonymous function)
 
@@ -443,11 +425,29 @@ Name | Type | Default value | Description |
 
 ___
 
+### Job
+
+▸ **Job**(`schedule?`: undefined \| string): (Anonymous function)
+
+*Defined in src/decorators/JobDecorators.ts:12*
+
+Indicates that the decorated class is a background service job.
+
+#### Parameters:
+
+Name | Type | Description |
+------ | ------ | ------ |
+`schedule?` | undefined \| string | The optional crontab style schedule that the job will be executed with. If `undefined` the job                  executes exactly once.  |
+
+**Returns:** (Anonymous function)
+
+___
+
 ### Logger
 
 ▸ **Logger**(`target`: any, `propertyKey`: string \| symbol): void
 
-*Defined in src/decorators/ObjectDecorators.ts:65*
+*Defined in src/decorators/ObjectDecorators.ts:68*
 
 Apply this to a property to have the logger utility injected at instantiation.
 
@@ -512,6 +512,24 @@ Apply this to a property to have the TypeORM `MongoRepository` for the given ent
 Name | Type | Description |
 ------ | ------ | ------ |
 `type` | any | The entity type whose repository will be injected.  |
+
+**Returns:** (Anonymous function)
+
+___
+
+### Options
+
+▸ **Options**(`path?`: undefined \| string): (Anonymous function)
+
+*Defined in src/decorators/RouteDecorators.ts:161*
+
+Indicates that the decorated function handles incoming `OPTIONS` requests at the given sub-path.
+
+#### Parameters:
+
+Name | Type | Description |
+------ | ------ | ------ |
+`path?` | undefined \| string | The sub-path that the route will handle requests for.  |
 
 **Returns:** (Anonymous function)
 
@@ -814,26 +832,5 @@ Name | Type | Description |
 ------ | ------ | ------ |
 `app` | Application | The Expressjs application to add WebSocket support to. |
 `wss` | WebSocketServer | The WebSocketServer server that will be configured for Express.  |
-
-**Returns:** any
-
-___
-
-### marshall
-
-▸ **marshall**(`req`: any, `res`: any): any
-
-*Defined in src/behaviors/DefaultBehaviors.ts:13*
-
-Sends a `200 OK` response to the client containing a JSON body back to the client. The body to encode is determined
-by the `result` property as set on the `res` argument. If no `result` property is found then a `204 NO_CONTENT`
-response is sent instead.
-
-#### Parameters:
-
-Name | Type | Description |
------- | ------ | ------ |
-`req` | any | The original HTTP request from the client. |
-`res` | any | The outgoing HTTP response that will be sent to the client.  |
 
 **Returns:** any

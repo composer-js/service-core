@@ -17,14 +17,6 @@ conf.defaults({
         origins: ["http://localhost:3000"],
     },
     datastores: {
-        acl: {
-            type: "mongodb",
-            url: "mongodb://localhost:9999",
-            database: "acls",
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            synchronize: true,
-        },
         mongodb: {
             type: "mongodb",
             url: "mongodb://localhost:9999",
@@ -43,18 +35,6 @@ conf.defaults({
             synchronize: true,
         },
     },
-    jobs: {
-        defaultSchedule: "*/2 * * * * *",
-        MyFirstService: {
-            schedule: "* * * * * *",
-        },
-        MySecondService: {
-            schedule: "* * * * * *",
-        },
-        MyThirdService: {},
-    },
-    // Specifies the group names that are considered to be trusted with administrative privileges.
-    trusted_roles: ["admin"],
     // Settings pertaining to the signing and verification of authentication tokens
     auth: {
         // The default PassportJS authentication strategy to use

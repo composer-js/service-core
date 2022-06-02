@@ -5,8 +5,8 @@
     "author": "AcceleratXR, Inc. <info@acceleratxr.com>",
     "repository": "https://gitlab.com/AcceleratXR/composerjs/composer-service-core.git",
     "license": "MIT",
-    "main": "dist/lib/service_core.js",
-    "typings": "dist/types/service_core.d.ts",
+    "main": "dist/lib/index.js",
+    "typings": "dist/types/index.d.ts",
     "files": [
         "dist"
     ],
@@ -146,7 +146,7 @@
         "typescript": "^4.1.2"
     },
     "dependencies": {
-        "@composer-js/core": "^1.4.5",
+        "@composer-js/core": "^1.5.1",
         "@types/ioredis": "^4.17.8",
         "@types/js-yaml": "^3.12.5",
         "@types/mongodb": "^3.5.34",
@@ -157,6 +157,7 @@
         "cookie-parser": "^1.4.5",
         "cors": "^2.8.5",
         "express": "^4.17.1",
+        "express-session": "^1.17.3",
         "ioredis": "^4.19.2",
         "js-yaml": "^3.14.0",
         "jsonwebtoken": "^8.5.1",

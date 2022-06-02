@@ -10,27 +10,28 @@ import * as path from "path";
 import * as prom from "prom-client";
 import "reflect-metadata";
 
-import { Application, Response, Request, NextFunction, RequestHandler } from "express";
-import ConnectionManager from "./database/ConnectionManager";
+import { Application, Response, Request, NextFunction } from "express";
+import { ConnectionManager } from "./database/ConnectionManager";
 import { CorsOptions } from "cors";
-import IndexRoute from "./routes/IndexRoute";
-import { JWTStrategy, Options as JWTOptions } from "./passportjs/JWTStrategy";
-import { Logger, UserUtils } from "@composer-js/core";
-import ModelUtils from "./models/ModelUtils";
-import OpenAPIRoute from "./routes/OpenAPIRoute";
-import RouteScanner from "./RoutesScanner";
-import { Connection, MongoRepository, Repository } from "typeorm";
-import MetricsRoute from "./routes/MetricsRoute";
-import * as Redis from "ioredis";
-import ACLRouteMongo from "./security/ACLRouteMongo";
-import ACLRouteSQL from "./security/ACLRouteSQL";
-import { default as AccessControlListSQL } from "./security/AccessControlListSQL";
-import { default as AccessControlListMongo } from "./security/AccessControlListMongo";
-import ACLUtils from "./security/ACLUtils";
-import ObjectFactory from "./ObjectFactory";
-import RouteUtils from "./express/RouteUtils";
+import { IndexRoute } from "./routes/IndexRoute";
+import { JWTStrategy, JWTStrategyOptions } from "./passportjs/JWTStrategy";
+import { ClassLoader, Logger } from "@composer-js/core";
+import { OpenAPIRoute } from "./routes/OpenAPIRoute";
+import { MetricsRoute } from "./routes/MetricsRoute";
+import { ObjectFactory } from "./ObjectFactory";
+import { BackgroundServiceManager } from "./BackgroundServiceManager";
+import { RouteUtils } from "./express/RouteUtils";
 import { Server as WebSocketServer } from "ws";
 import addWebSocket from "./express/WebSocket";
+import * as session from "express-session";
+
+interface Entity {
+    storeName?: any;
+}
+
+interface Model {
+    modelClass?: any;
+}
 
 /**
  * Provides an HTTP server utilizing ExpressJS and PassportJS. The server automatically registers all routes, and
@@ -53,7 +54,7 @@ import addWebSocket from "./express/WebSocket";
  * The following is an example of a simple route class.
  * 
 ```javascript
-import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, RouteDecorators } from "@composer-js/service_core";
 import { Get, Route } = RouteDecorators;
 
 @Route("/hello")
@@ -74,7 +75,7 @@ export default TestRoute;
  * The following is an example of a route class that is bound to a data model providing basic CRUDS operations.
  * 
  * ```javascript
-import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@composer-js/service_core";
 import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
 import { Model } = ModelDecorators;
 import { marshall } = DefaultBehaviors;
@@ -133,9 +134,7 @@ export default ItemRoute;
  *
  * @author Jean-Philippe Steinmetz
  */
-class Server {
-    /** The repository to the access control lists. */
-    protected readonly aclRepo?: Repository<AccessControlListSQL> | MongoRepository<AccessControlListMongo>;
+export class Server {
     /** The OpenAPI specification object to use to construct the server with. */
     protected readonly apiSpec?: any;
     /** The underlying ExpressJS application that provides HTTP processing services. */
@@ -150,8 +149,10 @@ class Server {
     protected readonly objectFactory: ObjectFactory;
     /** The port that the server is listening on. */
     public readonly port: number;
+    protected routeUtils?: RouteUtils;
     /** The underlying HTTP server instance. */
     protected server?: http.Server;
+    protected serviceManager?: BackgroundServiceManager;
     /** The underlying WebSocket server instance. */
     protected wss?: WebSocketServer;
 
@@ -275,151 +276,190 @@ class Server {
      */
     public start(): Promise<void> {
         return new Promise(async (resolve, reject) => {
-            this.logger.info("Starting server...");
-
-            // Express configuration
-            this.app = express();
-            this.server = http.createServer(this.app);
-            this.wss = new WebSocketServer({
-                server: this.server,
-            });
-            this.app = addWebSocket(this.app, this.wss);
-            this.app.use(express.static(path.join(__dirname, "public")));
-            this.app.use(express.json());
-            this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
-            this.app.use(cookieParser(this.config.get("cookie_secret")));
-            this.app.use(passport.initialize());
-            this.app.use(passport.session());
-
-            // cors
-            const corsOptions: CorsOptions = {
-                origin: this.config.get("cors:origins"),
-                credentials: true,
-                methods: "GET,HEAD,OPTIONS,PUT,POST,DELETE",
-                allowedHeaders: ["Accept", "Authorization", "Content-Type", "Origin", "X-Requested-With"],
-                preflightContinue: false,
-                optionsSuccessStatus: 204,
-            };
-            this.app.use(cors(corsOptions));
-
-            // passport (authentication) setup
-            passport.deserializeUser((profile: any, done: any) => {
-                done(null, profile);
-            });
-            passport.serializeUser((profile: any, done: any) => {
-                done(null, profile);
-            });
-            if (this.config.get("auth:strategy") === "JWTStrategy") {
-                const jwtOptions: JWTOptions = new JWTOptions();
-                jwtOptions.headerScheme = "(jwt|bearer)";
-                jwtOptions.config = this.config.get("auth");
-                passport.use("jwt", new JWTStrategy(jwtOptions));
-            }
-
-            // Set x-powered-by header
-            this.app.use((req: Request, res: Response, next: NextFunction) => {
-                res.setHeader("x-powered-by", "AcceleratXR");
-                return next();
-            });
-
-            // Load all models
-            this.logger.info("Loading data models...");
-            const models: any = await ModelUtils.loadModels(path.join(this.basePath, "models"));
-
-            // Initiate all database connections
-            this.logger.info("Initializing database connection(s)...");
-            const datastores: any = this.config.get("datastores");
-            // If ACL has been configured we need to make sure the proper models are configured and loaded
-            if (datastores.acl) {
-                if (datastores.acl.type === "mongodb") {
-                    models[AccessControlListMongo.name] = AccessControlListMongo;
-                } else {
-                    models[AccessControlListSQL.name] = AccessControlListSQL;
-                }
-            }
-            await ConnectionManager.connect(datastores, models);
-
-            // Initialize ACL utility
-            ACLUtils.init(this.config);
-
-            const allRoutes: Array<any> = [];
-
-            // Register the index route
-            const index: IndexRoute = new IndexRoute(this.config);
-            allRoutes.push(index);
-            RouteUtils.registerRoute(this.app, index);
-
-            // Register the ACLs route if configured
-            const aclConn: any = ConnectionManager.connections.get("acl");
-            if (aclConn instanceof Connection) {
-                if (aclConn.driver.constructor.name === "MongoDriver") {
-                    const aclRoute: ACLRouteMongo = await this.instantiateRoute(ACLRouteMongo);
-                    RouteUtils.registerRoute(this.app, aclRoute);
-                    allRoutes.push(aclRoute);
-                } else {
-                    const aclRoute: ACLRouteSQL = await this.instantiateRoute(ACLRouteSQL);
-                    RouteUtils.registerRoute(this.app, aclRoute);
-                    allRoutes.push(aclRoute);
-                }
-            }
-
-            // Register the OpenAPI route if a spec has been provided
-            if (this.apiSpec) {
-                const oasRoute: OpenAPIRoute = new OpenAPIRoute(this.apiSpec);
-                RouteUtils.registerRoute(this.app, oasRoute);
-                allRoutes.push(oasRoute);
-            }
-
-            // Register the metrics route
-            const metricsRoute: MetricsRoute = new MetricsRoute(this.config);
-            RouteUtils.registerRoute(this.app, metricsRoute);
-
-            // Perform automatic discovery of all other routes
-            this.logger.info("Scanning for routes...");
             try {
-                const routeScanner: RouteScanner = new RouteScanner(path.join(this.basePath, "routes"));
-                const routes: any[] = await routeScanner.scan();
-                for (const clazz of routes) {
-                    const route: any = await this.instantiateRoute(clazz);
-                    RouteUtils.registerRoute(this.app, route);
-                    allRoutes.push(route);
-                }
-            } catch (err) {
-                reject("Failed to scan for routes.\n" + err);
-                return;
-            }
+                this.logger.info("Starting server...");
 
-            // Error handling. NOTE: Must be defined last.
-            this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-                if (err) {
-                    this.logger.error(err);
-                    if (typeof err === "string") {
-                        res.status(500).header("Content-Type", "application/json").send(JSON.stringify(err));
-                    } else {
-                        if (!err.status && !err.status) {
-                            err.status = 500;
+                // Express configuration
+                this.app = express();
+                this.server = http.createServer(this.app);
+                this.wss = new WebSocketServer({
+                    server: this.server,
+                });
+                this.app = addWebSocket(this.app, this.wss);
+                this.app.use(express.static(path.join(__dirname, "public")));
+                this.app.use(express.json());
+                this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
+                this.app.use(cookieParser(this.config.get("cookie_secret")));
+                this.app.use(session({
+                    cookie: {
+                        sameSite: 'none',
+                            secure: true
+                    },
+                    resave: false,
+                    saveUninitialized: false,
+                    secret: this.config.get("session:secret")
+                }));
+                this.app.use(passport.initialize());
+                this.app.use(passport.session());
+
+                // cors
+                const corsOptions: CorsOptions = {
+                    origin: this.config.get("cors:origins"),
+                    credentials: true,
+                    methods: "GET,HEAD,OPTIONS,PUT,POST,DELETE",
+                    allowedHeaders: [
+                        "Accept",
+                        "Authorization",
+                        "Content-Type",
+                        "Location",
+                        "Origin",
+                        "Set-Cookie",
+                        "X-Requested-With"
+                    ],
+                    preflightContinue: false,
+                    optionsSuccessStatus: 204,
+                };
+                this.app.use(cors(corsOptions));
+
+                // passport (authentication) setup
+                passport.deserializeUser((profile: any, done: any) => {
+                    done(null, profile);
+                });
+                passport.serializeUser((profile: any, done: any) => {
+                    done(null, profile);
+                });
+                if (this.config.get("auth:strategy") === "JWTStrategy") {
+                    const jwtOptions: JWTStrategyOptions = new JWTStrategyOptions();
+                    jwtOptions.headerScheme = "(jwt|bearer)";
+                    jwtOptions.config = this.config.get("auth");
+                    passport.use("jwt", new JWTStrategy(jwtOptions));
+                }
+
+                // Set x-powered-by header
+                this.app.use((req: Request, res: Response, next: NextFunction) => {
+                    res.setHeader("x-powered-by", "AcceleratXR");
+                    return next();
+                });
+
+                const datastores: any = this.config.get("datastores");
+                const models: Map<string, any> = new Map();
+
+                this.logger.info("Loading all service scripts...");
+                const classLoader: ClassLoader = new ClassLoader(this.basePath);
+                await classLoader.load();
+
+                // Register all found classes with the object factory
+                for (const pair of classLoader.getClasses().entries()) {
+                    this.objectFactory.register(pair[1], pair[0]);
+                }
+
+                // Load all models
+                this.logger.info("Scanning for data models...");
+                for (const pair of classLoader.getClasses().entries()) {
+                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", pair[1]) || undefined;
+                    if (datastore) {
+                        models.set(pair[0], pair[1]);
+                    }
+                }
+
+                // Initiate all database connections
+                this.logger.info("Initializing database connection(s)...");
+
+                await ConnectionManager.connect(datastores, models);
+
+                const allRoutes: Array<any> = [];
+
+                this.routeUtils = await this.objectFactory.newInstance(RouteUtils, "default");
+                if (!this.routeUtils) { 
+                    reject("Failed to instantiate RouteUtils.");
+                    return;
+                }
+
+                // Register the index route
+                const index: IndexRoute = await this.instantiateRoute(IndexRoute);
+                allRoutes.push(index);
+                await this.routeUtils.registerRoute(this.app, index);
+
+                // Register the OpenAPI route if a spec has been provided
+                if (this.apiSpec) {
+                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", this.apiSpec);
+                    await this.routeUtils.registerRoute(this.app, oasRoute);
+                    allRoutes.push(oasRoute);
+                }
+
+                // Register the metrics route
+                const metricsRoute: MetricsRoute = await this.instantiateRoute(MetricsRoute);
+                await this.routeUtils.registerRoute(this.app, metricsRoute);
+
+                // Initialize the background service manager
+                this.logger.info("Starting background services...");
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", classLoader, this.objectFactory, this.config, this.logger);
+                if (this.serviceManager) {
+                    await this.serviceManager.startAll();
+                }
+
+                // Perform automatic discovery of all other routes
+                this.logger.info("Scanning for routes...");
+                for (const clazz of classLoader.getClasses().values()) {
+                    const routePaths: string[] | undefined = Reflect.getMetadata("cjs:routePaths", clazz.prototype) || undefined;
+                    if (routePaths) {
+                        const route: any = await this.instantiateRoute(clazz);
+                        await this.routeUtils.registerRoute(this.app, route);
+                        allRoutes.push(route);
+                    }
+                }
+
+                // Error handling. NOTE: Must be defined last.
+                this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+                    if (err) {
+                        // Only log 500-level errors. 400-level errors are the client's fault and
+                        // we don't need to spam the logs because of that.
+                        if (err.status >= 500) {
+                            this.logger.error(err);
+                        } else {
+                            this.logger.debug(err);
                         }
-                        // leverage NODE_ENV or another config?
-                        if (err.stack && process.env.NODE_ENV === "production") {
-                            err.stack = undefined;
+
+                        if (typeof err === "string") {
+                            if (!res.headersSent) {
+                                res.status(500);
+                            }
+                            res.json(err);
+                        } else {
+                            if (!err.status && !err.status) {
+                                err.status = 500;
+                            }
+                            // leverage NODE_ENV or another config?
+                            if (err.stack && process.env.NODE_ENV === "production") {
+                                delete err.stack;
+                            }
+                            if (!res.headersSent) {
+                                res.status(err.status);
+                            }
+                            res.json(err);
                         }
-                        res.status(err.status)
-                            .header("Content-Type", "application/json")
-                            .send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+
+                        Server.metricFailedRequests.inc(1);
                     }
 
-                    Server.metricFailedRequests.inc(1);
-                }
+                    return next();
+                });
 
-                Server.metricRequestPath.labels(req.path).observe(1);
-                Server.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
-            });
+                this.app.use((req: Request, res: Response) => {
+                    Server.metricRequestPath.labels(req.path).observe(1);
+                    Server.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
+                    return !res.writableEnded ? res.send() : res;
+                });
 
-            // Initialize the HTTP listen server
-            this.server.listen(this.port, "0.0.0.0", () => {
-                this.logger.info("Listening on port " + this.port + "...");
-                resolve();
-            });
+                // Initialize the HTTP listen server
+                this.server.listen(this.port, "0.0.0.0", () => {
+                    this.logger.info("Listening on port " + this.port + "...");
+                    resolve();
+                });
+            } catch (err) {
+                this.logger.error(err);
+                reject(err);
+            }
         });
     }
 
@@ -427,7 +467,10 @@ class Server {
      * Stops the HTTP listen server.
      */
     public stop(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            this.logger.info("Stopping background services...");
+            await this.serviceManager?.stopAll();
+
             if (this.wss) {
                 this.logger.info("Stopping server...");
                 this.wss.close(async (err: any) => {
@@ -437,14 +480,14 @@ class Server {
                         this.wss = undefined;
 
                         this.server.close(async (err: any) => {
-                            this.logger.info("Closing database connections...");
-                            await ConnectionManager.disconnect();
+                    this.logger.info("Closing database connections...");
+                    await ConnectionManager.disconnect();
 
                             if (err) {
                                 reject(err);
                             } else {
                                 this.server = undefined;
-                                resolve();
+                    resolve();
                             }
                         });
                     }
@@ -467,5 +510,3 @@ class Server {
         return this.start();
     }
 }
-
-export default Server;

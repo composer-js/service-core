@@ -101,7 +101,7 @@ The application logging utility.
 
 ▸ **clear**(): void
 
-*Defined in src/ObjectFactory.ts:84*
+*Defined in src/ObjectFactory.ts:96*
 
 Deletes all instantiated objects.
 
@@ -113,7 +113,7 @@ ___
 
 ▸ **clearAll**(): void
 
-*Defined in src/ObjectFactory.ts:91*
+*Defined in src/ObjectFactory.ts:103*
 
 Deletes all instantiated objects and registered class types.
 
@@ -123,11 +123,17 @@ ___
 
 ### destroy
 
-▸ **destroy**(): Promise\<void>
+▸ **destroy**(`objs?`: any \| any[]): Promise\<void>
 
-*Defined in src/ObjectFactory.ts:43*
+*Defined in src/ObjectFactory.ts:45*
 
-Destroys the factory including all instantiated objects it is managing.
+Destroys the specified objects. If `undefined` is passed in, all objects managed by the factory are destroyed.
+
+#### Parameters:
+
+Name | Type |
+------ | ------ |
+`objs?` | any \| any[] |
 
 **Returns:** Promise\<void>
 
@@ -137,7 +143,7 @@ ___
 
 ▸ **getInitMethods**(`obj`: any): Function[]
 
-*Defined in src/ObjectFactory.ts:211*
+*Defined in src/ObjectFactory.ts:229*
 
 Searches an object for one or more functions that implement a `@Init` decorator.
 
@@ -157,9 +163,12 @@ ___
 
 ▸ **getInstance**\<T>(`nameOrType`: any): T
 
-*Defined in src/ObjectFactory.ts:242*
+*Defined in src/ObjectFactory.ts:263*
 
-Returns the object instance with the given unique name.
+Returns the object instance with the given unique name. Unique names take the form `<ClassName>:<InstanceName>`.
+It is possible to only specifiy the `<ClassName>`, doing so will automatically look for the `<ClassName>:default`
+instance. It is also possible to pass the class type directly, in which case the instance will be searched by
+`<ClassName>:default`.
 
 #### Type parameters:
 
@@ -183,7 +192,7 @@ ___
 
 ▸ **initialize**(`obj`: any): Promise\<void>
 
-*Defined in src/ObjectFactory.ts:100*
+*Defined in src/ObjectFactory.ts:112*
 
 Scans the given object for any properties with the @Inject decorator and assigns the correct values.
 
@@ -201,7 +210,7 @@ ___
 
 ▸ **newInstance**\<T>(`type`: any, `name?`: undefined \| string, ...`args`: any): Promise\<T>
 
-*Defined in src/ObjectFactory.ts:267*
+*Defined in src/ObjectFactory.ts:293*
 
 Creates a new instance of the class specified with the provided unique name or type and constructor arguments. If an existing
 object has already been created with the given name, that instance is returned, otherwise a new instance is created
@@ -229,7 +238,7 @@ ___
 
 ▸ **register**(`clazz`: any, `fqn?`: undefined \| string): void
 
-*Defined in src/ObjectFactory.ts:325*
+*Defined in src/ObjectFactory.ts:354*
 
 Registers the given class type for the provided fully qualified name.
 

@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { ACLUtils } from "../service_core";
+import { ServerResponse } from "http";
+import { Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 const passport = require("passport");
 
@@ -12,40 +13,9 @@ const passport = require("passport");
  *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
-class RouteUtils {
-    /**
-     * Creates an Express middleware function that verifies the incoming request is from a valid user with at least
-     * one of the specified roles.
-     */
-    public checkRequiredPerms(): RequestHandler {
-        return async function (req: Request, res: Response, next: NextFunction) {
-            let granted: boolean = await ACLUtils.checkRequestPerms(req.user as any, req);
-
-            if (granted) {
-                return next();
-            } else {
-                return res.status(403).send();
-            }
-        };
-    }
-
-    /**
-     * Creates an Express middleware function that verifies the incoming request is from a valid user with at least
-     * one of the specified roles.
-     *
-     * @param requiredRoles The list of roles that the authenticated user must have.
-     */
-    public checkRequiredRoles(requiredRoles: string[]): RequestHandler {
-        return function (req: Request, res: Response, next: NextFunction) {
-            let foundRole: boolean = UserUtils.hasRoles(req.user, requiredRoles);
-
-            if (foundRole) {
-                return next();
-            } else {
-                return res.status(403).send();
-            }
-        };
-    }
+export class RouteUtils {
+    @Logger
+    private logger?: any;
 
     /**
      * Converts the given array of string or Function objects to functions bound to the given route object.
@@ -82,7 +52,7 @@ class RouteUtils {
         let results: Map<string, any> = new Map();
 
         for (let member in route) {
-            let metadata: any = Reflect.getMetadata("axr:route", route, member);
+            let metadata: any = Reflect.getMetadata("cjs:route", route, member);
             if (metadata) {
                 results.set(member, route[member]);
             }
@@ -90,7 +60,7 @@ class RouteUtils {
         let proto = Object.getPrototypeOf(route);
         while (proto) {
             for (let member of Object.getOwnPropertyNames(proto)) {
-                let metadata: any = Reflect.getMetadata("axr:route", proto, member);
+                let metadata: any = Reflect.getMetadata("cjs:route", proto, member);
                 if (metadata) {
                     results.set(member, route[member]);
                 }
@@ -107,10 +77,10 @@ class RouteUtils {
      * @param app The Express application to register the route to.
      * @param route The route object to register with Express.
      */
-    public registerRoute(app: any, route: any) {
-        let routePaths: string[] = Reflect.getMetadata("axr:routePaths", route);
+    public async registerRoute(app: any, route: any): Promise<void> {
+        let routePaths: string[] = Reflect.getMetadata("cjs:routePaths", route);
         if (!routePaths) {
-            throw new Error("Route must specify a path: " + route);
+            throw new Error("Route must specify a path: " + JSON.stringify(route));
         }
 
         // Each route definition will contain a set of functions that have been decorated to include route metadata.
@@ -122,7 +92,7 @@ class RouteUtils {
             let key: string = entry[0];
             let value: any = entry[1] as any;
 
-            let metadata: any = Reflect.getMetadata("axr:route", route, key);
+            let metadata: any = Reflect.getMetadata("cjs:route", route, key);
             if (value && metadata) {
                 const { after, authRequired, before, methods, requiredRoles, validator } = metadata;
                 let { authStrategies } = metadata;
@@ -136,17 +106,11 @@ class RouteUtils {
                 // Prepare the list of middleware to apply for the given endpoint.
                 // The order of operations for middleware is:
                 // 1. Auth Strategies
-                // 2. Required Roles
-                // 3. Required Permissions (Path Matching)
                 // 4. Validator Function
                 // 5. Before Functions
                 // 6. Decorated Function
                 // 7. After Functions
                 let middleware: Array<RequestHandler> = new Array();
-                if (requiredRoles) {
-                    middleware.push(this.checkRequiredRoles(requiredRoles));
-                }
-                middleware.push(this.checkRequiredPerms());
                 if (validator) {
                     middleware = middleware.concat(this.getFuncArray(route, [validator]));
                 }
@@ -188,7 +152,7 @@ class RouteUtils {
                         } else {
                             app[verb](path, ...middleware);
                         }
-                        //this.logger.info("Registered Route: " + verb.toUpperCase() + " " + path);
+                        this.logger.info("Registered Route: " + verb.toUpperCase() + " " + path);
                     }
                 }
             }
@@ -204,11 +168,9 @@ class RouteUtils {
      */
     public wrapMiddleware(obj: any, func: Function, send: boolean = false): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
-            let returnResult: any = undefined;
-
             try {
-                const argMetadata: any = Reflect.getMetadata("axr:args", Object.getPrototypeOf(obj), func.name);
-                const routeMetadata: any = Reflect.getMetadata("axr:route", Object.getPrototypeOf(obj), func.name);
+                const argMetadata: any = Reflect.getMetadata("cjs:args", Object.getPrototypeOf(obj), func.name);
+                const routeMetadata: any = Reflect.getMetadata("cjs:route", Object.getPrototypeOf(obj), func.name);
                 const args: any[] = [];
 
                 // This is a hack that lets us stub out function arguments because we no longer can access
@@ -288,35 +250,38 @@ class RouteUtils {
                     (req as RequestWS).wsHandled = true;
                 }
 
-                if (send) {
-                    // If a result was returned set it as the response body, otherwise set the status to NO_CONTENT
-                    if (result) {
-                        // Does the handler specify it's own Content-Type override?
-                        const contentType: string =
-                            routeMetadata && routeMetadata.contentType ? routeMetadata.contentType : "application/json";
-                        // Don't encode the result as JSON if not the desired content-type
-                        res.header("Content-Type", contentType).send(
-                            contentType === "application/json" ? JSON.stringify(result) : result
-                        );
-                    } else {
-                        res.status(204).send();
-                    }
-
-                    returnResult = next();
+                // If the result is a response we need to return this immediately. We don't return the original response
+                // object because responses are passed by copy, not refernce and so the result will be different.
+                const isResponse: boolean = result instanceof ServerResponse || (result && result.headers && result.url);
+                if (isResponse) {
+                    return result.send();
                 } else {
-                    // Assign result to the response for other handlers to use
-                    (res as any).result = result;
-                    returnResult = next();
+                    if (send) {
+                        // If a result was returned set it as the response body, otherwise set the status to NO_CONTENT
+                        if (result !== undefined) {
+                            if (!res.headersSent) {
+                                res.status(200);
+                            }
+                            res.json(result);
+                        } else {
+                            if (!res.headersSent) {
+                                res.status(204);
+                            }
+                        }
+                    } else {
+                        // Assign result to the response for other handlers to use
+                        (res as any).result = result;
+                    }
                 }
-            } catch (error) {
-                returnResult = next(error);
-            }
 
-            if (returnResult) {
-                return returnResult;
+                if (next) {
+                    return next();
+                } else {
+                    return res.send();
+                }
+            } catch (err) {
+                return next(err);
             }
         };
     }
 }
-
-export default new RouteUtils();

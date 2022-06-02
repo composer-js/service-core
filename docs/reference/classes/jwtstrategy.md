@@ -45,7 +45,7 @@ search for a token by one of the following methods (in order of precedence).
 
 ### constructor
 
-\+ **new JWTStrategy**(`options`: Options): [JWTStrategy](jwtstrategy.md)
+\+ **new JWTStrategy**(`options`: [JWTStrategyOptions](jwtstrategyoptions.md)): [JWTStrategy](jwtstrategy.md)
 
 *Defined in src/passportjs/JWTStrategy.ts:40*
 
@@ -53,7 +53,7 @@ search for a token by one of the following methods (in order of precedence).
 
 Name | Type |
 ------ | ------ |
-`options` | Options |
+`options` | [JWTStrategyOptions](jwtstrategyoptions.md) |
 
 **Returns:** [JWTStrategy](jwtstrategy.md)
 
@@ -61,7 +61,7 @@ Name | Type |
 
 ### options
 
-• `Private` **options**: Options
+• `Private` **options**: [JWTStrategyOptions](jwtstrategyoptions.md)
 
 *Defined in src/passportjs/JWTStrategy.ts:40*
 
