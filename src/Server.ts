@@ -329,7 +329,7 @@ export class Server {
 
                 // Load all classes from disk
                 this.logger.info("Loading all files...");
-                const classLoader: ClassLoader = new ClassLoader(path.join(this.basePath));
+                const classLoader: ClassLoader = new ClassLoader(this.basePath);
                 try {
                     await classLoader.load();
                 }
