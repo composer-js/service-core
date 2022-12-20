@@ -5,7 +5,7 @@ import { default as config } from "./config";
 import * as request from "supertest";
 import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src/service_core";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import User from "./models/VersionedUser";
+import User from "./server/models/VersionedUser";
 import { MongoRepository, DataSource } from "typeorm";
 import { JWTUtils, Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";

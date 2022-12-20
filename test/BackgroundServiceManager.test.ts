@@ -4,9 +4,9 @@
 import config from "./config";
 import { BackgroundServiceManager } from "../src/BackgroundServiceManager";
 import { ClassLoader, Logger } from "@composer-js/core";
-import MyFirstService from "./jobs/MyFirstService";
-import MySecondService from "./jobs/MySecondService";
-import MyThirdService from "./jobs/MyThirdService";
+import MyFirstService from "./server/jobs/MyFirstService";
+import MySecondService from "./server/jobs/MySecondService";
+import MyThirdService from "./server/jobs/MyThirdService";
 import { ObjectFactory } from "../src/service_core";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
