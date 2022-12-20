@@ -3,56 +3,28 @@
 ///////////////////////////////////////////////////////////////////////////////
 import config from "./config";
 import { BackgroundServiceManager } from "../src/BackgroundServiceManager";
-import { Logger } from "@composer-js/core";
+import { ClassLoader, Logger } from "@composer-js/core";
 import MyFirstService from "./server/jobs/MyFirstService";
 import MySecondService from "./server/jobs/MySecondService";
 import MyThirdService from "./server/jobs/MyThirdService";
-import { ObjectFactory, ConnectionManager } from "../src/service_core";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { MongoRepository, DataSource } from "typeorm";
-import { Redis } from "ioredis";
-
-const mongod: MongoMemoryServer = new MongoMemoryServer({
-    instance: {
-        port: 9999,
-        dbName: "axr-test",
-    },
-});
+import { ObjectFactory } from "../src/service_core";
 
 jest.setTimeout(10000);
 
 describe("BackgroundServiceManager Tests", () => {
-    let repo: MongoRepository<ScriptMongo>;
+    const classLoader: ClassLoader = new ClassLoader("./test/server");
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    let scriptManager: ScriptManager;
 
     beforeAll(async () => {
-        await mongod.start();
-        const models: Map<string, any> = new Map();
-        models.set("ScriptMongo", ScriptMongo);
-        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");
-        await connMgr.connect({
-            scripts: config.get("datastores:scripts")
-        }, models);
-
-        const conn: DataSource | Redis | undefined = connMgr.connections.get("scripts") as any;
-        expect(conn).toBeDefined();
-        if (conn instanceof DataSource) {
-            repo = conn.getMongoRepository(ScriptMongo.name);
-        }
-        expect(repo).toBeDefined();
-
-        scriptManager = await objectFactory.newInstance(ScriptManager, "default", config, Logger(), repo);
-        await scriptManager.load(__dirname, ["test\.ts"]);
+        await classLoader.load();
     });
 
     afterAll(async () => {
-        await mongod.stop();
         await objectFactory.destroy();
     })
 
     it("Can start/stop single background service.", async () => {
-        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, scriptManager, config, Logger());
+        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
         await manager.start("MyFirstService");
         const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
         expect(service).toBeDefined();
@@ -82,7 +54,7 @@ describe("BackgroundServiceManager Tests", () => {
     });
 
     it("Can start/stop multiple background services.", async () => {
-        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, scriptManager, config, Logger());
+        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
         await manager.startAll();
         const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
         expect(service).toBeDefined();
