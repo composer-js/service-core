@@ -61,8 +61,8 @@ export class BackgroundServiceManager {
      */
     public async startAll(): Promise<void> {
         if (this.classes) {
-            for (const clazz of this.classes.values()) {
-                await this.start(clazz.name, clazz);
+            for (const [name, clazz] of this.classes.entries()) {
+                await this.start(name, clazz);
             }
         }
     }
@@ -82,13 +82,7 @@ export class BackgroundServiceManager {
         }
 
         // Look for the class definition with the given name if not already given
-        if (!clazz) {
-            this.classes.forEach((clazzDef: any, name: string) => {
-                if (name.match(new RegExp(`.*${serviceName}.*`))) {
-                    clazz = clazzDef;
-                }
-            });
-        }
+        clazz = clazz ? clazz : this.classes.get(serviceName);
 
         if (clazz) {
             try {
