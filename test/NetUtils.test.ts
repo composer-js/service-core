@@ -2,8 +2,6 @@
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { NetUtils } from "../src/NetUtils";
-import { Request } from "express";
-import { promises as dns, LookupAddress } from "dns";
 
 const YahooIPs: string[] = [
     "74.6.231.21",
