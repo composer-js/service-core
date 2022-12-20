@@ -25,27 +25,27 @@ describe("BackgroundServiceManager Tests", () => {
 
     it("Can start/stop single background service.", async () => {
         const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
-        await manager.start("MyFirstService");
-        const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
+        await manager.start("jobs.MyFirstService");
+        const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
         expect(service).toBeDefined();
         expect(service.counter).toBe(0);
         expect(service.started).toBe(true);
         expect(service.stopped).toBe(false);
 
-        const service2: MySecondService = manager.getService("MySecondService") as MySecondService;
+        const service2: MySecondService = manager.getService("jobs.MySecondService") as MySecondService;
         expect(service2).not.toBeDefined();
-        const service3: MyThirdService = manager.getService("MyThirdService") as MyThirdService;
+        const service3: MyThirdService = manager.getService("jobs.MyThirdService") as MyThirdService;
         expect(service3).not.toBeDefined();
 
         return new Promise<void>((resolve) => {
             setTimeout(async () => {
-                const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
+                const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
                 expect(service).toBeDefined();
                 expect(service.counter).toBeGreaterThanOrEqual(5);
                 expect(service.started).toBe(true);
                 expect(service.stopped).toBe(false);
 
-                await manager.stop("MyFirstService");
+                await manager.stop("jobs.MyFirstService");
                 expect(service.started).toBe(false);
                 expect(service.stopped).toBe(true);
                 resolve();
@@ -56,19 +56,19 @@ describe("BackgroundServiceManager Tests", () => {
     it("Can start/stop multiple background services.", async () => {
         const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
         await manager.startAll();
-        const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
+        const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
         expect(service).toBeDefined();
         expect(service.counter).toBe(0);
         expect(service.started).toBe(true);
         expect(service.stopped).toBe(false);
 
-        const service2: MySecondService = manager.getService("MySecondService") as MySecondService;
+        const service2: MySecondService = manager.getService("jobs.MySecondService") as MySecondService;
         expect(service2).toBeDefined();
         expect(service2.counter).toBe(0);
         expect(service2.started).toBe(true);
         expect(service2.stopped).toBe(false);
 
-        const service3: MyThirdService = manager.getService("MyThirdService") as MyThirdService;
+        const service3: MyThirdService = manager.getService("jobs.MyThirdService") as MyThirdService;
         expect(service3).toBeDefined();
         expect(service3.counter).toBe(1);
         expect(service3.started).toBe(true);
@@ -76,9 +76,9 @@ describe("BackgroundServiceManager Tests", () => {
 
         return new Promise<void>((resolve) => {
             setTimeout(async () => {
-                const service: MyFirstService = manager.getService("MyFirstService") as MyFirstService;
-                const service2: MySecondService = manager.getService("MySecondService") as MySecondService;
-                const service3: MyThirdService = manager.getService("MyThirdService") as MyThirdService;
+                const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
+                const service2: MySecondService = manager.getService("jobs.MySecondService") as MySecondService;
+                const service3: MyThirdService = manager.getService("jobs.MyThirdService") as MyThirdService;
 
                 await manager.stopAll();
 
