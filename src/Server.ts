@@ -396,7 +396,7 @@ export class Server {
                         bgServices.set(name, clazz);
                     }
                 }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", classLoader, this.objectFactory, bgServices, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, bgServices, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }
