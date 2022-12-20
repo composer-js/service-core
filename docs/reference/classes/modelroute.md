@@ -1,8 +1,6 @@
-**[@composer-js/service-core](../README.md)**
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [ModelRoute](modelroute.md)
 
-> [Globals](../globals.md) / ModelRoute
-
-# Class: ModelRoute\<T>
+# Class: ModelRoute ‹**T**›
 
 The `ModelRoute` is an abstract base class that provides a set of built-in route behavior functions for handling
 requests for a given data model that is managed by a persistent datastore.
@@ -20,231 +18,243 @@ Provided behaviors:
 
 ## Type parameters
 
-Name | Type |
------- | ------ |
-`T` | [BaseEntity](baseentity.md) \| [SimpleEntity](simpleentity.md) |
+▪ **T**: *[BaseEntity](baseentity.md) | SimpleEntity*
 
 ## Hierarchy
 
 * **ModelRoute**
 
+  ↳ [ACLRouteMongo](aclroutemongo.md)
+
+  ↳ [ACLRouteSQL](aclroutesql.md)
+
+  ↳ [ScriptRouteMongo](scriptroutemongo.md)
+
+  ↳ [ScriptRouteSQL](scriptroutesql.md)
+
 ## Index
 
 ### Constructors
 
-* [constructor](modelroute.md#constructor)
+* [constructor](modelroute.md#protected-constructor)
 
 ### Properties
 
-* [cacheClient](modelroute.md#cacheclient)
-* [cacheTTL](modelroute.md#cachettl)
-* [config](modelroute.md#config)
-* [defaultACLUid](modelroute.md#defaultacluid)
-* [logger](modelroute.md#logger)
-* [repo](modelroute.md#repo)
-* [trackChanges](modelroute.md#trackchanges)
+* [cacheClient](modelroute.md#protected-optional-cacheclient)
+* [cacheTTL](modelroute.md#protected-optional-cachettl)
+* [config](modelroute.md#protected-optional-config)
+* [defaultACLUid](modelroute.md#protected-defaultacluid)
+* [logger](modelroute.md#protected-logger)
+* [repo](modelroute.md#protected-optional-abstract-repo)
+* [trackChanges](modelroute.md#protected-trackchanges)
 
 ### Accessors
 
-* [baseCacheKey](modelroute.md#basecachekey)
-* [modelClass](modelroute.md#modelclass)
+* [baseCacheKey](modelroute.md#protected-basecachekey)
+* [modelClass](modelroute.md#protected-modelclass)
 
 ### Methods
 
-* [doCount](modelroute.md#docount)
-* [doCreate](modelroute.md#docreate)
-* [doDelete](modelroute.md#dodelete)
-* [doDeleteVersion](modelroute.md#dodeleteversion)
-* [doExists](modelroute.md#doexists)
-* [doFindAll](modelroute.md#dofindall)
-* [doFindById](modelroute.md#dofindbyid)
-* [doFindByIdAndVersion](modelroute.md#dofindbyidandversion)
-* [doTruncate](modelroute.md#dotruncate)
-* [doUpdate](modelroute.md#doupdate)
-* [getObj](modelroute.md#getobj)
-* [hashQuery](modelroute.md#hashquery)
-* [searchIdQuery](modelroute.md#searchidquery)
+* [doCount](modelroute.md#protected-docount)
+* [doCreate](modelroute.md#protected-docreate)
+* [doDelete](modelroute.md#protected-dodelete)
+* [doDeleteVersion](modelroute.md#protected-dodeleteversion)
+* [doFindAll](modelroute.md#protected-dofindall)
+* [doFindById](modelroute.md#protected-dofindbyid)
+* [doFindByIdAndVersion](modelroute.md#protected-dofindbyidandversion)
+* [doTruncate](modelroute.md#protected-dotruncate)
+* [doUpdate](modelroute.md#protected-doupdate)
+* [getDefaultACL](modelroute.md#protected-abstract-getdefaultacl)
+* [getObj](modelroute.md#protected-getobj)
+* [hashQuery](modelroute.md#protected-hashquery)
+* [searchIdQuery](modelroute.md#private-searchidquery)
+* [superInitialize](modelroute.md#private-superinitialize)
 
 ## Constructors
 
-### constructor
+### `Protected` constructor
 
-\+ `Protected`**new ModelRoute**(): [ModelRoute](modelroute.md)
+\+ **new ModelRoute**(): *[ModelRoute](modelroute.md)*
 
-*Defined in src/routes/ModelRoute.ts:56*
+Defined in src/routes/ModelRoute.ts:57
 
 Initializes a new instance using any defaults.
 
-**Returns:** [ModelRoute](modelroute.md)
+**Returns:** *[ModelRoute](modelroute.md)*
 
 ## Properties
 
-### cacheClient
+### `Protected` `Optional` cacheClient
 
-• `Protected` `Optional` **cacheClient**: Redis
+• **cacheClient**? : *Redis*
 
-*Defined in src/routes/ModelRoute.ts:34*
+Defined in src/routes/ModelRoute.ts:35
 
 The redis client that will be used as a 2nd level cache for all cacheable models.
 
 ___
 
-### cacheTTL
+### `Protected` `Optional` cacheTTL
 
-• `Protected` `Optional` **cacheTTL**: undefined \| number
+• **cacheTTL**? : *undefined | number*
 
-*Defined in src/routes/ModelRoute.ts:37*
+Defined in src/routes/ModelRoute.ts:38
 
 The time, in milliseconds, that objects will be cached before being invalidated.
 
 ___
 
-### config
+### `Protected` `Optional` config
 
-• `Protected` `Optional` **config**: any
+• **config**? : *any*
 
-*Defined in src/routes/ModelRoute.ts:41*
+Defined in src/routes/ModelRoute.ts:42
 
 The global application configuration.
 
 ___
 
-### defaultACLUid
+### `Protected` defaultACLUid
 
-• `Protected` **defaultACLUid**: string = ""
+• **defaultACLUid**: *string* = ""
 
-*Defined in src/routes/ModelRoute.ts:44*
+Defined in src/routes/ModelRoute.ts:45
 
 The unique identifier of the default ACL for the model type.
 
 ___
 
-### logger
+### `Protected` logger
 
-• `Protected` **logger**: any
+• **logger**: *any*
 
-*Defined in src/routes/ModelRoute.ts:47*
+Defined in src/routes/ModelRoute.ts:48
 
 ___
 
-### repo
+### `Protected` `Optional` `Abstract` repo
 
-• `Protected` `Optional` `Abstract` **repo**: Repository\<T> \| MongoRepository\<T>
+• **repo**? : *Repository‹T› | MongoRepository‹T›*
 
-*Defined in src/routes/ModelRoute.ts:50*
+Defined in src/routes/ModelRoute.ts:51
 
 The model class associated with the controller to perform operations against.
 
 ___
 
-### trackChanges
+### `Protected` trackChanges
 
-• `Protected` **trackChanges**: number = 0
+• **trackChanges**: *number* = 0
 
-*Defined in src/routes/ModelRoute.ts:56*
+Defined in src/routes/ModelRoute.ts:57
 
 The number of previous document versions to store in the database. A negative value indicates storing all
 versions, a value of `0` stores no versions.
 
 ## Accessors
 
-### baseCacheKey
+### `Protected` baseCacheKey
 
-• `Protected`get **baseCacheKey**(): string
+• **get baseCacheKey**(): *string*
 
-*Defined in src/routes/ModelRoute.ts:66*
+Defined in src/routes/ModelRoute.ts:67
 
 The base key used to get or set data in the cache.
 
-**Returns:** string
+**Returns:** *string*
 
 ___
 
-### modelClass
+### `Protected` modelClass
 
-• `Protected`get **modelClass**(): any
+• **get modelClass**(): *any*
 
-*Defined in src/routes/ModelRoute.ts:74*
+Defined in src/routes/ModelRoute.ts:75
 
 The class type of the model this route is associated with.
 
-**Returns:** any
+**Returns:** *any*
 
 ## Methods
 
-### doCount
+### `Protected` doCount
 
-▸ `Protected`**doCount**(`params`: any, `query`: any, `res`: XResponse, `user?`: any): Promise\<XResponse>
+▸ **doCount**(`params`: any, `query`: any, `user?`: any): *Promise‹any›*
 
-*Defined in src/routes/ModelRoute.ts:159*
+Defined in src/routes/ModelRoute.ts:205
 
 Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
-request `query`. Any results that have been found are set to the `content-length` header of the `res` argument.
+request `query`. Any results that have been found are set to the `result` property of the `res` argument.
+`result` is never null.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
 `params` | any |
 `query` | any |
-`res` | XResponse |
 `user?` | any |
 
-**Returns:** Promise\<XResponse>
+**Returns:** *Promise‹any›*
 
 ___
 
-### doCreate
+### `Protected` doCreate
 
-▸ `Protected`**doCreate**(`obj`: T, `user?`: any): Promise\<T>
+▸ **doCreate**(`obj`: T, `user?`: any, `acl?`: [AccessControlList](../interfaces/accesscontrollist.md), `recordEvent`: boolean, `req?`: XRequest): *Promise‹T›*
 
-*Defined in src/routes/ModelRoute.ts:185*
+Defined in src/routes/ModelRoute.ts:238
 
 Attempts to store the object provided in `req.body` into the datastore. Upon success, sets the newly persisted
 object to the `result` property of the `res` argument, otherwise sends a `400 BAD REQUEST` response to the
 client.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Description |
------- | ------ | ------ |
-`obj` | T | The object to store in the database. |
-`user?` | any | The authenticated user performing the action.  |
+Name | Type | Default | Description |
+------ | ------ | ------ | ------ |
+`obj` | T | - | The object to store in the database. |
+`user?` | any | - | The authenticated user performing the action. |
+`acl?` | [AccessControlList](../interfaces/accesscontrollist.md) | - | An optional AccessControlList to create along with the object. If none specified, a default ACL is generated. |
+`recordEvent` | boolean | true | Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`. |
+`req?` | XRequest | - | The optional original request object.  |
 
-**Returns:** Promise\<T>
+**Returns:** *Promise‹T›*
 
 ___
 
-### doDelete
+### `Protected` doDelete
 
-▸ `Protected`**doDelete**(`id`: string, `user?`: any): Promise\<void>
+▸ **doDelete**(`id`: string, `user?`: any, `recordEvent`: boolean, `req?`: XRequest): *Promise‹void›*
 
-*Defined in src/routes/ModelRoute.ts:221*
+Defined in src/routes/ModelRoute.ts:317
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id`.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Description |
------- | ------ | ------ |
-`id` | string | The unique identifier of the object to delete. |
-`user?` | any | The authenticated user performing the action.  |
+Name | Type | Default | Description |
+------ | ------ | ------ | ------ |
+`id` | string | - | The unique identifier of the object to delete. |
+`user?` | any | - | The authenticated user performing the action. |
+`recordEvent` | boolean | true | Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`. |
+`req?` | XRequest | - | The optional original request object.  |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### doDeleteVersion
+### `Protected` doDeleteVersion
 
-▸ `Protected`**doDeleteVersion**(`id`: string, `version`: number, `user?`: any): Promise\<void>
+▸ **doDeleteVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹void›*
 
-*Defined in src/routes/ModelRoute.ts:256*
+Defined in src/routes/ModelRoute.ts:371
 
 Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
 `id` for a specified `version`.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
@@ -252,41 +262,21 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### doExists
+### `Protected` doFindAll
 
-▸ `Protected`**doExists**(`id`: string, `res`: XResponse, `user?`: any): Promise\<any>
+▸ **doFindAll**(`params`: any, `query`: any, `user?`: any): *Promise‹T[]›*
 
-*Defined in src/routes/ModelRoute.ts:290*
-
-Attempts to determine if an existing object with the given unique identifier exists.
-
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`id` | string |
-`res` | XResponse |
-`user?` | any |
-
-**Returns:** Promise\<any>
-
-___
-
-### doFindAll
-
-▸ `Protected`**doFindAll**(`params`: any, `query`: any, `user?`: any): Promise\<T[]>
-
-*Defined in src/routes/ModelRoute.ts:320*
+Defined in src/routes/ModelRoute.ts:416
 
 Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
 `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
 never null.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
@@ -294,38 +284,38 @@ Name | Type |
 `query` | any |
 `user?` | any |
 
-**Returns:** Promise\<T[]>
+**Returns:** *Promise‹T[]›*
 
 ___
 
-### doFindById
+### `Protected` doFindById
 
-▸ `Protected`**doFindById**(`id`: string, `user?`: any): Promise\<T \| undefined>
+▸ **doFindById**(`id`: string, `user?`: any): *Promise‹T | undefined›*
 
-*Defined in src/routes/ModelRoute.ts:392*
+Defined in src/routes/ModelRoute.ts:485
 
 Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
 `id` | string |
 `user?` | any |
 
-**Returns:** Promise\<T \| undefined>
+**Returns:** *Promise‹T | undefined›*
 
 ___
 
-### doFindByIdAndVersion
+### `Protected` doFindByIdAndVersion
 
-▸ `Protected`**doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): Promise\<T \| undefined>
+▸ **doFindByIdAndVersion**(`id`: string, `version`: number, `user?`: any): *Promise‹T | undefined›*
 
-*Defined in src/routes/ModelRoute.ts:421*
+Defined in src/routes/ModelRoute.ts:521
 
 Attempts to retrieve a single data model object as identified by the `id` and `version` parameters in the URI.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
@@ -333,102 +323,128 @@ Name | Type |
 `version` | number |
 `user?` | any |
 
-**Returns:** Promise\<T \| undefined>
+**Returns:** *Promise‹T | undefined›*
 
 ___
 
-### doTruncate
+### `Protected` doTruncate
 
-▸ `Protected`**doTruncate**(`params?`: any, `query?`: any, `user?`: any): Promise\<void>
+▸ **doTruncate**(`user?`: any, `recordEvent`: boolean, `req?`: XRequest): *Promise‹void›*
 
-*Defined in src/routes/ModelRoute.ts:455*
+Defined in src/routes/ModelRoute.ts:561
 
-Attempts to remove all entries of the data model type from the datastore matching the given
-parameters and query.
+Attempts to remove all entries of the data model type from the datastore.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Description |
------- | ------ | ------ |
-`params?` | any | The parameters to match. |
-`query?` | any | The query parameters to match. |
-`user?` | any | The authenticated user performing the action, otherwise undefined.  |
+Name | Type | Default | Description |
+------ | ------ | ------ | ------ |
+`user?` | any | - | The authenticated user performing the action, otherwise undefined. |
+`recordEvent` | boolean | true | Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`. |
+`req?` | XRequest | - | The optional original request object.  |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### doUpdate
+### `Protected` doUpdate
 
-▸ `Protected`**doUpdate**(`id`: string, `obj`: T, `user?`: any): Promise\<T>
+▸ **doUpdate**(`id`: string, `obj`: T, `user?`: any, `recordEvent`: boolean, `req?`: XRequest): *Promise‹T›*
 
-*Defined in src/routes/ModelRoute.ts:493*
+Defined in src/routes/ModelRoute.ts:600
 
 Attempts to modify an existing data model object as identified by the `id` parameter in the URI.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type |
------- | ------ |
-`id` | string |
-`obj` | T |
-`user?` | any |
+Name | Type | Default | Description |
+------ | ------ | ------ | ------ |
+`id` | string | - | - |
+`obj` | T | - | - |
+`user?` | any | - | - |
+`recordEvent` | boolean | true | Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`. |
+`req?` | XRequest | - | The optional original request object.  |
 
-**Returns:** Promise\<T>
+**Returns:** *Promise‹T›*
 
 ___
 
-### getObj
+### `Protected` `Abstract` getDefaultACL
 
-▸ `Protected`**getObj**(`id`: string, `version?`: undefined \| number): Promise\<T \| undefined>
+▸ **getDefaultACL**(): *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
 
-*Defined in src/routes/ModelRoute.ts:98*
+Defined in src/routes/ModelRoute.ts:84
+
+Returns the default access control list governing the model type. Returning a value of `undefined` will grant
+full acccess to any user (including unauthenticated anonymous users).
+
+**Returns:** *[AccessControlList](../interfaces/accesscontrollist.md) | undefined*
+
+___
+
+### `Protected` getObj
+
+▸ **getObj**(`id`: string, `version?`: undefined | number): *Promise‹T | undefined›*
+
+Defined in src/routes/ModelRoute.ts:143
 
 Retrieves the object with the given id from either the cache or the database. If retrieving from the database
 the cache is populated to speed up subsequent requests.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `id` | string | The unique identifier of the object to retrieve. |
-`version?` | undefined \| number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
+`version?` | undefined &#124; number | The desired version number of the object to retrieve. If `undefined` returns the latest.  |
 
-**Returns:** Promise\<T \| undefined>
+**Returns:** *Promise‹T | undefined›*
 
 ___
 
-### hashQuery
+### `Protected` hashQuery
 
-▸ `Protected`**hashQuery**(`query`: any): string
+▸ **hashQuery**(`query`: any): *string*
 
-*Defined in src/routes/ModelRoute.ts:83*
+Defined in src/routes/ModelRoute.ts:90
 
 Hashes the given query object to a unique string.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `query` | any | The query object to hash.  |
 
-**Returns:** string
+**Returns:** *string*
 
 ___
 
-### searchIdQuery
+### `Private` searchIdQuery
 
-▸ `Private`**searchIdQuery**(`id`: string, `version?`: undefined \| number): any
+▸ **searchIdQuery**(`id`: string, `version?`: undefined | number): *any*
 
-*Defined in src/routes/ModelRoute.ts:151*
+Defined in src/routes/ModelRoute.ts:196
 
-Search for existing object based on passed in id and version and product uid.
+Search for existing object based on passed in id and version
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
 `id` | string |
-`version?` | undefined \| number |
+`version?` | undefined &#124; number |
 
-**Returns:** any
+**Returns:** *any*
+
+___
+
+### `Private` superInitialize
+
+▸ **superInitialize**(): *Promise‹void›*
+
+Defined in src/routes/ModelRoute.ts:101
+
+Called on server startup to initialize the route with any defaults.
+
+**Returns:** *Promise‹void›*

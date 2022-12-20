@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / IndexRoute
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [IndexRoute](indexroute.md)
 
 # Class: IndexRoute
 
@@ -15,28 +13,48 @@ name, version.
 
 ## Index
 
+### Constructors
+
+* [constructor](indexroute.md#constructor)
+
 ### Properties
 
-* [config](indexroute.md#config)
+* [config](indexroute.md#private-config)
 
 ### Methods
 
-* [get](indexroute.md#get)
+* [get](indexroute.md#private-get)
+
+## Constructors
+
+###  constructor
+
+\+ **new IndexRoute**(`config`: any): *[IndexRoute](indexroute.md)*
+
+Defined in src/routes/IndexRoute.ts:15
+
+**Parameters:**
+
+Name | Type |
+------ | ------ |
+`config` | any |
+
+**Returns:** *[IndexRoute](indexroute.md)*
 
 ## Properties
 
-### config
+### `Private` config
 
-• `Private` **config**: any
+• **config**: *any*
 
-*Defined in src/routes/IndexRoute.ts:16*
+Defined in src/routes/IndexRoute.ts:15
 
 ## Methods
 
-### get
+### `Private` get
 
-▸ `Private`**get**(): any
+▸ **get**(): *any*
 
-*Defined in src/routes/IndexRoute.ts:19*
+Defined in src/routes/IndexRoute.ts:22
 
-**Returns:** any
+**Returns:** *any*

@@ -17,7 +17,9 @@ import { IndexRoute } from "./routes/IndexRoute";
 import { JWTStrategy, JWTStrategyOptions } from "./passportjs/JWTStrategy";
 import { ClassLoader, Logger } from "@composer-js/core";
 import { OpenAPIRoute } from "./routes/OpenAPIRoute";
+import { DataSource, MongoRepository, Repository } from "typeorm";
 import { MetricsRoute } from "./routes/MetricsRoute";
+import * as Redis from "ioredis";
 import { ObjectFactory } from "./ObjectFactory";
 import { BackgroundServiceManager } from "./BackgroundServiceManager";
 import { RouteUtils } from "./express/RouteUtils";
@@ -26,12 +28,20 @@ import addWebSocket from "./express/WebSocket";
 import * as session from "express-session";
 import { BulkError } from "./BulkError";
 
+interface Entity {
+    storeName?: any;
+}
+
+interface Model {
+    modelClass?: any;
+}
+
 /**
  * Provides an HTTP server utilizing ExpressJS and PassportJS. The server automatically registers all routes, and
  * establishes database connections for all configured data stores. Additionally provides automatic authentication
  * handling using JSON Web Token (JWT) via PassportJS. When provided an OpenAPI specificatiion object the server will
  * also automatically serve this specification via the `GET /openapi.json` route.
- * 
+ *
  * Routes are defined by creating any class definition using the various decorators found in `RouteDecorators` and
  * saving these files in the `routes` subfolder. Upon server start, the `routes` folder is scanned for any class
  * that has been decorated with `@Route` and is automatically loaded and registered with Express. Similarly, if the
@@ -43,11 +53,11 @@ import { BulkError } from "./BulkError";
  * Once authenticated, the provided `request` argument will have the `user` property available containing information
  * about the authenticated user. If the `user` property is `undefined` then no user has been authenticated or the
  * authentication attempt failed.
- * 
+ *
  * The following is an example of a simple route class.
- * 
+ *
 ```javascript
-import { DefaultBehaviors, RouteDecorators } from "@composer-js/service_core";
+import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
 import { Get, Route } = RouteDecorators;
 
 @Route("/hello")
@@ -64,11 +74,11 @@ class TestRoute extends ModelRoute {
 
 export default TestRoute;
  * ```
- * 
+ *
  * The following is an example of a route class that is bound to a data model providing basic CRUDS operations.
- * 
+ *
  * ```javascript
-import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@composer-js/service_core";
+import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
 import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
 import { Model } = ModelDecorators;
 import { marshall } = DefaultBehaviors;
@@ -196,7 +206,7 @@ export class Server {
         apiSpec?: any,
         basePath: string = ".",
         logger: any = Logger(),
-        objectFactory?: ObjectFactory
+        objectFactory?: ObjectFactory,
     ) {
         this.app = express();
         this.config = config;
@@ -290,7 +300,7 @@ export class Server {
                 this.app.use(session({
                     cookie: {
                         sameSite: 'none',
-                            secure: true
+                        secure: true
                     },
                     resave: false,
                     saveUninitialized: false,
@@ -334,40 +344,46 @@ export class Server {
 
                 // Set x-powered-by header
                 this.app.use((req: Request, res: Response, next: NextFunction) => {
-                    res.setHeader("x-powered-by", "ComposerJS");
+                    res.setHeader("x-powered-by", "AcceleratXR");
                     return next();
                 });
 
+                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
                 const datastores: any = this.config.get("datastores");
                 const models: Map<string, any> = new Map();
 
-                this.logger.info("Loading all service scripts...");
+                this.logger.info("Loading all service classes...");
                 const classLoader: ClassLoader = new ClassLoader(this.basePath);
-                await classLoader.load();
+                try {
+                    await classLoader.load();
+                }
+                catch (e) {
+                    throw new Error(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
+                }
 
                 // Register all found classes with the object factory
-                for (const pair of classLoader.getClasses().entries()) {
-                    this.objectFactory.register(pair[1], pair[0]);
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    this.objectFactory.register(clazz, name);
                 }
 
                 // Load all models
                 this.logger.info("Scanning for data models...");
-                for (const pair of classLoader.getClasses().entries()) {
-                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", pair[1]) || undefined;
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", clazz) || undefined;
                     if (datastore) {
-                        models.set(pair[0], pair[1]);
+                        models.set(name, clazz);
                     }
                 }
 
                 // Initiate all database connections
                 this.logger.info("Initializing database connection(s)...");
-                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
+
                 await this.connectionManager.connect(datastores, models);
 
                 const allRoutes: Array<any> = [];
 
                 this.routeUtils = await this.objectFactory.newInstance(RouteUtils, "default");
-                if (!this.routeUtils) { 
+                if (!this.routeUtils) {
                     reject("Failed to instantiate RouteUtils.");
                     return;
                 }
@@ -390,26 +406,25 @@ export class Server {
 
                 // Initialize the background service manager
                 this.logger.info("Starting background services...");
-                const bgServices: Map<string,any> = new Map();
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    if (name.startsWith("jobs.")) {
-                        bgServices.set(name, clazz);
-                    }
-                }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, bgServices, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, classLoader, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }
 
                 // Perform automatic discovery of all other routes
                 this.logger.info("Scanning for routes...");
-                for (const clazz of classLoader.getClasses().values()) {
-                    const routePaths: string[] | undefined = Reflect.getMetadata("cjs:routePaths", clazz.prototype) || undefined;
-                    if (routePaths) {
-                        const route: any = await this.instantiateRoute(clazz);
-                        await this.routeUtils.registerRoute(this.app, route);
-                        allRoutes.push(route);
+                try {
+                    for (const [name, clazz] of classLoader.getClasses().entries()) {
+                        const routePaths: string[] | undefined = Reflect.getMetadata("cjs:routePaths", clazz.prototype) || undefined;
+                        if (routePaths) {
+                            const route: any = await this.instantiateRoute(clazz);
+                            await this.routeUtils.registerRoute(this.app, route);
+                            allRoutes.push(route);
+                        }
                     }
+                } catch (err) {
+                    reject("Failed to scan for routes.\n" + err);
+                    return;
                 }
 
                 // Error handling. NOTE: Must be defined last.

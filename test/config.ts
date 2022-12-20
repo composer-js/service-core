@@ -21,7 +21,7 @@ conf.defaults({
             type: "mongodb",
             host: "localhost",
             port: 9999,
-            database: "axr-test",
+            database: "accounts",
             useUnifiedTopology: true,
             synchronize: true,
         },

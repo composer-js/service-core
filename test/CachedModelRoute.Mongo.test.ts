@@ -9,7 +9,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/CacheUser";
 import { MongoRepository, DataSource } from "typeorm";
 import CacheUser from "./server/models/CacheUser";
-import { JWTUtils, Logger } from "@composer-js/core";
+import { Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";
 const Redis = require("ioredis-mock");
 const uuid = require("uuid");

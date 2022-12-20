@@ -14,7 +14,6 @@ import {
     LessThan,
     Between,
     MongoRepository,
-    ObjectLiteral,
 } from "typeorm";
 import { ClassLoader } from "@composer-js/core";
 import "reflect-metadata";
@@ -50,7 +49,7 @@ export class ModelUtils {
         while (proto) {
             const props: string[] = Object.getOwnPropertyNames(proto);
             for (const prop of props) {
-                const isIdentifier: boolean = Reflect.getMetadata("axr:isIdentifier", proto, prop);
+                const isIdentifier: boolean = Reflect.getMetadata("cjs:isIdentifier", proto, prop);
                 if (isIdentifier) {
                     results.push(prop);
                 }
@@ -73,7 +72,7 @@ export class ModelUtils {
      * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuery<T extends ObjectLiteral>(
+    public static buildIdSearchQuery<T>(
         repo: Repository<T> | MongoRepository<T> | undefined,
         modelClass: any,
         id: any | any[],
@@ -353,7 +352,7 @@ export class ModelUtils {
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
-    public static buildSearchQuery<T extends ObjectLiteral>(
+    public static buildSearchQuery<T>(
         modelClass: any,
         repo: Repository<T> | MongoRepository<T> | undefined,
         params?: any,
@@ -681,7 +680,7 @@ export class ModelUtils {
 
                 // Go through each class and determine which ones implements the `@Model` decorator.
                 classLoader.getClasses().forEach((clazz: any, name: string) => {
-                    const isModel: any = Reflect.getMetadata("axr:datastore", clazz) !== undefined;
+                    const isModel: any = Reflect.getMetadata("cjs:datastore", clazz) !== undefined;
                     if (isModel) {
                         result.set(name, clazz);
                     }

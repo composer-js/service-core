@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / Entity
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [Entity](entity.md)
 
 # Interface: Entity
 
@@ -12,21 +10,12 @@
 
 ### Properties
 
-* [datastore](entity.md#datastore)
-* [storeName](entity.md#storename)
+* [storeName](entity.md#optional-storename)
 
 ## Properties
 
-### datastore
+### `Optional` storeName
 
-• `Optional` **datastore**: any
+• **storeName**? : *any*
 
-*Defined in src/ObjectFactory.ts:12*
-
-___
-
-### storeName
-
-• `Optional` **storeName**: any
-
-*Defined in src/Server.ts:29*
+Defined in src/Server.ts:40

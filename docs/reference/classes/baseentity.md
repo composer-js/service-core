@@ -1,10 +1,10 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / BaseEntity
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [BaseEntity](baseentity.md)
 
 # Class: BaseEntity
 
 Provides a common base class for all entity's that will be persisted with TypeORM.
+Provides a simple base class for all entity's that will be persisted with TypeORM. Unlike `BaseEntity` this class
+does not provide optimistic locking or date created and modified tracking.
 
 Note that the `@CreateDateColumn`, `@UpdateDateColumn`, and `@VersionColumn` decorators from TypeORM are not supported
 because they are not implemented in TypeORM's MongoDB support. They are instead implemented directly by this
@@ -12,11 +12,17 @@ library as part of `ModelRoute`.
 
 **`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
 
+**`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
+
 ## Hierarchy
 
 * **BaseEntity**
 
+  ↳ [ScriptSQL](scriptsql.md)
+
   ↳ [BaseMongoEntity](basemongoentity.md)
+
+  ↳ [AccessControlListSQL](accesscontrollistsql.md)
 
 ## Index
 
@@ -33,56 +39,59 @@ library as part of `ModelRoute`.
 
 ## Constructors
 
-### constructor
+###  constructor
 
-\+ **new BaseEntity**(`other?`: any): [BaseEntity](baseentity.md)
+\+ **new BaseEntity**(`other?`: any): *[BaseEntity](baseentity.md)*
 
-*Defined in src/models/BaseEntity.ts:42*
+Defined in src/models/BaseEntity.ts:42
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
 `other?` | any |
 
-**Returns:** [BaseEntity](baseentity.md)
+**Returns:** *[BaseEntity](baseentity.md)*
 
 ## Properties
 
-### dateCreated
+###  dateCreated
 
-•  **dateCreated**: Date = new Date()
+• **dateCreated**: *Date* = new Date()
 
-*Defined in src/models/BaseEntity.ts:30*
+Defined in src/models/BaseEntity.ts:30
 
 The date and time that the entity was created.
 
 ___
 
-### dateModified
+###  dateModified
 
-•  **dateModified**: Date = new Date()
+• **dateModified**: *Date* = new Date()
 
-*Defined in src/models/BaseEntity.ts:36*
+Defined in src/models/BaseEntity.ts:36
 
 The date and time that the entity was last modified.
 
 ___
 
-### uid
+###  uid
 
-•  **uid**: string = uuid.v4()
+• **uid**: *string* = uuid.v4()
 
-*Defined in src/models/BaseEntity.ts:24*
+Defined in src/models/BaseEntity.ts:24
 
+Defined in src/models/SimpleEntity.ts:21
+
+The universally unique identifier of the entity.
 The universally unique identifier of the entity.
 
 ___
 
-### version
+###  version
 
-•  **version**: number = 0
+• **version**: *number* = 0
 
-*Defined in src/models/BaseEntity.ts:42*
+Defined in src/models/BaseEntity.ts:42
 
 The optimistic lock version.

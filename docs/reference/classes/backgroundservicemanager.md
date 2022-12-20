@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / BackgroundServiceManager
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [BackgroundServiceManager](backgroundservicemanager.md)
 
 # Class: BackgroundServiceManager
 
@@ -13,9 +11,9 @@ To use the manager instantiate a new object and provide the required constructor
 `startAll` function. When shutting your application down you should call the `stopAll` function.
 
 ```
-import { BackgroundServiceManager } from "@composer-js/services_manager";
+import { BackgroundServiceManager } from "@acceleratxr/services_manager";
 
-const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, config, logger);
+const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, scriptManager, config, logger);
 await manager.startAll();
 ...
 await manager.stopAll();
@@ -43,12 +41,13 @@ await manger.stop("MyService");
 
 ### Properties
 
-* [classLoader](backgroundservicemanager.md#classloader)
-* [config](backgroundservicemanager.md#config)
-* [jobs](backgroundservicemanager.md#jobs)
-* [logger](backgroundservicemanager.md#logger)
-* [objectFactory](backgroundservicemanager.md#objectfactory)
-* [services](backgroundservicemanager.md#services)
+* [config](backgroundservicemanager.md#private-readonly-config)
+* [defaultSchedule](backgroundservicemanager.md#private-readonly-defaultschedule)
+* [jobs](backgroundservicemanager.md#private-jobs)
+* [logger](backgroundservicemanager.md#private-readonly-logger)
+* [objectFactory](backgroundservicemanager.md#private-objectfactory)
+* [scriptManager](backgroundservicemanager.md#private-scriptmanager)
+* [services](backgroundservicemanager.md#private-services)
 
 ### Methods
 
@@ -60,147 +59,154 @@ await manger.stop("MyService");
 
 ## Constructors
 
-### constructor
+###  constructor
 
-\+ **new BackgroundServiceManager**(`classLoader`: ClassLoader, `objectFactory`: [ObjectFactory](objectfactory.md), `config`: any, `logger`: any): [BackgroundServiceManager](backgroundservicemanager.md)
+\+ **new BackgroundServiceManager**(`objectFactory`: [ObjectFactory](objectfactory.md), `scriptManager`: [ScriptManager](scriptmanager.md), `config`: any, `logger`: any): *[BackgroundServiceManager](backgroundservicemanager.md)*
 
-*Defined in src/BackgroundServiceManager.ts:43*
+Defined in src/BackgroundServiceManager.ts:44
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
-`classLoader` | ClassLoader |
 `objectFactory` | [ObjectFactory](objectfactory.md) |
+`scriptManager` | [ScriptManager](scriptmanager.md) |
 `config` | any |
 `logger` | any |
 
-**Returns:** [BackgroundServiceManager](backgroundservicemanager.md)
+**Returns:** *[BackgroundServiceManager](backgroundservicemanager.md)*
 
 ## Properties
 
-### classLoader
+### `Private` `Readonly` config
 
-• `Private` **classLoader**: ClassLoader
+• **config**: *any*
 
-*Defined in src/BackgroundServiceManager.ts:38*
-
-___
-
-### config
-
-• `Private` `Readonly` **config**: any
-
-*Defined in src/BackgroundServiceManager.ts:39*
+Defined in src/BackgroundServiceManager.ts:38
 
 ___
 
-### jobs
+### `Private` `Readonly` defaultSchedule
 
-• `Private` **jobs**: any
+• **defaultSchedule**: *string*
 
-*Defined in src/BackgroundServiceManager.ts:40*
-
-___
-
-### logger
-
-• `Private` `Readonly` **logger**: any
-
-*Defined in src/BackgroundServiceManager.ts:41*
+Defined in src/BackgroundServiceManager.ts:39
 
 ___
 
-### objectFactory
+### `Private` jobs
 
-• `Private` **objectFactory**: [ObjectFactory](objectfactory.md)
+• **jobs**: *any*
 
-*Defined in src/BackgroundServiceManager.ts:42*
+Defined in src/BackgroundServiceManager.ts:40
 
 ___
 
-### services
+### `Private` `Readonly` logger
 
-• `Private` **services**: any
+• **logger**: *any*
 
-*Defined in src/BackgroundServiceManager.ts:43*
+Defined in src/BackgroundServiceManager.ts:41
+
+___
+
+### `Private` objectFactory
+
+• **objectFactory**: *[ObjectFactory](objectfactory.md)*
+
+Defined in src/BackgroundServiceManager.ts:42
+
+___
+
+### `Private` scriptManager
+
+• **scriptManager**: *[ScriptManager](scriptmanager.md)*
+
+Defined in src/BackgroundServiceManager.ts:44
+
+___
+
+### `Private` services
+
+• **services**: *any*
+
+Defined in src/BackgroundServiceManager.ts:43
 
 ## Methods
 
-### getService
+###  getService
 
-▸ **getService**(`name`: string): [BackgroundService](backgroundservice.md) \| undefined
+▸ **getService**(`name`: string): *[BackgroundService](backgroundservice.md)*
 
-*Defined in src/BackgroundServiceManager.ts:57*
+Defined in src/BackgroundServiceManager.ts:59
 
 Returns the service instance with the given name.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `name` | string | The name of the background service to retrieve.  |
 
-**Returns:** [BackgroundService](backgroundservice.md) \| undefined
+**Returns:** *[BackgroundService](backgroundservice.md)*
 
 ___
 
-### start
+###  start
 
-▸ **start**(`serviceName`: string, `clazz?`: any, ...`args`: any): Promise\<void>
+▸ **start**(`serviceName`: string, `clazz?`: any): *Promise‹void›*
 
-*Defined in src/BackgroundServiceManager.ts:86*
+Defined in src/BackgroundServiceManager.ts:80
 
 Starts the background service with the given name.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `serviceName` | string | The name of the background service to start. |
-`clazz?` | any | The class type of the service to start. If not specified the name is used to lookup the                      class type. |
-`...args` | any | The list of arguments to pass into the service constructor  |
+`clazz?` | any | The class type of the service to start. If not specified the name is used to lookup the                      class type.  |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### startAll
+###  startAll
 
-▸ **startAll**(): Promise\<void>
+▸ **startAll**(): *Promise‹void›*
 
-*Defined in src/BackgroundServiceManager.ts:64*
+Defined in src/BackgroundServiceManager.ts:66
 
 Starts all configured background services.
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### stop
+###  stop
 
-▸ **stop**(`serviceName`: string): Promise\<void>
+▸ **stop**(`serviceName`: string): *Promise‹void›*
 
-*Defined in src/BackgroundServiceManager.ts:140*
+Defined in src/BackgroundServiceManager.ts:126
 
 Stops the background service with the given name.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `serviceName` | string | The name of the background service to stop.  |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### stopAll
+###  stopAll
 
-▸ **stopAll**(): Promise\<void>
+▸ **stopAll**(): *Promise‹void›*
 
-*Defined in src/BackgroundServiceManager.ts:125*
+Defined in src/BackgroundServiceManager.ts:111
 
 Stops all currently active background services that are owned by the manager.
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*

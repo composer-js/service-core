@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / ConnectionManager
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [ConnectionManager](connectionmanager.md)
 
 # Class: ConnectionManager
 
@@ -16,67 +14,48 @@ Provides database connection management.
 
 ### Properties
 
-* [connections](connectionmanager.md#connections)
+* [connections](connectionmanager.md#static-connections)
 
 ### Methods
 
-* [buildConnectionUri](connectionmanager.md#buildconnectionuri)
-* [connect](connectionmanager.md#connect)
-* [disconnect](connectionmanager.md#disconnect)
+* [connect](connectionmanager.md#static-connect)
+* [disconnect](connectionmanager.md#static-disconnect)
 
 ## Properties
 
-### connections
+### `Static` connections
 
-▪ `Static` **connections**: Map\<string, Connection \| Redis.Redis> = new Map()
+▪ **connections**: *Map‹string, DataSource | Redis.Redis›* = new Map()
 
-*Defined in src/database/ConnectionManager.ts:16*
+Defined in src/database/ConnectionManager.ts:16
 
 ## Methods
 
-### buildConnectionUri
+### `Static` connect
 
-▸ `Static` `Private`**buildConnectionUri**(`config`: any): string
+▸ **connect**(`datastores`: any, `models`: Map‹string, any›): *Promise‹void›*
 
-*Defined in src/database/ConnectionManager.ts:21*
-
-Builds a compatible connection URI for the database by the provided configuration.
-
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`config` | any |
-
-**Returns:** string
-
-___
-
-### connect
-
-▸ `Static`**connect**(`datastores`: any, `models`: Map\<string, any>): Promise\<void>
-
-*Defined in src/database/ConnectionManager.ts:39*
+Defined in src/database/ConnectionManager.ts:24
 
 Attempts to initiate all database connections as defined in the config.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `datastores` | any | - |
-`models` | Map\<string, any> | A map of model names and associated class definitions to establish database connections for.  |
+`models` | Map‹string, any› | A map of model names and associated class definitions to establish database connections for.  |
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### disconnect
+### `Static` disconnect
 
-▸ `Static`**disconnect**(): Promise\<void>
+▸ **disconnect**(): *Promise‹void›*
 
-*Defined in src/database/ConnectionManager.ts:110*
+Defined in src/database/ConnectionManager.ts:99
 
 Attempts to disconnect all active database connections.
 
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*

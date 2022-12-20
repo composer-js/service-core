@@ -1,11 +1,9 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / BackgroundService
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [BackgroundService](backgroundservice.md)
 
 # Class: BackgroundService
 
 The `BackgroundService` is an abstract base class for defining scheduled background services. A background service
-executes in the background once on startup or on a set schedule (like a cron job) and performs additional processing.
+executes in the background on a set schedule (like a cron job) and performs additional processing.
 
 **`author`** Jean-Philippe Steinmetz <info@acceleratxr.com>
 
@@ -21,84 +19,100 @@ executes in the background once on startup or on a set schedule (like a cron job
 
 ### Properties
 
-* [config](backgroundservice.md#config)
-* [logger](backgroundservice.md#logger)
+* [config](backgroundservice.md#protected-config)
+* [logger](backgroundservice.md#protected-logger)
+
+### Accessors
+
+* [schedule](backgroundservice.md#schedule)
 
 ### Methods
 
-* [run](backgroundservice.md#run)
-* [start](backgroundservice.md#start)
-* [stop](backgroundservice.md#stop)
+* [run](backgroundservice.md#abstract-run)
+* [start](backgroundservice.md#abstract-start)
+* [stop](backgroundservice.md#abstract-stop)
 
 ## Constructors
 
-### constructor
+###  constructor
 
-\+ **new BackgroundService**(`config`: any, `logger`: any): [BackgroundService](backgroundservice.md)
+\+ **new BackgroundService**(`config`: any, `logger`: any): *[BackgroundService](backgroundservice.md)*
 
-*Defined in src/BackgroundService.ts:14*
+Defined in src/BackgroundService.ts:14
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
 `config` | any |
 `logger` | any |
 
-**Returns:** [BackgroundService](backgroundservice.md)
+**Returns:** *[BackgroundService](backgroundservice.md)*
 
 ## Properties
 
-### config
+### `Protected` config
 
-• `Protected` **config**: any
+• **config**: *any*
 
-*Defined in src/BackgroundService.ts:12*
+Defined in src/BackgroundService.ts:12
 
 The global application configuration that the service can reference.
 
 ___
 
-### logger
+### `Protected` logger
 
-• `Protected` **logger**: any
+• **logger**: *any*
 
-*Defined in src/BackgroundService.ts:14*
+Defined in src/BackgroundService.ts:14
 
 The logging utility to use.
 
+## Accessors
+
+###  schedule
+
+• **get schedule**(): *string | undefined*
+
+Defined in src/BackgroundService.ts:24
+
+Returns the desired execution interval that this service should be scheduled with.
+
+**Returns:** *string | undefined*
+
 ## Methods
 
-### run
+### `Abstract` run
 
-▸ `Abstract`**run**(): Promise\<void> \| void
+▸ **run**(): *void*
 
-*Defined in src/BackgroundService.ts:24*
+Defined in src/BackgroundService.ts:29
 
 The processing function to execute at each scheduled interval.
 
-**Returns:** Promise\<void> \| void
+**Returns:** *void*
 
 ___
 
-### start
+### `Abstract` start
 
-▸ `Abstract`**start**(): Promise\<void> \| void
+▸ **start**(): *Promise‹void›*
 
-*Defined in src/BackgroundService.ts:29*
+Defined in src/BackgroundService.ts:34
 
 Initializes the background service with any defaults.
 
-**Returns:** Promise\<void> \| void
+**Returns:** *Promise‹void›*
 
 ___
 
-### stop
+### `Abstract` stop
 
-▸ `Abstract`**stop**(): Promise\<void> \| void
+▸ **stop**(): *Promise‹void›*
 
-*Defined in src/BackgroundService.ts:34*
+Defined in src/BackgroundService.ts:39
 
 Shuts down the background allowing the service to complete any outstanding tasks.
 
-**Returns:** Promise\<void> \| void
+**Returns:** *Promise‹void›*

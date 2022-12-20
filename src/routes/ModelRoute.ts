@@ -6,9 +6,9 @@ import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
-import { Init, RedisConnection } from "../decorators/RouteDecorators";
+import { RedisConnection } from "../decorators/RouteDecorators";
 import * as crypto from "crypto";
-import { Logger, Config, Inject } from "../decorators/ObjectDecorators";
+import { Logger, Config } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
@@ -100,6 +100,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /** The global application configuration. */
     @Config()
     protected config?: any;
+
+    /** The unique identifier of the default ACL for the model type. */
+    protected defaultACLUid: string = "";
 
     @Logger
     protected logger: any;

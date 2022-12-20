@@ -7,7 +7,7 @@ import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src/ser
 import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/VersionedUser";
 import { MongoRepository, DataSource } from "typeorm";
-import { JWTUtils, Logger } from "@composer-js/core";
+import { JWTUtils, EventUtils, Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";
 const uuid = require("uuid");
 

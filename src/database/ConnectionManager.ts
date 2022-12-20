@@ -72,7 +72,7 @@ export class ConnectionManager {
                     for (const className of models.keys()) {
                         // Get the class type
                         const clazz = models.get(className);
-                        const ds: string = Reflect.getMetadata("axr:datastore", clazz);
+                        const ds: string = Reflect.getMetadata("cjs:datastore", clazz);
                         // Search for the associated datastore with the model via either config or @Model decorator
                         if (ds === name || (datastore.entities && datastore.entities.includes(className))) {
                             const processedDatastore = processedModels.get(clazz.name);

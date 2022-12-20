@@ -10,6 +10,7 @@ import * as path from "path";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
+import { LicenseManager } from "@acceleratxr/licensing";
 import * as rimraf from "rimraf";
 
 import * as yamljs from "js-yaml";
@@ -195,5 +196,20 @@ describe("Server Tests", () => {
         const result = await request(server.getApplication()).get("/error");
         expect(result.status).toBe(400);
         expect(result.body.status).toBeDefined();
+    });
+
+    it.skip("Cannot start server without valid license.", async () => {
+        expect(server.isRunning()).toBe(true);
+        await server.stop();
+        expect(server.isRunning()).toBe(false);
+        jest.spyOn(LicenseManager, "verify").mockImplementation(() => Promise.reject());
+        let didThrow: boolean = false;
+        try {
+            await server.start();
+        } catch (err) {
+            didThrow = true;
+        }
+        expect(didThrow).toBe(true);
+        expect(server.isRunning()).toBe(false);
     });
 });

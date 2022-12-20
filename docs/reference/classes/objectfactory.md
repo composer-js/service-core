@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / ObjectFactory
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [ObjectFactory](objectfactory.md)
 
 # Class: ObjectFactory
 
@@ -16,237 +14,160 @@ so that references can be referenced by unique name.
 
 ## Index
 
-### Constructors
-
-* [constructor](objectfactory.md#constructor)
-
 ### Properties
 
-* [classes](objectfactory.md#classes)
-* [config](objectfactory.md#config)
-* [instances](objectfactory.md#instances)
-* [logger](objectfactory.md#logger)
+* [classes](objectfactory.md#private-classes)
+* [instances](objectfactory.md#readonly-instances)
 
 ### Methods
 
 * [clear](objectfactory.md#clear)
 * [clearAll](objectfactory.md#clearall)
 * [destroy](objectfactory.md#destroy)
-* [getInitMethods](objectfactory.md#getinitmethods)
 * [getInstance](objectfactory.md#getinstance)
 * [initialize](objectfactory.md#initialize)
 * [newInstance](objectfactory.md#newinstance)
 * [register](objectfactory.md#register)
 
-## Constructors
-
-### constructor
-
-\+ **new ObjectFactory**(`config?`: any, `logger?`: any): [ObjectFactory](objectfactory.md)
-
-*Defined in src/ObjectFactory.ts:33*
-
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`config?` | any |
-`logger?` | any |
-
-**Returns:** [ObjectFactory](objectfactory.md)
-
 ## Properties
 
-### classes
+### `Private` classes
 
-• `Private` **classes**: Map\<string, any> = new Map()
+• **classes**: *Map‹string, any›* = new Map()
 
-*Defined in src/ObjectFactory.ts:24*
+Defined in src/ObjectFactory.ts:16
 
 A map for string fully qualified class names to their class types.
 
 ___
 
-### config
+### `Readonly` instances
 
-• `Private` **config**: any
+• **instances**: *Map‹string, any›* = new Map()
 
-*Defined in src/ObjectFactory.ts:27*
-
-The global application configuration object.
-
-___
-
-### instances
-
-• `Readonly` **instances**: Map\<string, any> = new Map()
-
-*Defined in src/ObjectFactory.ts:30*
+Defined in src/ObjectFactory.ts:19
 
 A map for the unique name to the intance of a particular class type.
 
-___
-
-### logger
-
-• `Private` **logger**: any
-
-*Defined in src/ObjectFactory.ts:33*
-
-The application logging utility.
-
 ## Methods
 
-### clear
+###  clear
 
-▸ **clear**(): void
+▸ **clear**(): *void*
 
-*Defined in src/ObjectFactory.ts:96*
+Defined in src/ObjectFactory.ts:58
 
 Deletes all instantiated objects.
 
-**Returns:** void
+**Returns:** *void*
 
 ___
 
-### clearAll
+###  clearAll
 
-▸ **clearAll**(): void
+▸ **clearAll**(): *void*
 
-*Defined in src/ObjectFactory.ts:103*
+Defined in src/ObjectFactory.ts:65
 
 Deletes all instantiated objects and registered class types.
 
-**Returns:** void
+**Returns:** *void*
 
 ___
 
-### destroy
+###  destroy
 
-▸ **destroy**(`objs?`: any \| any[]): Promise\<void>
+▸ **destroy**(): *Promise‹void›*
 
-*Defined in src/ObjectFactory.ts:45*
+Defined in src/ObjectFactory.ts:24
 
-Destroys the specified objects. If `undefined` is passed in, all objects managed by the factory are destroyed.
+Destroys the factory including all instantiated objects it is managing.
 
-#### Parameters:
-
-Name | Type |
------- | ------ |
-`objs?` | any \| any[] |
-
-**Returns:** Promise\<void>
+**Returns:** *Promise‹void›*
 
 ___
 
-### getInitMethods
+###  getInstance
 
-▸ **getInitMethods**(`obj`: any): Function[]
+▸ **getInstance**‹**T**›(`nameOrType`: any): *T*
 
-*Defined in src/ObjectFactory.ts:229*
+Defined in src/ObjectFactory.ts:99
 
-Searches an object for one or more functions that implement a `@Init` decorator.
+Returns the object instance with the given unique name.
 
-#### Parameters:
+**Type parameters:**
 
-Name | Type | Description |
------- | ------ | ------ |
-`obj` | any | The object to search. |
+▪ **T**
 
-**Returns:** Function[]
-
-The list of functions that implements the `@Init` decorator if found, otherwise undefined.
-
-___
-
-### getInstance
-
-▸ **getInstance**\<T>(`nameOrType`: any): T
-
-*Defined in src/ObjectFactory.ts:263*
-
-Returns the object instance with the given unique name. Unique names take the form `<ClassName>:<InstanceName>`.
-It is possible to only specifiy the `<ClassName>`, doing so will automatically look for the `<ClassName>:default`
-instance. It is also possible to pass the class type directly, in which case the instance will be searched by
-`<ClassName>:default`.
-
-#### Type parameters:
-
-Name |
------- |
-`T` |
-
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `nameOrType` | any | The unique name or class type of the object to retrieve. |
 
-**Returns:** T
+**Returns:** *T*
 
 The object instance associated with the given name if found, otherwise `undefined`.
 
 ___
 
-### initialize
+###  initialize
 
-▸ **initialize**(`obj`: any): Promise\<void>
+▸ **initialize**(`obj`: any): *void*
 
-*Defined in src/ObjectFactory.ts:112*
+Defined in src/ObjectFactory.ts:74
 
 Scans the given object for any properties with the @Inject decorator and assigns the correct values.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `obj` | any | The object to initialize with injected defaults  |
 
-**Returns:** Promise\<void>
+**Returns:** *void*
 
 ___
 
-### newInstance
+###  newInstance
 
-▸ **newInstance**\<T>(`type`: any, `name?`: undefined \| string, ...`args`: any): Promise\<T>
+▸ **newInstance**‹**T**›(`type`: any, `name?`: undefined | string, ...`args`: any): *T*
 
-*Defined in src/ObjectFactory.ts:293*
+Defined in src/ObjectFactory.ts:124
 
 Creates a new instance of the class specified with the provided unique name or type and constructor arguments. If an existing
 object has already been created with the given name, that instance is returned, otherwise a new instance is created
 using the provided arguments.
 
-#### Type parameters:
+**Type parameters:**
 
-Name |
------- |
-`T` |
+▪ **T**
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `type` | any | The fully qualified name or type of the class to instantiate. If a type is given it's class name will be inferred              via the constructor name. |
-`name?` | undefined \| string | The unique name to give the class instance. Set to `undefined` if you wish to force a new object              is created. |
+`name?` | undefined &#124; string | The unique name to give the class instance. Set to `undefined` if you wish to force a new object              is created. |
 `...args` | any | The set of constructor arguments to use during construction  |
 
-**Returns:** Promise\<T>
+**Returns:** *T*
 
 ___
 
-### register
+###  register
 
-▸ **register**(`clazz`: any, `fqn?`: undefined \| string): void
+▸ **register**(`clazz`: any, `fqn?`: undefined | string): *void*
 
-*Defined in src/ObjectFactory.ts:354*
+Defined in src/ObjectFactory.ts:180
 
 Registers the given class type for the provided fully qualified name.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `clazz` | any | The class type to register. |
-`fqn?` | undefined \| string | The fully qualified name of the class to register. If not specified, the class name will be used.  |
+`fqn?` | undefined &#124; string | The fully qualified name of the class to register. If not specified, the class name will be used.  |
 
-**Returns:** void
+**Returns:** *void*

@@ -73,7 +73,7 @@ export class RouteUtils {
         let results: Map<string, any> = new Map();
 
         for (let member in route) {
-            let metadata: any = Reflect.getMetadata("axr:route", route, member);
+            let metadata: any = Reflect.getMetadata("cjs:route", route, member);
             if (metadata) {
                 results.set(member, route[member]);
             }
@@ -81,7 +81,7 @@ export class RouteUtils {
         let proto = Object.getPrototypeOf(route);
         while (proto) {
             for (let member of Object.getOwnPropertyNames(proto)) {
-                let metadata: any = Reflect.getMetadata("axr:route", proto, member);
+                let metadata: any = Reflect.getMetadata("cjs:route", proto, member);
                 if (metadata) {
                     results.set(member, route[member]);
                 }
@@ -99,7 +99,7 @@ export class RouteUtils {
      * @param route The route object to register with Express.
      */
     public async registerRoute(app: any, route: any): Promise<void> {
-        let routePaths: string[] = Reflect.getMetadata("axr:routePaths", route);
+        let routePaths: string[] = Reflect.getMetadata("cjs:routePaths", route);
         if (!routePaths) {
             throw new Error("Route must specify a path: " + JSON.stringify(route));
         }
@@ -113,7 +113,7 @@ export class RouteUtils {
             let key: string = entry[0];
             let value: any = entry[1] as any;
 
-            let metadata: any = Reflect.getMetadata("axr:route", route, key);
+            let metadata: any = Reflect.getMetadata("cjs:route", route, key);
             if (value && metadata) {
                 const { after, authRequired, before, methods, requiredRoles, validator } = metadata;
                 let { authStrategies } = metadata;
@@ -195,8 +195,8 @@ export class RouteUtils {
     public wrapMiddleware(obj: any, func: Function, send: boolean = false): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
             try {
-                const argMetadata: any = Reflect.getMetadata("axr:args", Object.getPrototypeOf(obj), func.name);
-                const routeMetadata: any = Reflect.getMetadata("axr:route", Object.getPrototypeOf(obj), func.name);
+                const argMetadata: any = Reflect.getMetadata("cjs:args", Object.getPrototypeOf(obj), func.name);
+                const routeMetadata: any = Reflect.getMetadata("cjs:route", Object.getPrototypeOf(obj), func.name);
                 const args: any[] = [];
 
                 const routeType = [...routeMetadata?.methods?.keys() || []][0];

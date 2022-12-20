@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / Model
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [Model](model.md)
 
 # Interface: Model
 
@@ -12,12 +10,12 @@
 
 ### Properties
 
-* [modelClass](model.md#modelclass)
+* [modelClass](model.md#optional-modelclass)
 
 ## Properties
 
-### modelClass
+### `Optional` modelClass
 
-• `Optional` **modelClass**: any
+• **modelClass**? : *any*
 
-*Defined in src/Server.ts:33*
+Defined in src/Server.ts:44

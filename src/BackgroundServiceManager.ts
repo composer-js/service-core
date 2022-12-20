@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { ClassLoader } from "@composer-js/core";
 import { BackgroundService } from "./BackgroundService";
 import * as schedule from "node-schedule";
 import { ObjectFactory } from "./ObjectFactory";
@@ -34,14 +35,14 @@ import { ObjectFactory } from "./ObjectFactory";
  */
 export class BackgroundServiceManager {
     private readonly config: any;
-    private classes: Map<string, any> = new Map();
+    private classLoader: ClassLoader;
     private jobs: any = {};
     private readonly logger: any;
     private objectFactory: ObjectFactory;
     private services: any = {};
 
-    constructor(objectFactory: ObjectFactory, classes: Map<string, any>, config: any, logger: any) {
-        this.classes = classes;
+    constructor(objectFactory: ObjectFactory, classLoader: ClassLoader, config: any, logger: any) {
+        this.classLoader = classLoader;
         this.config = config;
         this.logger = logger;
         this.objectFactory = objectFactory;
@@ -60,9 +61,10 @@ export class BackgroundServiceManager {
      * Starts all configured background services.
      */
     public async startAll(): Promise<void> {
-        if (this.classes) {
-            for (const [name, clazz] of this.classes.entries()) {
-                await this.start(name, clazz);
+        // Go through all loaded background job classes and start each one
+        if (this.classLoader) {
+            for (const clazz of this.classLoader.getClasses().values()) {
+                await this.start(clazz.name, clazz);
             }
         }
     }
@@ -82,7 +84,7 @@ export class BackgroundServiceManager {
         }
 
         // Look for the class definition with the given name if not already given
-        clazz = clazz ? clazz : this.classes.get(serviceName);
+        clazz = clazz ? clazz : this.classLoader.getClass(serviceName);
 
         if (clazz) {
             try {

@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / NotificationUtils
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [NotificationUtils](notificationutils.md)
 
 # Class: NotificationUtils
 
@@ -20,7 +18,7 @@ Utility functions for sending push notifications to registered clients.
 
 ### Properties
 
-* [socketio](notificationutils.md#socketio)
+* [socketio](notificationutils.md#private-socketio)
 
 ### Methods
 
@@ -29,41 +27,41 @@ Utility functions for sending push notifications to registered clients.
 
 ## Constructors
 
-### constructor
+###  constructor
 
-\+ **new NotificationUtils**(`config`: any): [NotificationUtils](notificationutils.md)
+\+ **new NotificationUtils**(`config`: any): *[NotificationUtils](notificationutils.md)*
 
-*Defined in src/NotificationsUtils.ts:11*
+Defined in src/NotificationsUtils.ts:11
 
 Initializes the utility using the given configuration.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `config` | any | The configuration to use for initialization.  |
 
-**Returns:** [NotificationUtils](notificationutils.md)
+**Returns:** *[NotificationUtils](notificationutils.md)*
 
 ## Properties
 
-### socketio
+### `Private` socketio
 
-• `Private` **socketio**: any = null
+• **socketio**: *any* = null
 
-*Defined in src/NotificationsUtils.ts:11*
+Defined in src/NotificationsUtils.ts:11
 
 ## Methods
 
-### broadcastMessage
+###  broadcastMessage
 
-▸ **broadcastMessage**(`type`: any, `message`: any, `volatile`: boolean): void
+▸ **broadcastMessage**(`type`: any, `message`: any, `volatile`: boolean): *void*
 
-*Defined in src/NotificationsUtils.ts:29*
+Defined in src/NotificationsUtils.ts:29
 
 Broadcasts a given message to all users.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
@@ -71,19 +69,19 @@ Name | Type | Description |
 `message` | any | The message contents to send to all users. |
 `volatile` | boolean | Set to true if the message can be dropped (unreliable).  |
 
-**Returns:** void
+**Returns:** *void*
 
 ___
 
-### sendMessage
+###  sendMessage
 
-▸ **sendMessage**(`uid`: string, `type`: string, `message`: any, `volatile`: boolean): void
+▸ **sendMessage**(`uid`: string, `type`: string, `message`: any, `volatile`: boolean): *void*
 
-*Defined in src/NotificationsUtils.ts:49*
+Defined in src/NotificationsUtils.ts:49
 
 Sends a given message to the room or user with the specified uid.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
@@ -92,4 +90,4 @@ Name | Type | Description |
 `message` | any | The message contents to send to the room or user. |
 `volatile` | boolean | Set to true if the message can be dropped (unreliable).  |
 
-**Returns:** void
+**Returns:** *void*

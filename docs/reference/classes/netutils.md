@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / NetUtils
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [NetUtils](netutils.md)
 
 # Class: NetUtils
 
@@ -16,24 +14,24 @@ Provides common utilities and functions for working with networking related prob
 
 ### Methods
 
-* [getIPAddress](netutils.md#getipaddress)
+* [getIPAddress](netutils.md#static-getipaddress)
 
 ## Methods
 
-### getIPAddress
+### `Static` getIPAddress
 
-▸ `Static`**getIPAddress**(`urlOrRequest`: string \| XRequest): Promise\<string \| undefined>
+▸ **getIPAddress**(`urlOrRequest`: string | XRequest): *Promise‹string | undefined›*
 
-*Defined in src/NetUtils.ts:19*
+Defined in src/NetUtils.ts:19
 
 Extracts the IP address from a given url or HTTP request.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type |
 ------ | ------ |
-`urlOrRequest` | string \| XRequest |
+`urlOrRequest` | string &#124; XRequest |
 
-**Returns:** Promise\<string \| undefined>
+**Returns:** *Promise‹string | undefined›*
 
 A `string` containing the IP address if found, otherwise `undefined`.

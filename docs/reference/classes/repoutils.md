@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / RepoUtils
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [RepoUtils](repoutils.md)
 
 # Class: RepoUtils
 
@@ -14,57 +12,52 @@
 
 ### Methods
 
-* [preprocessBeforeSave](repoutils.md#preprocessbeforesave)
-* [preprocessBeforeUpdate](repoutils.md#preprocessbeforeupdate)
+* [preprocessBeforeSave](repoutils.md#static-preprocessbeforesave)
+* [preprocessBeforeUpdate](repoutils.md#static-preprocessbeforeupdate)
 
 ## Methods
 
-### preprocessBeforeSave
+### `Static` preprocessBeforeSave
 
-▸ `Static`**preprocessBeforeSave**\<T>(`repo`: Repository\<T> \| MongoRepository\<T>, `obj`: T): Promise\<T>
+▸ **preprocessBeforeSave**‹**T**›(`repo`: Repository‹T› | MongoRepository‹T›, `obj`: T): *Promise‹T›*
 
-*Defined in src/models/RepoUtils.ts:19*
+Defined in src/models/RepoUtils.ts:19
 
 Verify object does not exist and update required fields for BaseEntity
 
-#### Type parameters:
+**Type parameters:**
 
-Name | Type |
------- | ------ |
-`T` | [BaseEntity](baseentity.md) \| [SimpleEntity](simpleentity.md) |
+▪ **T**: *[BaseEntity](baseentity.md) | SimpleEntity*
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`repo` | Repository\<T> \| MongoRepository\<T> | Repository used to verify no existing object |
+`repo` | Repository‹T› &#124; MongoRepository‹T› | Repository used to verify no existing object |
 `obj` | T | Object that exentds BaseEntity or SimpleEntity  |
 
-**Returns:** Promise\<T>
+**Returns:** *Promise‹T›*
 
 ___
 
-### preprocessBeforeUpdate
+### `Static` preprocessBeforeUpdate
 
-▸ `Static`**preprocessBeforeUpdate**\<T>(`repo`: Repository\<T> \| MongoRepository\<T>, `modelClass`: any, `obj`: T, `old?`: T): Promise\<T>
+▸ **preprocessBeforeUpdate**‹**T**›(`repo`: Repository‹T› | MongoRepository‹T›, `obj`: T, `old?`: T): *Promise‹T›*
 
-*Defined in src/models/RepoUtils.ts:56*
+Defined in src/models/RepoUtils.ts:50
 
 Verify object does exist and update required fields
 
-#### Type parameters:
+**Type parameters:**
 
-Name | Type |
------- | ------ |
-`T` | [BaseEntity](baseentity.md) \| [SimpleEntity](simpleentity.md) |
+▪ **T**: *[BaseEntity](baseentity.md) | SimpleEntity*
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`repo` | Repository\<T> \| MongoRepository\<T> | Repository used to verify no existing object |
-`modelClass` | any | - |
+`repo` | Repository‹T› &#124; MongoRepository‹T› | Repository used to verify no existing object |
 `obj` | T | Object that exentds BaseEntity or SimpleEntity |
 `old?` | T | The original object to validate against  |
 
-**Returns:** Promise\<T>
+**Returns:** *Promise‹T›*

@@ -8,7 +8,7 @@ import Item from "./server/models/Item";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";
 import { Repository, DataSource } from "typeorm";
-import { JWTUtils, Logger } from "@composer-js/core";
+import { Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";
 const uuid = require("uuid");
 

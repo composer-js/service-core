@@ -1,6 +1,4 @@
-**[@composer-js/service-core](../README.md)**
-
-> [Globals](../globals.md) / ModelUtils
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [ModelUtils](modelutils.md)
 
 # Class: ModelUtils
 
@@ -16,99 +14,98 @@ Utility class for working with data model classes.
 
 ### Methods
 
-* [buildIdSearchQuery](modelutils.md#buildidsearchquery)
-* [buildIdSearchQueryMongo](modelutils.md#buildidsearchquerymongo)
-* [buildIdSearchQuerySQL](modelutils.md#buildidsearchquerysql)
-* [buildSearchQuery](modelutils.md#buildsearchquery)
-* [buildSearchQueryMongo](modelutils.md#buildsearchquerymongo)
-* [buildSearchQuerySQL](modelutils.md#buildsearchquerysql)
-* [getIdPropertyNames](modelutils.md#getidpropertynames)
-* [getQueryParamValue](modelutils.md#getqueryparamvalue)
-* [getQueryParamValueMongo](modelutils.md#getqueryparamvaluemongo)
+* [buildIdSearchQuery](modelutils.md#static-buildidsearchquery)
+* [buildIdSearchQueryMongo](modelutils.md#static-buildidsearchquerymongo)
+* [buildIdSearchQuerySQL](modelutils.md#static-buildidsearchquerysql)
+* [buildSearchQuery](modelutils.md#static-buildsearchquery)
+* [buildSearchQueryMongo](modelutils.md#static-buildsearchquerymongo)
+* [buildSearchQuerySQL](modelutils.md#static-buildsearchquerysql)
+* [getIdPropertyNames](modelutils.md#static-getidpropertynames)
+* [getQueryParamValue](modelutils.md#static-private-getqueryparamvalue)
+* [getQueryParamValueMongo](modelutils.md#static-private-getqueryparamvaluemongo)
+* [loadModels](modelutils.md#static-loadmodels)
 
 ## Methods
 
-### buildIdSearchQuery
+### `Static` buildIdSearchQuery
 
-▸ `Static`**buildIdSearchQuery**\<T>(`repo`: Repository\<T> \| MongoRepository\<T> \| undefined, `modelClass`: any, `id`: any \| any[], `version?`: undefined \| number): any
+▸ **buildIdSearchQuery**‹**T**›(`repo`: Repository‹T› | MongoRepository‹T› | undefined, `modelClass`: any, `id`: any, `version?`: undefined | number): *any*
 
-*Defined in src/models/ModelUtils.ts:70*
+Defined in src/models/ModelUtils.ts:67
 
 Builds a query object for use with `find` functions of the given repository for retrieving objects matching the
 specified unique identifier.
 
-#### Type parameters:
+**Type parameters:**
 
-Name |
------- |
-`T` |
+▪ **T**
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`repo` | Repository\<T> \| MongoRepository\<T> \| undefined | The repository to build the query for. |
+`repo` | Repository‹T› &#124; MongoRepository‹T› &#124; undefined | The repository to build the query for. |
 `modelClass` | any | The class definition of the data model to build a search query for. |
-`id` | any \| any[] | The unique identifier to search for. |
-`version?` | undefined \| number | The version number of the document to search for. |
+`id` | any | The unique identifier to search for. |
+`version?` | undefined &#124; number | - |
 
-**Returns:** any
+**Returns:** *any*
 
 An object that can be passed to a TypeORM `find` function.
 
 ___
 
-### buildIdSearchQueryMongo
+### `Static` buildIdSearchQueryMongo
 
-▸ `Static`**buildIdSearchQueryMongo**(`modelClass`: any, `id`: any \| any[], `version?`: undefined \| number): any
+▸ **buildIdSearchQueryMongo**(`modelClass`: any, `id`: any, `version?`: undefined | number): *any*
 
-*Defined in src/models/ModelUtils.ts:118*
+Defined in src/models/ModelUtils.ts:111
 
 Builds a MongoDB compatible query object for use in `find` functions for retrieving objects matching the
 specified unique identifier.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `modelClass` | any | The class definition of the data model to build a search query for. |
-`id` | any \| any[] | The unique identifier to search for. |
-`version?` | undefined \| number | The version number of the document to search for. |
+`id` | any | The unique identifier to search for. |
+`version?` | undefined &#124; number | The version number of the document to search for. |
 
-**Returns:** any
+**Returns:** *any*
 
 An object that can be passed to a MongoDB `find` function.
 
 ___
 
-### buildIdSearchQuerySQL
+### `Static` buildIdSearchQuerySQL
 
-▸ `Static`**buildIdSearchQuerySQL**(`modelClass`: any, `id`: any \| any[], `version?`: undefined \| number): any
+▸ **buildIdSearchQuerySQL**(`modelClass`: any, `id`: any, `version?`: undefined | number): *any*
 
-*Defined in src/models/ModelUtils.ts:92*
+Defined in src/models/ModelUtils.ts:89
 
 Builds a TypeORM compatible query object for use in `find` functions for retrieving objects matching the
 specified unique identifier.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `modelClass` | any | The class definition of the data model to build a search query for. |
-`id` | any \| any[] | The unique identifier to search for. |
-`version?` | undefined \| number | The version number of the document to search for. |
+`id` | any | The unique identifier to search for. |
+`version?` | undefined &#124; number | The version number of the document to search for. |
 
-**Returns:** any
+**Returns:** *any*
 
 An object that can be passed to a TypeORM `find` function.
 
 ___
 
-### buildSearchQuery
+### `Static` buildSearchQuery
 
-▸ `Static`**buildSearchQuery**\<T>(`modelClass`: any, `repo`: Repository\<T> \| MongoRepository\<T> \| undefined, `params?`: any, `queryParams?`: any, `exactMatch?`: boolean, `user?`: any): any
+▸ **buildSearchQuery**‹**T**›(`modelClass`: any, `repo`: Repository‹T› | MongoRepository‹T› | undefined, `params?`: any, `queryParams?`: any, `exactMatch`: boolean, `user?`: any): *any*
 
-*Defined in src/models/ModelUtils.ts:335*
+Defined in src/models/ModelUtils.ts:305
 
 Builds a query object for the given criteria and repository. Query params can have a value containing a
 conditional operator to apply for the search. The operator is encoded with the format `op(value)`. The following
@@ -125,34 +122,32 @@ operators are supported:
 
 When no operator is provided the comparison will always be evaluated as `eq`.
 
-#### Type parameters:
+**Type parameters:**
 
-Name |
------- |
-`T` |
+▪ **T**
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Default value | Description |
+Name | Type | Default | Description |
 ------ | ------ | ------ | ------ |
 `modelClass` | any | - | The class definition of the data model to build a search query for. |
-`repo` | Repository\<T> \| MongoRepository\<T> \| undefined | - | The repository to build a search query for. |
+`repo` | Repository‹T› &#124; MongoRepository‹T› &#124; undefined | - | The repository to build a search query for. |
 `params?` | any | - | The URI parameters for the endpoint that was requested. |
 `queryParams?` | any | - | The URI query parameters that were included in the request. |
 `exactMatch` | boolean | false | Set to true to create a query where parameters are to be matched exactly, otherwise set to                          false to use a 'contains' search. |
 `user?` | any | - | The user that is performing the request. |
 
-**Returns:** any
+**Returns:** *any*
 
 The TypeORM compatible query object.
 
 ___
 
-### buildSearchQueryMongo
+### `Static` buildSearchQueryMongo
 
-▸ `Static`**buildSearchQueryMongo**(`modelClass`: any, `params?`: any, `queryParams?`: any, `exactMatch?`: boolean, `user?`: any): any
+▸ **buildSearchQueryMongo**(`modelClass`: any, `params?`: any, `queryParams?`: any, `exactMatch`: boolean, `user?`: any): *any*
 
-*Defined in src/models/ModelUtils.ts:511*
+Defined in src/models/ModelUtils.ts:481
 
 Builds a MongoDB compatible query object for the given criteria. Query params can have a value containing a
 conditional operator to apply for the search. The operator is encoded with the format `op(value)`. The following
@@ -169,9 +164,9 @@ operators are supported:
 
 When no operator is provided the comparison will always be evaluated as `eq`.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Default value | Description |
+Name | Type | Default | Description |
 ------ | ------ | ------ | ------ |
 `modelClass` | any | - | The class definition of the data model to build a search query for. |
 `params?` | any | - | The URI parameters for the endpoint that was requested. |
@@ -179,17 +174,17 @@ Name | Type | Default value | Description |
 `exactMatch` | boolean | false | Set to true to create a query where parameters are to be matched exactly, otherwise set to                          false to use a 'contains' search. |
 `user?` | any | - | The user that is performing the request. |
 
-**Returns:** any
+**Returns:** *any*
 
 The TypeORM compatible query object.
 
 ___
 
-### buildSearchQuerySQL
+### `Static` buildSearchQuerySQL
 
-▸ `Static`**buildSearchQuerySQL**(`modelClass`: any, `params?`: any, `queryParams?`: any, `exactMatch?`: boolean, `user?`: any): any
+▸ **buildSearchQuerySQL**(`modelClass`: any, `params?`: any, `queryParams?`: any, `exactMatch`: boolean, `user?`: any): *any*
 
-*Defined in src/models/ModelUtils.ts:374*
+Defined in src/models/ModelUtils.ts:344
 
 Builds a TypeORM compatible query object for the given criteria. Query params can have a value containing a
 conditional operator to apply for the search. The operator is encoded with the format `op(value)`. The following
@@ -206,9 +201,9 @@ operators are supported:
 
 When no operator is provided the comparison will always be evaluated as `eq`.
 
-#### Parameters:
+**Parameters:**
 
-Name | Type | Default value | Description |
+Name | Type | Default | Description |
 ------ | ------ | ------ | ------ |
 `modelClass` | any | - | The class definition of the data model to build a search query for. |
 `params?` | any | - | The URI parameters for the endpoint that was requested. |
@@ -216,68 +211,89 @@ Name | Type | Default value | Description |
 `exactMatch` | boolean | false | Set to true to create a query where parameters are to be matched exactly, otherwise set to                          false to use a 'contains' search. |
 `user?` | any | - | The user that is performing the request. |
 
-**Returns:** any
+**Returns:** *any*
 
 The TypeORM compatible query object.
 
 ___
 
-### getIdPropertyNames
+### `Static` getIdPropertyNames
 
-▸ `Static`**getIdPropertyNames**(`modelClass`: any): string[]
+▸ **getIdPropertyNames**(`modelClass`: any): *string[]*
 
-*Defined in src/models/ModelUtils.ts:39*
+Defined in src/models/ModelUtils.ts:37
 
 Retrieves a list of all of the specified class's properties that have the @Identifier decorator applied.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
 `modelClass` | any | The class definition to search for identifiers from. |
 
-**Returns:** string[]
+**Returns:** *string[]*
 
 The list of all property names that have the @Identifier decorator applied.
 
 ___
 
-### getQueryParamValue
+### `Static` `Private` getQueryParamValue
 
-▸ `Static` `Private`**getQueryParamValue**(`param`: any): any
+▸ **getQueryParamValue**(`param`: string): *any*
 
-*Defined in src/models/ModelUtils.ts:154*
+Defined in src/models/ModelUtils.ts:136
 
 Given a string containing a parameter value and/or a comparison operation return a TypeORM compatible find value.
 e.g.
  Given the string "myvalue" will return an Eq("myvalue") object.
  Given the string "Like(myvalue)" will return an Like("myvalue") object.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`param` | any |   |
+`param` | string |   |
 
-**Returns:** any
+**Returns:** *any*
 
 ___
 
-### getQueryParamValueMongo
+### `Static` `Private` getQueryParamValueMongo
 
-▸ `Static` `Private`**getQueryParamValueMongo**(`param`: any): any
+▸ **getQueryParamValueMongo**(`param`: string): *any*
 
-*Defined in src/models/ModelUtils.ts:234*
+Defined in src/models/ModelUtils.ts:212
 
 Given a string containing a parameter value and/or a comparison operation return a MongoDB compatible find value.
 e.g.
  Given the string "myvalue" will return an `"myvalue"` object.
  Given the string "not(myvalue)" will return an `{ $not: "myvalue" }` object.
 
-#### Parameters:
+**Parameters:**
 
 Name | Type | Description |
 ------ | ------ | ------ |
-`param` | any |   |
+`param` | string |   |
 
-**Returns:** any
+**Returns:** *any*
+
+___
+
+### `Static` loadModels
+
+▸ **loadModels**(`src`: string, `result`: Map‹string, any›): *Promise‹Map‹string, any››*
+
+Defined in src/models/ModelUtils.ts:575
+
+Loads all model schema files from the specified path and returns a map containing all the definitions.
+
+**Parameters:**
+
+Name | Type | Default | Description |
+------ | ------ | ------ | ------ |
+`src` | string | - | The path to the model files to load. |
+`result` | Map‹string, any› | new Map | - |
+
+**Returns:** *Promise‹Map‹string, any››*
+
+A map containing of all loaded model names to their class definitions.

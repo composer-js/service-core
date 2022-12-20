@@ -14,32 +14,54 @@ Provides a set of utilities for converting Route classes to ExpressJS middleware
 
 ## Index
 
-### Properties
-
-* [logger](routeutils.md#logger)
-
 ### Methods
 
+* [checkRequiredPerms](routeutils.md#checkrequiredperms)
+* [checkRequiredRoles](routeutils.md#checkrequiredroles)
 * [getFuncArray](routeutils.md#getfuncarray)
 * [getRouteMethods](routeutils.md#getroutemethods)
 * [registerRoute](routeutils.md#registerroute)
 * [wrapMiddleware](routeutils.md#wrapmiddleware)
 
-## Properties
-
-### logger
-
-• `Private` `Optional` **logger**: any
-
-*Defined in src/express/RouteUtils.ts:18*
-
 ## Methods
+
+### checkRequiredPerms
+
+▸ **checkRequiredPerms**(): RequestHandler
+
+*Defined in src/express/RouteUtils.ts:20*
+
+Creates an Express middleware function that verifies the incoming request is from a valid user with at least
+one of the specified roles.
+
+**Returns:** RequestHandler
+
+___
+
+### checkRequiredRoles
+
+▸ **checkRequiredRoles**(`requiredRoles`: string[]): RequestHandler
+
+*Defined in src/express/RouteUtils.ts:38*
+
+Creates an Express middleware function that verifies the incoming request is from a valid user with at least
+one of the specified roles.
+
+#### Parameters:
+
+Name | Type | Description |
+------ | ------ | ------ |
+`requiredRoles` | string[] | The list of roles that the authenticated user must have.  |
+
+**Returns:** RequestHandler
+
+___
 
 ### getFuncArray
 
 ▸ **getFuncArray**(`route`: any, `funcs`: (Function \| string)[], `send?`: boolean): RequestHandler[]
 
-*Defined in src/express/RouteUtils.ts:28*
+*Defined in src/express/RouteUtils.ts:58*
 
 Converts the given array of string or Function objects to functions bound to the given route object.
 
@@ -61,7 +83,7 @@ ___
 
 ▸ **getRouteMethods**(`route`: any): Map\<string, any>
 
-*Defined in src/express/RouteUtils.ts:51*
+*Defined in src/express/RouteUtils.ts:81*
 
 Searches an route object for any functions that implement a `@Method` decorator.
 
@@ -79,9 +101,9 @@ ___
 
 ### registerRoute
 
-▸ **registerRoute**(`app`: any, `route`: any): Promise\<void>
+▸ **registerRoute**(`app`: any, `route`: any): void
 
-*Defined in src/express/RouteUtils.ts:80*
+*Defined in src/express/RouteUtils.ts:110*
 
 Registers the provided route object containing a set of decorated endpoints to the server.
 
@@ -92,7 +114,7 @@ Name | Type | Description |
 `app` | any | The Express application to register the route to. |
 `route` | any | The route object to register with Express.  |
 
-**Returns:** Promise\<void>
+**Returns:** void
 
 ___
 
@@ -100,7 +122,7 @@ ___
 
 ▸ **wrapMiddleware**(`obj`: any, `func`: Function, `send?`: boolean): RequestHandler
 
-*Defined in src/express/RouteUtils.ts:169*
+*Defined in src/express/RouteUtils.ts:205*
 
 Wraps the provided function with Express handling based on the function's defined decorators.
 

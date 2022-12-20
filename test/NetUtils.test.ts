@@ -2,6 +2,8 @@
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { NetUtils } from "../src/NetUtils";
+import { Request } from "express";
+import { promises as dns, LookupAddress } from "dns";
 
 const YahooIPs: string[] = [
     "74.6.231.21",
@@ -54,8 +56,8 @@ describe("NetUtils Tests", () => {
         expect(YahooIPs).toContain(result);
 
         result = await NetUtils.getIPAddress("http://localhost");
-        expect(result).toBe("::1");
+        expect(result).toBe("127.0.0.1");
         result = await NetUtils.getIPAddress("http://localhost:1234");
-        expect(result).toBe("::1");
+        expect(result).toBe("127.0.0.1");
     });
 });
