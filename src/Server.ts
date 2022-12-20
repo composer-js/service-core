@@ -390,7 +390,13 @@ export class Server {
 
                 // Initialize the background service manager
                 this.logger.info("Starting background services...");
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", classLoader, this.objectFactory, this.config, this.logger);
+                const bgServices: Map<string,any> = new Map();
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    if (name.startsWith("jobs.")) {
+                        bgServices.set(name, clazz);
+                    }
+                }
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", classLoader, this.objectFactory, bgServices, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }
