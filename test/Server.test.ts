@@ -123,36 +123,6 @@ describe("Server Tests", () => {
         expect(result.body.msg).toBe("Hello World!");
     });
 
-    it("Can serve protected hello world to anonymous.", async () => {
-        expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication()).get("/protected/hello");
-        expect(result.status).toBe(200);
-        expect(result.body).toBeDefined();
-        expect(result.body.msg).toBe("Hello World!");
-    });
-
-    it("Can perform required role check.", async () => {
-        const user = { uid: uuid.v4(), roles: ['test'] };
-        const token = JWTUtils.createToken(config.get("auth"), user);
-        expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication())
-            .get("/protected/roletest")
-            .set("Authorization", "jwt " + token);
-        expect(result.status).toBe(200);
-        expect(result.body).toBeDefined();
-        expect(result.body.msg).toBe("success");
-    });
-
-    it("Can fail required role check.", async () => {
-        const user = { uid: uuid.v4() };
-        const token = JWTUtils.createToken(config.get("auth"), user);
-        expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication())
-            .get("/protected/roletest")
-            .set("Authorization", "jwt " + token);
-        expect(result.status).toBe(403);
-    });
-
     it("Can authorize user.", async () => {
         const user = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
@@ -169,25 +139,6 @@ describe("Server Tests", () => {
         const result = await request(server.getApplication()).get("/token?jwt_token=" + token);
         expect(result.status).toBe(200);
         expect(result.body).toEqual(user);
-    });
-
-    it("Can serve protected foobar to user.", async () => {
-        const user = { uid: uuid.v4() };
-        const token = JWTUtils.createToken(config.get("auth"), user);
-        expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication()).get("/protected/foobar").set("Authorization", `jwt ${token}`);
-        expect(result).toHaveProperty("status");
-        expect(result.status).toBe(200);
-        expect(result).toHaveProperty("body");
-        expect(result.body.msg).toBe("foobar");
-    });
-
-    // TODO Disabling for now. It works standalone but not when all tests are run.
-    it.skip("Cannot serve protected foobar to anonymous.", async () => {
-        expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication()).get("/protected/foobar");
-        expect(result).toHaveProperty("status");
-        expect(result.status).toBe(403);
     });
 
     it("Can handle error gracefully.", async () => {
