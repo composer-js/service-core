@@ -31,7 +31,7 @@ import { BulkError } from "./BulkError";
  * establishes database connections for all configured data stores. Additionally provides automatic authentication
  * handling using JSON Web Token (JWT) via PassportJS. When provided an OpenAPI specificatiion object the server will
  * also automatically serve this specification via the `GET /openapi.json` route.
- *
+ * 
  * Routes are defined by creating any class definition using the various decorators found in `RouteDecorators` and
  * saving these files in the `routes` subfolder. Upon server start, the `routes` folder is scanned for any class
  * that has been decorated with `@Route` and is automatically loaded and registered with Express. Similarly, if the
@@ -43,11 +43,11 @@ import { BulkError } from "./BulkError";
  * Once authenticated, the provided `request` argument will have the `user` property available containing information
  * about the authenticated user. If the `user` property is `undefined` then no user has been authenticated or the
  * authentication attempt failed.
- *
+ * 
  * The following is an example of a simple route class.
- *
+ * 
 ```javascript
-import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, RouteDecorators } from "@composer-js/service_core";
 import { Get, Route } = RouteDecorators;
 
 @Route("/hello")
@@ -64,11 +64,11 @@ class TestRoute extends ModelRoute {
 
 export default TestRoute;
  * ```
- *
+ * 
  * The following is an example of a route class that is bound to a data model providing basic CRUDS operations.
- *
+ * 
  * ```javascript
-import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
+import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@composer-js/service_core";
 import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
 import { Model } = ModelDecorators;
 import { marshall } = DefaultBehaviors;
@@ -229,24 +229,40 @@ export class Server {
     }
 
     /**
+     * Injects all known dependencies into the given object based on the property decorators.
+     *
+     * @param clazz The class type of the object to inject.
+     * @param obj The object whose dependencies will be injected.
+     */
+    protected injectProperties(clazz: any, obj: any): Promise<void> {
+        // Set the cache TTL if set on the model
+        if (clazz.modelClass && clazz.modelClass.cacheTTL) {
+            obj.cacheTTL = clazz.modelClass.cacheTTL;
+        }
+
+        // Set the trackChanges if set on the model
+        if (clazz.modelClass && clazz.modelClass.trackChanges) {
+            obj.trackChanges = clazz.modelClass.trackChanges;
+        }
+
+        // Initialize the object with the ObjectFactory
+        return this.objectFactory.initialize(obj);
+    }
+
+    /**
      * Intantiates the given route class definition into an object that can be registered to Express.
      *
      * @param classDef The class definition of the route to instantiate.
      * @returns A new instance of the provided class definition that implements the Route interface.
      */
     protected async instantiateRoute(classDef: any): Promise<any> {
-        const obj: any = await this.objectFactory.newInstance(classDef, "default");
-        
-        // Set the cache TTL if set on the model
-        if (classDef.modelClass && classDef.modelClass.cacheTTL) {
-            obj.cacheTTL = classDef.modelClass.cacheTTL;
-        }
-
-        // Set the trackChanges if set on the model
-        if (classDef.modelClass && classDef.modelClass.trackChanges) {
-            obj.trackChanges = classDef.modelClass.trackChanges;
-        }
-
+        const obj: any = new classDef();
+        Object.defineProperty(obj, "class", {
+            enumerable: true,
+            writable: false,
+            value: classDef,
+        });
+        await this.injectProperties(classDef, obj);
         return obj;
     }
 
@@ -274,7 +290,7 @@ export class Server {
                 this.app.use(session({
                     cookie: {
                         sameSite: 'none',
-                        secure: true
+                            secure: true
                     },
                     resave: false,
                     saveUninitialized: false,
@@ -322,78 +338,72 @@ export class Server {
                     return next();
                 });
 
-                // Load all classes from disk
-                this.logger.info("Loading all files...");
+                const datastores: any = this.config.get("datastores");
+                const models: Map<string, any> = new Map();
+
+                this.logger.info("Loading all service scripts...");
                 const classLoader: ClassLoader = new ClassLoader(this.basePath);
-                try {
-                    await classLoader.load();
-                }
-                catch (e) {
-                    throw new Error(`[server-core|Server.ts]**ERR @ start, loading files: ${e}`);
-                }
+                await classLoader.load();
 
                 // Register all found classes with the object factory
-                if (classLoader.getClasses()) {
-                    for (const [name, clazz] of classLoader.getClasses().entries()) {
-                        this.objectFactory.register(clazz, name);
-                    }
+                for (const pair of classLoader.getClasses().entries()) {
+                    this.objectFactory.register(pair[1], pair[0]);
                 }
 
                 // Load all models
-                this.logger.info("Scanning data models...");
-                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
-                const datastores: any = this.config.get("datastores");
-                const models: Map<string, any> = new Map();
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    if (name.startsWith("models.")) {
-                        models.set(name, clazz);
+                this.logger.info("Scanning for data models...");
+                for (const pair of classLoader.getClasses().entries()) {
+                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", pair[1]) || undefined;
+                    if (datastore) {
+                        models.set(pair[0], pair[1]);
                     }
                 }
 
                 // Initiate all database connections
                 this.logger.info("Initializing database connection(s)...");
+                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
                 await this.connectionManager.connect(datastores, models);
 
+                const allRoutes: Array<any> = [];
+
                 this.routeUtils = await this.objectFactory.newInstance(RouteUtils, "default");
-                if (!this.routeUtils) {
+                if (!this.routeUtils) { 
                     reject("Failed to instantiate RouteUtils.");
                     return;
                 }
 
                 // Register the index route
-                this.logger.info("Registering routes...");
                 const index: IndexRoute = await this.instantiateRoute(IndexRoute);
+                allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
                     const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", this.apiSpec);
                     await this.routeUtils.registerRoute(this.app, oasRoute);
+                    allRoutes.push(oasRoute);
                 }
 
                 // Register the metrics route
                 const metricsRoute: MetricsRoute = await this.instantiateRoute(MetricsRoute);
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
-                // Register all custom defined routes
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    if (name.startsWith("routes.")) {
-                        const route: any = await this.instantiateRoute(clazz);
-                        this.routeUtils?.registerRoute(this.app, route);
-                    }
-                }
-
                 // Initialize the background service manager
                 this.logger.info("Starting background services...");
-                const bgServices: Map<string, any> = new Map();
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    if (name.startsWith("jobs.")) {
-                        bgServices.set(name, clazz);
-                    }
-                }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, bgServices, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", classLoader, this.objectFactory, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
+                }
+
+                // Perform automatic discovery of all other routes
+                this.logger.info("Scanning for routes...");
+                for (const clazz of classLoader.getClasses().values()) {
+                    const routePaths: string[] | undefined = Reflect.getMetadata("cjs:routePaths", clazz.prototype) || undefined;
+                    if (routePaths) {
+                        const route: any = await this.instantiateRoute(clazz);
+                        await this.routeUtils.registerRoute(this.app, route);
+                        allRoutes.push(route);
+                    }
                 }
 
                 // Error handling. NOTE: Must be defined last.
