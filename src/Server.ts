@@ -236,11 +236,6 @@ export class Server {
      */
     protected async instantiateRoute(classDef: any): Promise<any> {
         const obj: any = await this.objectFactory.newInstance(classDef, "default");
-        Object.defineProperty(obj, "class", {
-            enumerable: true,
-            writable: false,
-            value: classDef,
-        });
         
         // Set the cache TTL if set on the model
         if (classDef.modelClass && classDef.modelClass.cacheTTL) {
