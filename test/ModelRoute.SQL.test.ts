@@ -3,22 +3,23 @@
 /////////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
-import { Server, ConnectionManager } from "../src";
-import Item from "./server/models/Item";
+import { Server, ConnectionManager, ObjectFactory } from "../src/service_core";
+import Item from "./models/Item";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";
-import { Repository, Connection } from "typeorm";
+import { Repository, DataSource } from "typeorm";
+import { JWTUtils, Logger } from "@composer-js/core";
+import * as rimraf from "rimraf";
+const uuid = require("uuid");
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
         dbName: "axr-test",
     },
-    autoStart: false,
 });
 let repo: Repository<Item>;
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
-const server: Server = new Server(config, undefined, "./test/server");
 
 const createItem = async (name: string, quantity: number = 1, cost: number = 100): Promise<Item> => {
     const item: Item = new Item({
@@ -42,20 +43,29 @@ const createItems = async (num: number): Promise<Item[]> => {
 
 jest.setTimeout(120000);
 describe("ModelRoute Tests [SQL]", () => {
+    const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
+    const server: Server = new Server(config, undefined, "./test", Logger(), objectFactory);
+
     beforeAll(async () => {
         await mongod.start();
         await server.start();
-        const conn: any = ConnectionManager.connections.get("sqlite");
-        if (conn instanceof Connection) {
-            repo = conn.getRepository(Item);
+
+        const connMgr: ConnectionManager | undefined = objectFactory.getInstance(ConnectionManager);
+        const conn: any = connMgr?.connections.get("sqlite");
+        if (conn instanceof DataSource) {
+            repo = conn.getRepository(Item.name);
         }
     });
 
-    afterAll(async (done: Function) => {
+    afterAll(async () => {
         await server.stop();
         await mongod.stop();
-        sqlite.close(err => {
-            done();
+        await objectFactory.destroy();
+        return new Promise<void>((resolve) => {
+            sqlite.close(err => {
+                rimraf.sync("tmp-*");
+                resolve();
+            });
         });
     });
 
@@ -80,7 +90,7 @@ describe("ModelRoute Tests [SQL]", () => {
             expect(result.body.quantity).toEqual(item.quantity);
             expect(result.body.cost).toEqual(item.cost);
 
-            const stored: Item | undefined = await repo.findOne({ uid: result.body.uid });
+            const stored: Item | null = await repo.findOne({ where: { uid: result.body.uid } });
             expect(stored).toBeDefined();
             if (stored) {
                 expect(stored.uid).toEqual(item.uid);
@@ -96,8 +106,8 @@ describe("ModelRoute Tests [SQL]", () => {
             const result = await request(server.getApplication()).delete("/items/" + item.uid);
             expect(result.status).toBe(204);
 
-            const existing: Item | undefined = await repo.findOne({ uid: item.uid });
-            expect(existing).toBeUndefined();
+            const existing: Item | null = await repo.findOne({ where: { uid: item.uid } });
+            expect(existing).toBeNull();
         });
 
         it("Can find document by id. [SQL]", async () => {
@@ -129,7 +139,7 @@ describe("ModelRoute Tests [SQL]", () => {
             expect(result.body.quantity).toBe(item.quantity);
             expect(result.body.cost).toBe(item.cost);
 
-            const existing: Item | undefined = await repo.findOne({ uid: item.uid });
+            const existing: Item | null = await repo.findOne({ where: { uid: item.uid } });
             expect(existing).toBeDefined();
             if (existing) {
                 expect(existing.uid).toBe(result.body.uid);
@@ -145,9 +155,8 @@ describe("ModelRoute Tests [SQL]", () => {
         it("Can count documents. [SQL]", async () => {
             const items: Item[] = await createItems(20);
             const result = await request(server.getApplication()).head("/items");
-            expect(result).toHaveProperty("body");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers["content-length"]).toBe(String(items.length));
+            expect(result.headers['content-length']).toBe(items.length.toString());
         });
 
         it("Can count documents with criteria (eq). [SQL]", async () => {
@@ -156,10 +165,8 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
             const result = await request(server.getApplication()).head("/items?name=B-Bomb");
-            expect(result).toHaveProperty("body");
-            console.log(result.body);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers["content-length"]).toBe("1");
+            expect(result.headers['content-length']).toBe((1).toString());
         });
 
         it("Can count documents with criteria (like). [SQL]", async () => {
@@ -168,10 +175,8 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("B-Bomb", 5, 50);
             await createItem("Boomerang", 1, 100);
             const result = await request(server.getApplication()).head("/items?name=like(Item%)");
-            expect(result).toHaveProperty("body");
-            console.log(result.body);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers["content-length"]).toBe(String(items.length));
+            expect(result.headers['content-length']).toBe(items.length.toString());
         });
 
         it("Can find all documents. [SQL]", async () => {

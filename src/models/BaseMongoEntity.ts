@@ -25,7 +25,7 @@ export abstract class BaseMongoEntity extends BaseEntity {
                 ? (typeof other._id === "string" || typeof other._id === "number"
                     ? new ObjectID(other._id)
                     : other._id
-                  )
+                )
                 : this._id;
         }
     }

@@ -14,8 +14,13 @@ import {
     LessThan,
     Between,
     MongoRepository,
+    ObjectLiteral,
 } from "typeorm";
+import { ClassLoader } from "@composer-js/core";
 import "reflect-metadata";
+import { isEmpty } from "lodash";
+import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
+const _ = require('lodash');
 
 const logger = Logger();
 
@@ -45,7 +50,7 @@ export class ModelUtils {
         while (proto) {
             const props: string[] = Object.getOwnPropertyNames(proto);
             for (const prop of props) {
-                const isIdentifier: boolean = Reflect.getMetadata("cjs:isIdentifier", proto, prop);
+                const isIdentifier: boolean = Reflect.getMetadata("axr:isIdentifier", proto, prop);
                 if (isIdentifier) {
                     results.push(prop);
                 }
@@ -65,18 +70,20 @@ export class ModelUtils {
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
      * @param version The version number of the document to search for.
+     * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuery<T>(
+    public static buildIdSearchQuery<T extends ObjectLiteral>(
         repo: Repository<T> | MongoRepository<T> | undefined,
         modelClass: any,
         id: any | any[],
-        version?: number
+        version?: number,
+        productUid?: string
     ): any {
         if (repo instanceof MongoRepository) {
-            return ModelUtils.buildIdSearchQueryMongo(modelClass, id, version);
+            return ModelUtils.buildIdSearchQueryMongo(modelClass, id, version, productUid);
         } else {
-            return ModelUtils.buildIdSearchQuerySQL(modelClass, id, version);
+            return ModelUtils.buildIdSearchQuerySQL(modelClass, id, version, productUid);
         }
     }
 
@@ -87,16 +94,23 @@ export class ModelUtils {
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
      * @param version The version number of the document to search for.
+     * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuerySQL(modelClass: any, id: any | any[], version?: number): any {
+    public static buildIdSearchQuerySQL(modelClass: any, id: any | any[], version?: number, productUid?: string): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const where: any = [];
         for (const prop of props) {
+            // If productUid is an id, skip it because it's used as a compound key
+            if (prop === "productUid") continue;
+
             const q: any = { [prop]: Array.isArray(id) ? In(id) : id };
+            if (props.includes("productUid")) {
+                q.productUid = productUid;
+            }
             if (version !== undefined) {
                 q.version = version;
             }
@@ -113,9 +127,10 @@ export class ModelUtils {
      * @param modelClass The class definition of the data model to build a search query for.
      * @param id The unique identifier to search for.
      * @param version The version number of the document to search for.
+     * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a MongoDB `find` function.
      */
-    public static buildIdSearchQueryMongo(modelClass: any, id: any | any[], version?: number): any {
+    public static buildIdSearchQueryMongo(modelClass: any, id: any | any[], version?: number, productUid?: string): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // We want to performa case-insensitive search. So convert all strings to regex.
@@ -133,7 +148,13 @@ export class ModelUtils {
         // e.g. WHERE idField1 = :idField1 OR idField2 = :idField2 ...
         const query: any[] = [];
         for (const prop of props) {
+            // If productUid is an id, skip it because it's used as a compound key
+            if (prop === "productUid") continue;
+
             const q: any = { [prop]: Array.isArray(id) ? { $in: id } : id };
+            if (productUid && props.includes("productUid")) {
+                q.productUid = productUid;
+            }
             if (version !== undefined) {
                 q.version = version;
             }
@@ -332,7 +353,7 @@ export class ModelUtils {
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
-    public static buildSearchQuery<T>(
+    public static buildSearchQuery<T extends ObjectLiteral>(
         modelClass: any,
         repo: Repository<T> | MongoRepository<T> | undefined,
         params?: any,
@@ -340,6 +361,14 @@ export class ModelUtils {
         exactMatch: boolean = false,
         user?: any
     ): any {
+        // By default we don't want to return deleted recoverable objects unless explicitly requested
+        if (new modelClass() instanceof RecoverableBaseEntity) {
+            queryParams = {
+                ...queryParams,
+                deleted: queryParams && "deleted" in queryParams ? queryParams.deleted : false
+            };
+        }
+
         if (repo instanceof MongoRepository) {
             return ModelUtils.buildSearchQueryMongo(modelClass, params, queryParams, exactMatch, user);
         } else {
@@ -409,6 +438,8 @@ export class ModelUtils {
             }
         }
 
+        // logger?.debug(`Query params: ${JSON.stringify(queryParams)}`);
+
         // Now go through each query paramater. If the parameter is a single value, add it to each query object. If it's an array,
         // add only one value to each query object.
         for (let key in queryParams) {
@@ -435,7 +466,7 @@ export class ModelUtils {
                         } else {
                             let newValue: any = value;
                             newValue = {};
-                            newValue[value] = "ASC";
+                            newValue[value] = 'ASC';
                             value = newValue;
                         }
                     }
@@ -515,7 +546,7 @@ export class ModelUtils {
         exactMatch: boolean = false,
         user?: any
     ): any {
-        const query: any = {};
+        const queries: any[] = [{}];
         let sort: any = undefined;
 
         // Add the URL parameters
@@ -525,11 +556,13 @@ export class ModelUtils {
                 if (!user) {
                     throw new Error("An anonymous user cannot make a request with a `me` reference.");
                 }
-                query[key] = user.uid;
+                queries[0][key] = user.uid;
             } else {
-                query[key] = params[key];
+                queries[0][key] = params[key];
             }
         }
+
+        // logger?.debug(`Query params: ${JSON.stringify(queryParams)}`);
 
         for (const key in queryParams) {
             // Ignore reserved query parameters
@@ -548,16 +581,45 @@ export class ModelUtils {
                         } else {
                             let newValue: any = value;
                             newValue = {};
-                            newValue[value] = "ASC";
+                            newValue[value] = 1;
                             value = newValue;
                         }
                     }
 
-                    sort = {
+                    let resolvedSort = {
                         ...sort,
                         ...value
                     };
+
+                    sort = sort || {};
+
+                    // Format sort for mongo: https://www.mongodb.com/docs/manual/reference/operator/aggregation/sort/#mongodb-pipeline-pipe.-sort
+                    Object.keys(resolvedSort).forEach((key) => {
+                        let value = resolvedSort[key];
+
+                        if (!value) return;
+
+                        if (value.toUpperCase() === 'ASC') {
+                            sort[key] = 1;
+                        } else if (value.toUpperCase() === 'DESC') {
+                            sort[key] = -1;
+                        }
+                    })
                 }
+
+                continue;
+            }
+
+            if (key === '$or') {
+                // Array of OR queries
+                let orResults = [];
+                for (const query of (queryParams[key] as Array<any>)) {
+                    const subQueryOrResult = this.buildSearchQueryMongo(modelClass, undefined, query, exactMatch, user);
+                    const validSubQueryResult = subQueryOrResult && subQueryOrResult.length > 0 && subQueryOrResult[0]['$match'];
+                    validSubQueryResult && orResults.push(validSubQueryResult);
+                }
+
+                queries[0] = { $or: orResults };
 
                 continue;
             }
@@ -565,34 +627,70 @@ export class ModelUtils {
             if (Array.isArray(queryParams[key])) {
                 // Add each value in the array to each corresponding query
                 const conditions: any[] = [];
-                for (const value of queryParams[key]) {
-                    conditions.push(ModelUtils.getQueryParamValueMongo(value));
-                }
+                for (let i = 0; i < queryParams[key].length; i++) {
+                    const value: any = ModelUtils.getQueryParamValueMongo(queryParams[key][i]);
 
-                query[key] = { $or: conditions };
+                    if (!queries[i]) {
+                        queries[i] = {
+                            ...queries[0]
+                        };
+                    }
+
+                    queries[i][key] = value;
+                }
             } else {
-                query[key] = ModelUtils.getQueryParamValueMongo(queryParams[key]);
+                const value: any = ModelUtils.getQueryParamValueMongo(queryParams[key]);
+                for (let i = 0; i < queries.length; i++) {
+                    queries[i][key] = value;
+                }
             }
+        }
+
+
+        let result: any[] = [];
+        if (queries.length > 0) {
+            result.push({ $match: queries.length === 1 ? queries[0] : { $or: queries } });
         }
 
         // Determine if the model class is versioned or not. We provide a different
         // aggregation query if it is.
-        let result: any[] = [];
         if (modelClass && modelClass.trackChanges !== undefined) {
-            result = [
-                { $match: query },
-                { $sort: { version: -1 } },
-                { $group: { _id: "$uid", doc: { $first: "$$ROOT" } } },
-                { $replaceRoot: { newRoot: "$doc" } }
-            ];
-        } else {
-            result.push({ $match: query });
+            result.push({ $sort: { version: -1 } });
+            result.push({ $group: { _id: "$uid", doc: { $first: "$$ROOT" } } });
+            result.push({ $replaceRoot: { newRoot: "$doc" } });
         }
 
         // Add the sort if specified
-        if (sort) {
+        if (sort && !isEmpty(sort)) {
             result.push({ $sort: sort });
         }
         return result;
+    }
+
+    /**
+     * Loads all model schema files from the specified path and returns a map containing all the definitions.
+     *
+     * @param src The path to the model files to load.
+     * @returns A map containing of all loaded model names to their class definitions.
+     */
+    public static async loadModels(src: string, result: Map<string, any> = new Map): Promise<Map<string, any>> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const classLoader: ClassLoader = new ClassLoader(src);
+                await classLoader.load();
+
+                // Go through each class and determine which ones implements the `@Model` decorator.
+                classLoader.getClasses().forEach((clazz: any, name: string) => {
+                    const isModel: any = Reflect.getMetadata("axr:datastore", clazz) !== undefined;
+                    if (isModel) {
+                        result.set(name, clazz);
+                    }
+                });
+
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 }

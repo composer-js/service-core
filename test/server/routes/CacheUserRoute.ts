@@ -4,18 +4,18 @@
 import {
     Route,
     Get,
-    Head,
     Post,
     Validate,
     Delete,
+    Head,
     Put,
     Param,
     User,
     Query,
+    Response,
     Init,
     Model,
-    MongoRepository,
-    Response
+    MongoRepository
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
@@ -53,41 +53,40 @@ class UserRoute extends ModelRoute<UserModel> {
 
     @Head()
     protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
-        return await super.doCount(params, query, res, user);
+        return await super.doCount({ params, query, res, user });
     }
 
     @Post()
     @Validate("validate")
-    protected async create(obj: UserModel, @User user?: any): Promise<UserModel> {
-        const newObj: UserModel = new UserModel(obj);
-        return await super.doCreate(newObj, user);
+    protected async create(objs: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
+        return await super.doCreate(objs, { user });
     }
 
     @Delete(":id")
     protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
-        await super.doDelete(id, user);
+        await super.doDelete(id, { user });
     }
 
     @Get()
     protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
-        return await super.doFindAll(params, query, user);
+        return await super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
-    protected async findById(@Param("id") id: string, @User user?: any): Promise<UserModel | void> {
-        return await super.doFindById(id, user);
+    protected async findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<UserModel | null> {
+        return await super.doFindById(id, { query, user });
     }
 
     @Delete()
     protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
-        await super.doTruncate(params, query, user);
+        await super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
     @Validate("validate")
     protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
         const newObj: UserModel = new UserModel(obj);
-        return await super.doUpdate(id, newObj, user);
+        return await super.doUpdate(id, newObj, { user });
     }
 }
 

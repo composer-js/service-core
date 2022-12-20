@@ -19,22 +19,22 @@ conf.defaults({
     datastores: {
         mongodb: {
             type: "mongodb",
-            url: "mongodb://localhost:9999",
+            host: "localhost",
+            port: 9999,
             database: "accounts",
-            useNewUrlParser: true,
             useUnifiedTopology: true,
             synchronize: true,
         },
         sqlite: {
             type: "sqlite",
-            url: "sqlite://localhost",
+            host: "localhost",
             database: "axr-test",
-            entities: ["Item"],
-            useNewUrlParser: true,
             useUnifiedTopology: true,
             synchronize: true,
         },
     },
+    // Specifies the group names that are considered to be trusted with administrative privileges.
+    trusted_roles: ["admin"],
     // Settings pertaining to the signing and verification of authentication tokens
     auth: {
         // The default PassportJS authentication strategy to use

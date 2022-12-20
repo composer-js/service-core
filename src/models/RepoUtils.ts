@@ -15,10 +15,12 @@ export class RepoUtils {
      * Verify object does not exist and update required fields for BaseEntity
      * @param repo Repository used to verify no existing object
      * @param obj Object that exentds BaseEntity or SimpleEntity
+     * @param tracked Indicates if the object type uses version tracking or not.
      */
     public static async preprocessBeforeSave<T extends BaseEntity | SimpleEntity>(
         repo: Repository<T> | MongoRepository<T>,
-        obj: T
+        obj: T,
+        tracked: boolean
     ): Promise<T> {
         if (!repo) {
             throw new Error("Repository not set or could not be found.");
@@ -28,11 +30,16 @@ export class RepoUtils {
         const ids: any[] = [];
         const idProps: string[] = ModelUtils.getIdPropertyNames(obj.constructor);
         for (const prop of idProps) {
-            ids.push((obj as any)[prop]);
+            // Skip `productUid` as it is considered a compound key
+            if (prop === "productUid") continue;
+            const val: string = (obj as any)[prop];
+            if (val) {
+                ids.push(val);
+            }
         }
-        const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, obj instanceof BaseEntity ? obj.version : undefined);
-        const existing: T | undefined = await repo.findOne(query);
-        if (existing) {
+        const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, undefined, (obj as any).productUid);
+        const count: number = await repo.count(query);
+        if (!tracked && count > 0) {
             const error: any = new Error("An existing object with this identifier already exists.");
             error.status = 400;
             throw error;
@@ -42,7 +49,7 @@ export class RepoUtils {
         if (obj instanceof BaseEntity) {
             obj.dateCreated = new Date();
             obj.dateModified = new Date();
-            obj.version = 0;
+            obj.version = count;
         }
         return obj;
     }
@@ -57,14 +64,14 @@ export class RepoUtils {
         repo: Repository<T> | MongoRepository<T>,
         modelClass: any,
         obj: T,
-        old?: T
+        old?: T | null
     ): Promise<T> {
         if (!repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         if (!old) {
-            const query: any = ModelUtils.buildIdSearchQuery(repo, modelClass, obj.uid);
+            const query: any = ModelUtils.buildIdSearchQuery(repo, modelClass, obj.uid, obj instanceof BaseEntity ? obj.version : undefined, "productUid" in obj ? (obj as any).productUid : undefined);
             old = await repo.findOne(query);
         }
         if (!old) {

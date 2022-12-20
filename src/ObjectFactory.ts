@@ -4,7 +4,7 @@
 import "reflect-metadata";
 import { Logger } from "@composer-js/core";
 import { ConnectionManager } from "./database/ConnectionManager";
-import { Connection } from "typeorm";
+import { DataSource } from "typeorm";
 import * as Redis from "ioredis";
 const uuid = require("uuid");
 
@@ -16,7 +16,7 @@ interface Entity {
  * The `ObjectFactory` is a manager for creating objects based on registered
  * class types. This allows for the tracking of multiple instances of objects
  * so that references can be referenced by unique name.
- * 
+ *
  * @author Jean-Philippe Steinmetz
  */
 export class ObjectFactory {
@@ -61,7 +61,7 @@ export class ObjectFactory {
             let proto = Object.getPrototypeOf(obj);
             while (proto) {
                 for (const member of Object.getOwnPropertyNames(proto)) {
-                    const hasDestructor: boolean = Reflect.getMetadata("cjs:destructor", proto, member);
+                    const hasDestructor: boolean = Reflect.getMetadata("axr:destructor", proto, member);
                     if (hasDestructor) {
                         destroyFunc = obj[member];
                         break;
@@ -115,9 +115,9 @@ export class ObjectFactory {
             // Search for each type of injectable property
             for (const member of Object.getOwnPropertyNames(proto)) {
                 // Inject @Config
-                const injectConfig: any = Reflect.getMetadata("cjs:injectConfig", proto, member);
+                const injectConfig: any = Reflect.getMetadata("axr:injectConfig", proto, member);
                 if (injectConfig) {
-                    const defaultValue: any = Reflect.getMetadata("cjs:injectConfigDefault", proto, member);
+                    const defaultValue: any = Reflect.getMetadata("axr:injectConfigDefault", proto, member);
                     // If the value is a string, then it must be a path to a specific variable desired
                     if (typeof injectConfig === "string") {
                         const value: any = this.config.get(injectConfig);
@@ -135,19 +135,21 @@ export class ObjectFactory {
                 }
 
                 // Inject @Logger
-                const injectLogger: any = Reflect.getMetadata("cjs:injectLogger", proto, member);
+                const injectLogger: any = Reflect.getMetadata("axr:injectLogger", proto, member);
                 if (injectLogger) {
                     obj[member] = this.logger;
                 }
 
+                const connectionManager: ConnectionManager | undefined = this.getInstance(ConnectionManager);
+
                 // Inject @Repository
-                const injectRepo: any = Reflect.getMetadata("cjs:injectRepo", proto, member);
+                const injectRepo: any = Reflect.getMetadata("axr:injectRepo", proto, member);
                 if (injectRepo) {
                     // Look up the connection name from the model class
                     const datastore: string = (injectRepo as Entity).datastore;
                     if (datastore) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(datastore);
-                        if (conn instanceof Connection) {
+                        const conn: DataSource | Redis.Redis | undefined = connectionManager?.connections.get(datastore);
+                        if (conn instanceof DataSource) {
                             obj[member] = conn.getRepository(injectRepo);
                         } else {
                             throw new Error("Unable to find database connection with name: " + datastore);
@@ -160,13 +162,13 @@ export class ObjectFactory {
                 }
 
                 // Inject @MongoRepository
-                const injectMongoRepo: any = Reflect.getMetadata("cjs:injectMongoRepo", proto, member);
+                const injectMongoRepo: any = Reflect.getMetadata("axr:injectMongoRepo", proto, member);
                 if (injectMongoRepo) {
                     // Look up the connection name from the model class
                     const datastore: string = (injectMongoRepo as Entity).datastore;
                     if (datastore) {
-                        const conn: Connection | Redis.Redis | undefined = ConnectionManager.connections.get(datastore);
-                        if (conn instanceof Connection) {
+                        const conn: DataSource | Redis.Redis | undefined = connectionManager?.connections.get(datastore);
+                        if (conn instanceof DataSource) {
                             obj[member] = conn.getMongoRepository(injectMongoRepo);
                         } else {
                             throw new Error("Unable to find database connection with name: " + datastore);
@@ -179,9 +181,9 @@ export class ObjectFactory {
                 }
 
                 // Inject @RedisConnection
-                const injectRedisConn: string = Reflect.getMetadata("cjs:injectRedisRepo", proto, member);
+                const injectRedisConn: string = Reflect.getMetadata("axr:injectRedisRepo", proto, member);
                 if (injectRedisConn) {
-                    const conn: any = ConnectionManager.connections.get(
+                    const conn: any = connectionManager?.connections.get(
                         injectRedisConn
                     );
                     if (conn) {
@@ -196,7 +198,7 @@ export class ObjectFactory {
                 }
 
                 // Inject @Inject
-                const injectObject: any = Reflect.getMetadata("cjs:injectObject", proto, member);
+                const injectObject: any = Reflect.getMetadata("axr:injectObject", proto, member);
                 if (injectObject) {
                     // First register the type just in case it hasn't been done yet
                     this.register(injectObject.type);
@@ -230,7 +232,7 @@ export class ObjectFactory {
         const results: Function[] = [];
 
         for (const member in obj) {
-            const initialize: boolean = Reflect.getMetadata("cjs:initialize", obj, member);
+            const initialize: boolean = Reflect.getMetadata("axr:initialize", obj, member);
             if (initialize) {
                 results.push(obj[member]);
                 break;
@@ -240,7 +242,7 @@ export class ObjectFactory {
         let proto = Object.getPrototypeOf(obj);
         while (proto) {
             for (const member of Object.getOwnPropertyNames(proto)) {
-                const initialize: boolean = Reflect.getMetadata("cjs:initialize", proto, member);
+                const initialize: boolean = Reflect.getMetadata("axr:initialize", proto, member);
                 if (initialize) {
                     results.push(obj[member]);
                     break;
@@ -260,7 +262,7 @@ export class ObjectFactory {
      * @param nameOrType The unique name or class type of the object to retrieve.
      * @returns The object instance associated with the given name if found, otherwise `undefined`.
      */
-    public getInstance<T>(nameOrType: any): T {
+    public getInstance<T>(nameOrType: any): T | undefined {
         if (typeof nameOrType === "string") {
             // Add `:default` to the name if no explicit name was provided
             if (!nameOrType.includes(":")) {
@@ -283,7 +285,7 @@ export class ObjectFactory {
      * Creates a new instance of the class specified with the provided unique name or type and constructor arguments. If an existing
      * object has already been created with the given name, that instance is returned, otherwise a new instance is created
      * using the provided arguments.
-     * 
+     *
      * @param type The fully qualified name or type of the class to instantiate. If a type is given it's class name will be inferred
      *              via the constructor name.
      * @param name The unique name to give the class instance. Set to `undefined` if you wish to force a new object
@@ -335,13 +337,14 @@ export class ObjectFactory {
         // Save the name to the object
         (instance as any).name = name;
 
-        // Now initialize the object with any injectable defaults
-        await this.initialize(instance);
-
         // Store the instance in our list of objects
         if (name) {
             this.instances.set(name, instance);
         }
+
+        // Now initialize the object with any injectable defaults. This must happen after we add the instance
+        // to our internal map so that circular dependencies due not cause endless cycles of creation/initialization.
+        await this.initialize(instance);
 
         return instance;
     }

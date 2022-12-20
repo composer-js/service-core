@@ -7,7 +7,7 @@ cache:
 
 build:
     stage: build
-    image: node:lts
+    image: node:lts-buster
     script:
         - npm install -g license-checker
         - license-checker --failOn 'GPL;LGPL;EPL-1.0;EPL-2.0;CPL-1.0' --exclude 'MIT,BSD,ISC,Apache-2.0,CC0-1.0,Artistic-2.0'
@@ -16,16 +16,16 @@ build:
 
 test:
     stage: test
-    image: node:lts
+    image: node:lts-buster
     script:
-        - yarn test --ci
+        - yarn test --ci --forceExit
 
 publish:
     only:
         - tags
-    image: node:lts
+    image: node:lts-buster
     stage: deploy
     script:
         - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
-        - yarn docs
+        - yarn build
         - npm publish --access public

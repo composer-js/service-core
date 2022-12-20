@@ -5,6 +5,8 @@ import config from "./config";
 import { ObjectFactory } from "../src/ObjectFactory";
 import { Inject, Destroy } from "../src/decorators/ObjectDecorators";
 import { Logger } from "@composer-js/core";
+import { CircularClassA } from "./factory/CircularClassA";
+import { CircularClassB } from "./factory/CircularClassB";
 
 class TestClassA {
     @Destroy
@@ -48,6 +50,8 @@ describe("ObjectFactory Tests", () => {
         factory.register(TestClassA);
         factory.register(TestClassB, TestClassB.name);
         factory.register(TestClassC);
+        factory.register(CircularClassA);
+        factory.register(CircularClassB);
     });
 
     afterEach(async () => {
@@ -64,6 +68,24 @@ describe("ObjectFactory Tests", () => {
         const instance: TestClassA = await factory.newInstance(TestClassA, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
+    });
+
+    it("Can create new default class instances by name with circular dependencies.", async () => {
+        const instance: CircularClassA = await factory.newInstance(CircularClassA.name, "default");
+        expect(instance).toBeDefined();
+        expect(instance).toBeInstanceOf(CircularClassA);
+
+        const dep: CircularClassB | undefined = factory.getInstance(CircularClassB);
+        expect(dep).toBeDefined();
+    });
+
+    it("Can create new default class instances by type with circular dependencies.", async () => {
+        const instance: CircularClassB = await factory.newInstance(CircularClassB, "default");
+        expect(instance).toBeDefined();
+        expect(instance).toBeInstanceOf(CircularClassB);
+
+        const dep: CircularClassA | undefined = factory.getInstance(CircularClassA);
+        expect(dep).toBeDefined();
     });
 
     it("Can initialize existing objects.", async () => {

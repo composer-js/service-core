@@ -12,10 +12,10 @@ class DefaultRoute {
     /**
      * Initializes a new instance with the specified defaults.
      */
-    constructor() {}
+    constructor() { }
 
     @Init
-    private async initialize() {}
+    private async initialize() { }
 
     @Get("hello")
     protected async helloWorld(): Promise<any> {

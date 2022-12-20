@@ -1,0 +1,34 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) AcceleratXR, Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
+import { ObjectID, ObjectIdColumn } from "typeorm";
+import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
+
+/**
+ * The `RecoverableBaseMongoEntity` provides an entity base class for those classes wishing to implement
+ * soft delete capability. A soft delete means that a delete operation does not remove the entity
+ * from the database but instead simply marks it as deleted. To completely remove the entity from
+ * the database the user must explicitly specify the entity to be purged.
+ *
+ * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
+ */
+export abstract class RecoverableBaseMongoEntity extends RecoverableBaseEntity {
+    /**
+     * The internal unique identifier used by MongoDB.
+     */
+     @ObjectIdColumn()
+     public _id?: any;
+ 
+     constructor(other?: any) {
+         super(other);
+ 
+         if (other) {
+             this._id = other._id
+                 ? (typeof other._id === "string" || typeof other._id === "number"
+                     ? new ObjectID(other._id)
+                     : other._id
+                 )
+                 : this._id;
+         }
+     }
+}

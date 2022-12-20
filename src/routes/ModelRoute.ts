@@ -5,13 +5,74 @@ import { Repository, MongoRepository, AggregationCursorResult } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
-import { Redis } from "ioredis";
+import Redis from "ioredis";
 import { Init, RedisConnection } from "../decorators/RouteDecorators";
 import * as crypto from "crypto";
 import { Logger, Config, Inject } from "../decorators/ObjectDecorators";
-import { Response as XResponse } from "express";
+import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
-import { NetUtils } from "../NetUtils";
+import { BulkError } from "../BulkError";
+import { RecoverableBaseEntity } from "../models";
+
+/**
+ * The set of options required by all request handlers.
+ */
+export interface RequestOptions {
+    /** The originating client request. */
+    req?: XRequest;
+    /** The outgoing client response. */
+    res?: XResponse;
+    /** The authenticated user making the request. */
+    user?: any;
+}
+
+/**
+ * The set of options required by create request handlers.
+ */
+export interface CreateRequestOptions extends RequestOptions {
+}
+
+/**
+ * The set of options required by delete request handlers.
+ */
+export interface DeleteRequestOptions extends RequestOptions {
+    /** The desired product uid of the resource to delete. */
+    productUid?: string;
+    /** Set to true to permanently remove the object from the database (if applicable). */
+    purge?: boolean;
+    /** The desired version number of the resource to delete. */
+    version?: number | string;
+}
+
+/**
+ * The set of options required by search request handlers.
+ */
+export interface FindRequestOptions extends RequestOptions {
+    /** The list of URL parameters to use in the search. */
+    params?: any;
+    /** The list of query parameters to use in the search. */
+    query: any;
+}
+
+/**
+ * The set of options required by truncate request handlers.
+ */
+ export interface TruncateRequestOptions extends DeleteRequestOptions {
+    /** The list of URL parameters to use in the search. */
+    params: any;
+    /** The list of query parameters to use in the search. */
+    query: any;
+}
+
+/**
+ * The set of options required by update request handlers.
+ */
+ export interface UpdateRequestOptions extends RequestOptions {
+    /** The desired product uid of the resource to update. */
+    productUid?: string;
+    /** The desired version number of the resource to update. */
+    version?: number | string;
+}
 
 /**
  * The `ModelRoute` is an abstract base class that provides a set of built-in route behavior functions for handling
@@ -40,9 +101,6 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     @Config()
     protected config?: any;
 
-    /** The unique identifier of the default ACL for the model type. */
-    protected defaultACLUid: string = "";
-
     @Logger
     protected logger: any;
 
@@ -58,7 +116,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Initializes a new instance using any defaults.
      */
-    protected constructor() {}
+    protected constructor() { }
 
     /**
      * The base key used to get or set data in the cache.
@@ -94,19 +152,20 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      *
      * @param id The unique identifier of the object to retrieve.
      * @param version The desired version number of the object to retrieve. If `undefined` returns the latest.
+     * @param productUid The optional productUid associated with the object.
      */
-    protected async getObj(id: string, version?: number): Promise<T | undefined> {
+    protected async getObj(id: string, version?: number | string, productUid?: string): Promise<T | null> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
-        const query: any = this.searchIdQuery(id, version);
+        const query: any = this.searchIdQuery(id, version, productUid);
         if (this.cacheClient && this.cacheTTL) {
             // First attempt to retrieve the object from the cache
             const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${this.hashQuery(query)}`);
             if (json) {
                 try {
-                    const existing: T | undefined = JSON.parse(json);
+                    const existing: T | null = JSON.parse(json);
                     if (existing) {
                         return existing;
                     }
@@ -116,7 +175,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        let existing: T | undefined = undefined;
+        let existing: T | null = null;
         if (this.repo instanceof MongoRepository) {
             existing = await this.repo.aggregate(
                 [
@@ -142,47 +201,53 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         // Make sure we return the correct data type
-        return existing ? new this.modelClass(existing) : undefined;
+        return existing ? new this.modelClass(existing) : null;
     }
 
     /**
      * Search for existing object based on passed in id and version and product uid.
      */
-    private searchIdQuery(id: string, version?: number): any {
-        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, version);
+    private searchIdQuery(id: string, version?: number | string, productUid?: string): any {
+        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version) : version, productUid);
     }
 
     /**
      * Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
      * request `query`. Any results that have been found are set to the `content-length` header of the `res` argument.
+     * 
+     * @param options The options to process the request using.
      */
-    protected async doCount(params: any, query: any, res: XResponse, user?: any): Promise<XResponse> {
+    protected async doCount(options: FindRequestOptions): Promise<XResponse> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
+        if (!options.res) {
+            throw new Error("Response must be provided.");
+        }
+
+        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
             const result: AggregationCursorResult = await (this.repo as MongoRepository<T>).aggregate(searchQuery).next();
-            res.setHeader('content-length', result ? result.count : 0);
+            options.res.setHeader('content-length', result ? result.count : 0);
         } else {
             const result: number = await this.repo.count(searchQuery);
-            res.setHeader('content-length', result);
+            options.res.setHeader('content-length', result);
         }
 
-        return res.status(200);
+        return options.res.status(200);
     }
 
     /**
-     * Attempts to store the object provided in `req.body` into the datastore. Upon success, sets the newly persisted
-     * object to the `result` property of the `res` argument, otherwise sends a `400 BAD REQUEST` response to the
+     * Attempts to store an object provided in `options.req.body` into the datastore. Upon success, sets the newly persisted
+     * object(s) to the `result` property of the `options.res` argument, otherwise sends a `400 BAD REQUEST` response to the
      * client.
-     * 
-     * @param obj The object to store in the database.
-     * @param user The authenticated user performing the action.
+     *
+     * @param objs The object to store in the database.
+     * @param options The options to process the request using.
      */
-    protected async doCreate(obj: T, user?: any): Promise<T> {
+    protected async doCreateObject(obj: T, options: CreateRequestOptions): Promise<T> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
@@ -190,10 +255,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         // Make sure the provided object has the correct typing
         obj = new this.modelClass(obj);
 
-        obj = await RepoUtils.preprocessBeforeSave(this.repo, obj);
+        obj = await RepoUtils.preprocessBeforeSave(this.repo, obj, this.trackChanges !== 0);
 
         // Are we tracking multiple versions for this object?
-        if (obj instanceof BaseEntity || this.trackChanges != 0) {
+        if (obj instanceof BaseEntity && this.trackChanges === 0) {
             (obj as any).version = 0;
         }
 
@@ -212,56 +277,67 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
-     * `id`.
-     * 
-     * @param id The unique identifier of the object to delete.
-     * @param user The authenticated user performing the action.
+     * Attempts to store a collection of objects provided in `options.req.body` into the datastore. Upon success, sets the newly persisted
+     * object(s) to the `result` property of the `options.res` argument, otherwise sends a `400 BAD REQUEST` response to the
+     * client.
+     *
+     * @param objs The object(s) to store in the database.
+     * @param options The options to process the request using.
      */
-    protected async doDelete(id: string, user?: any): Promise<void> {
-        if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
-        }
+    protected async doBulkCreate(objs: T[], options: CreateRequestOptions): Promise<T[]> {
+        let thrownError: boolean = false;
+        const errors: (Error | null)[] = [];
+        const results: T[] = [];
 
-        // When id === `me` this is a special keyword meaning the authenticated user
-        if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
-            } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
+        for (const obj of objs) {
+            try {
+                results.push(await this.doCreateObject(obj, options));
+                errors.push(null);
+            } catch (err: any) {
+                errors.push(err);
+                thrownError = true;
             }
         }
 
-        const query: any = this.searchIdQuery(id);
-        const objs: T[] | undefined = await this.repo.find(query);
-        const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
+        if (thrownError) {
+            throw new BulkError(errors, "Failed to create one or more objects.");
+        }
 
-        if (uid && objs) {
-            await this.repo.remove(objs);
+        return results;
+    }
 
-            if (this.cacheClient && this.cacheTTL) {
-                // Delete the object from cache
-                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
-                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
-            }
+    /**
+     * Attempts to store one or more objects provided in `options.req.body` into the datastore. Upon success, sets the newly persisted
+     * object(s) to the `result` property of the `options.res` argument, otherwise sends a `400 BAD REQUEST` response to the
+     * client.
+     *
+     * @param objs The object(s) to store in the database.
+     * @param options The options to process the request using.
+     */
+    protected async doCreate(obj: T | T[], options: CreateRequestOptions): Promise<T | T[]> {
+        if (Array.isArray(obj)) {
+            return this.doBulkCreate(obj, options);
+        } else {
+            return this.doCreateObject(obj, options);
         }
     }
 
     /**
      * Attempts to delete an existing data model object with a given unique identifier encoded by the URI parameter
-     * `id` for a specified `version`.
+     * `id`.
+     *
+     * @param id The unique identifier of the object to delete.
+     * @param options The options to process the request using.
      */
-    protected async doDeleteVersion(id: string, version: number, user?: any): Promise<void> {
+    protected async doDelete(id: string, options: DeleteRequestOptions): Promise<void> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
+            if (options.user) {
+                id = options.user.uid;
             } else {
                 const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
@@ -269,12 +345,30 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const query: any = this.searchIdQuery(id, version);
+        const query: any = this.searchIdQuery(id, options.version);
         const objs: T[] | undefined = await this.repo.find(query);
         const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
+        const isRecoverable: boolean = (new this.modelClass()) instanceof RecoverableBaseEntity;
+        const isPurge: boolean = isRecoverable ? (options.purge || false) : true;
 
         if (uid && objs) {
-            await this.repo.remove(objs);
+            // If the object(s) are being permenantly removed from the database do so and then clear the accompanying
+            // ACL(s). If the class type is recoverable and purge isn't desired, simply mark the object(s) as deleted.
+            if (isPurge) {
+                await this.repo.remove(objs);
+            } else {
+                if (this.repo instanceof MongoRepository) {
+                    await this.repo.updateMany(query, {
+                        $set: {
+                            deleted: true
+                        }
+                    });
+                } else {
+                    await this.repo.update(query, {
+                        deleted: true
+                    } as any);
+                }
+            }
 
             if (this.cacheClient && this.cacheTTL) {
                 // Delete the object from cache
@@ -286,16 +380,22 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to determine if an existing object with the given unique identifier exists.
+     * 
+     * @param id The unique identifier of the object to verify exists.
+     * @param options The options to process the request using.
      */
-    protected async doExists(id: string, res: XResponse, user?: any): Promise<any> {
+    protected async doExists(id: string, options: FindRequestOptions): Promise<any> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
+        }
+        if (!options.res) {
+            throw new Error("Response must be provided.");
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
+            if (options.user) {
+                id = options.user.uid;
             } else {
                 const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
@@ -303,12 +403,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const query: any = this.searchIdQuery(id);
+        const query: any = this.searchIdQuery(id, options.query.version);
         const result: number = await this.repo.count(query);
         if (result > 0) {
-            return res.status(200).setHeader('content-length', result);
+            return options.res.status(200).setHeader('content-length', result);
         } else {
-            return res.status(404);
+            return options.res.status(404);
         }
     }
 
@@ -316,17 +416,19 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
      * `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
      * never null.
+     * 
+     * @param options The options to process the request using.
      */
-    protected async doFindAll(params: any, query: any, user?: any): Promise<T[]> {
+    protected async doFindAll(options: FindRequestOptions): Promise<T[]> {
         let results: T[] = [];
 
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
-        const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
-        const page: number = query.page ? Number(query.page) : 0;
+        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
+        const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
+        const page: number = options.query.page ? Number(options.query.page) : 0;
 
         // When we hash the seach query we need to ensure we're including the pagination information to preserve
         // like queries and results.
@@ -346,7 +448,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                     const uids: string[] = JSON.parse(json);
                     for (const uid of uids) {
                         // Retrieve the object from the cache or from database if not available
-                        const obj: T | undefined = await this.getObj(uid);
+                        const obj: T | null = await this.getObj(uid, options.query.version, options.query.productUid);
                         if (obj) {
                             results.push(obj);
                         }
@@ -388,16 +490,18 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
+     * 
+     * @param options The options to process the request using.
      */
-    protected async doFindById(id: string, user?: any): Promise<T | undefined> {
+    protected async doFindById(id: string, options: FindRequestOptions): Promise<T | null> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
+            if (options.user) {
+                id = options.user.uid;
             } else {
                 const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
@@ -405,36 +509,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const result: T | undefined = await this.getObj(id);
-        if (!result) {
-            const error: any = new Error("No object with that id could be found.");
-            error.status = 404;
-            throw error;
-        }
-
-        return result;
-    }
-
-    /**
-     * Attempts to retrieve a single data model object as identified by the `id` and `version` parameters in the URI.
-     */
-    protected async doFindByIdAndVersion(id: string, version: number, user?: any): Promise<T | undefined> {
-        if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
-        }
-
-        // When id === `me` this is a special keyword meaning the authenticated user
-        if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
-            } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
-            }
-        }
-
-        const result: T | undefined = await this.getObj(id, version);
+        const result: T | null = await this.getObj(id, options.query.version, options.query.productUid);
         if (!result) {
             const error: any = new Error("No object with that id could be found.");
             error.status = 404;
@@ -448,21 +523,19 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Attempts to remove all entries of the data model type from the datastore matching the given
      * parameters and query.
      *
-     * @param params The parameters to match.
-     * @param query The query parameters to match.
-     * @param user The authenticated user performing the action, otherwise undefined.
+     * @param options The options to process the request using.
      */
-    protected async doTruncate(params?: any, query?: any, user?: any): Promise<void> {
+    protected async doTruncate(options: TruncateRequestOptions): Promise<void> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         try {
-            const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, params, query, true, user);
+            const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
             let objs: T[] | undefined = undefined;
             if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                const limit: number = query.limit ? Math.min(query.limit, 1000) : 100;
-                const page: number = query.page ? query.page : 0;
+                const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
+                const page: number = options.query.page ? options.query.page : 0;
                 const skip: number = page * limit;
                 objs = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
             }
@@ -484,21 +557,48 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
+     * Attempts to modify a collection of existing data model objects.
+     *
+     * @param recordEvent Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`.
+     * @param options The options to process the request using.
+     */
+    protected async doBulkUpdate(objs: T[], options: UpdateRequestOptions): Promise<T[]> {
+        let thrownError: boolean = false;
+        const errors: (Error | null)[] = [];
+        const result: T[] = [];
+
+        for (const obj of objs) {
+            try {
+                result.push(await this.doUpdate(obj.uid, obj, options));
+                errors.push(null);
+            } catch (err: any) {
+                errors.push(err);
+                thrownError = true;
+            }
+        }
+
+        if (thrownError) {
+            throw new BulkError(errors, "Failed to update one or more objects.");
+        }
+
+        return result;
+    }
+
+    /**
      * Attempts to modify an existing data model object as identified by the `id` parameter in the URI.
      *
-     * @param req The HTTP request that contains a body and `params.id` parameter with the unique identifier to modify.
-     * @param res The HTTP response whose `result` property will be set to the newly updated object upon success.
-     * @param next The next function to execute after this one.
+     * @param recordEvent Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`.
+     * @param options The options to process the request using.
      */
-    protected async doUpdate(id: string, obj: T, user?: any): Promise<T> {
+    protected async doUpdate(id: string, obj: T, options: UpdateRequestOptions): Promise<T> {
         if (!this.repo) {
             throw new Error("Repository not set or could not be found.");
         }
-        
+
         // When id === `me` this is a special keyword meaning the authenticated user
         if (id.toLowerCase() === "me") {
-            if (user) {
-                id = user.uid;
+            if (options.user) {
+                id = options.user.uid;
             } else {
                 const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
@@ -506,8 +606,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        let query: any = this.searchIdQuery(obj.uid);
-        obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj);
+        let query: any = this.searchIdQuery(id, options.version || (obj as any).version, options.productUid || (obj as any).productUid);
+        const existing: T | null = await this.repo.findOne(query);
+        obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj, existing);
 
         const keepPrevious: boolean = this.trackChanges != 0;
         const testObj: T = new this.modelClass();
@@ -588,7 +689,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
-        const result: T | undefined = await this.repo.findOne(query);
+        const result: T | null = await this.repo.findOne(query);
         if (result) {
             obj = new this.modelClass(result);
         }
@@ -604,5 +705,31 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         return obj;
+    }
+
+    /**
+     * Attempts to modify a single property of an existing data model object as identified by the `id` parameter in the URI.
+     *
+     * Note that this effectively bypasses optimistic locking and can cause unexpected data overwrites. Use with care.
+     * 
+     * @param id The unique identifier of the object to update.
+     * @param propertyName The name of the property to update.
+     * @param value The value of the property to set.
+     * @param options The options to process the request using.
+     */
+    protected async doUpdateProperty(id: string, propertyName: string, value: any, options: UpdateRequestOptions): Promise<T> {
+        const existing: any = await this.getObj(id);
+        if (!existing) {
+            const error: any = new Error("No object with that id could be found.");
+            error.status = 404;
+            throw error;
+        }
+
+        return this.doUpdate(id, {
+            uid: existing.uid,
+            productUid: options.productUid || existing.productUid,
+            version: options.version || existing.version,
+            [propertyName]: value
+        } as any, options);
     }
 }

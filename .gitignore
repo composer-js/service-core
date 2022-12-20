@@ -12,5 +12,5 @@ dist/
 docs/_build
 node_modules/
 temp/
-tmp/
+tmp*
 axr-test

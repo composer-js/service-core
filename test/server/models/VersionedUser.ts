@@ -1,11 +1,16 @@
-import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
-import { Entity, Column } from "typeorm";
-import { Model, TrackChanges } from "../../../src/decorators/ModelDecorators";
+import { Entity, Column, Index } from "typeorm";
+import { Identifier, Model, TrackChanges } from "../../../src/decorators/ModelDecorators";
+import { RecoverableBaseMongoEntity } from "../../../src/models";
 
 @Model("mongodb")
 @Entity()
 @TrackChanges()
-export default class VersionedUser extends BaseMongoEntity {
+export default class VersionedUser extends RecoverableBaseMongoEntity {
+    @Identifier
+    @Index()
+    @Column()
+    public name: string = "";
+
     @Column()
     public firstName: string = "";
 
@@ -19,9 +24,10 @@ export default class VersionedUser extends BaseMongoEntity {
         super(other);
 
         if (other) {
-            this.firstName = other.firstName ? other.firstName : this.firstName;
-            this.lastName = other.lastName ? other.lastName : this.lastName;
-            this.age = other.age ? other.age : this.age;
+            this.name = 'name' in other ? other.name : this.name;
+            this.firstName = 'firstName' in other ? other.firstName : this.firstName;
+            this.lastName = 'lastName' in other ? other.lastName : this.lastName;
+            this.age = 'age' in other ? other.age : this.age;
         }
     }
 }

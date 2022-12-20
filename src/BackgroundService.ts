@@ -19,6 +19,12 @@ export abstract class BackgroundService {
     }
 
     /**
+     * Returns the desired execution interval that this service should be scheduled with. If `undefined` is returned
+     * the service is executed only once.
+     */
+    public abstract get schedule(): string | undefined;
+
+    /**
      * The processing function to execute at each scheduled interval.
      */
     public abstract run(): Promise<void> | void;

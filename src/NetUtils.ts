@@ -6,13 +6,13 @@ import { Request as XRequest } from "express";
 
 /**
  * Provides common utilities and functions for working with networking related problems.
- * 
+ *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class NetUtils {
     /**
      * Extracts the IP address from a given url or HTTP request.
-     * 
+     *
      * @param req The url or HTTP request to extract the IP from.
      * @returns A `string` containing the IP address if found, otherwise `undefined`.
      */
@@ -50,7 +50,7 @@ export class NetUtils {
                 }
             }
         }
-        else if(urlOrRequest) {
+        else if (urlOrRequest) {
             const req: XRequest = urlOrRequest as XRequest;
 
             if (req.headers["x-original-forwarded-for"]) {

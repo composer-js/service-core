@@ -4,10 +4,10 @@
 import {
     Route,
     Get,
-    Head,
     Post,
     Validate,
     Delete,
+    Head,
     Put,
     Param,
     User,
@@ -16,13 +16,15 @@ import {
     Before,
     Model,
     MongoRepository,
-    Response
+    Request,
+    Response,
+    After
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
-import { Response as XResponse } from "express";
+import { Request as XRequest, Response as XResponse } from "express";
 
 const logger = Logger();
 
@@ -46,49 +48,73 @@ class UserRoute extends ModelRoute<UserModel> {
         }
     }
 
-    private validate(obj: UserModel): void {
+    private validate(obj: UserModel | UserModel[]): void {
         if (!obj) {
             throw new Error("Did not receive object to validate");
         }
     }
 
+    private cleanPII(obj: UserModel, @User user?: any): UserModel {
+        if (!user) {
+            obj.firstName = "";
+            obj.lastName = "";
+        }
+        return obj;
+    }
+
     @Head()
-    protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
-        return await super.doCount(params, query, res, user);
+    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+        return super.doCount({ params, query, res, user });
     }
 
     @Post()
     @Validate("validate")
-    protected async create(obj: UserModel, @User user?: any): Promise<UserModel> {
-        const newObj: UserModel = new UserModel(obj);
-        return await super.doCreate(newObj, user);
+    protected create(objs: UserModel | UserModel[], @Request req: XRequest, @User user?: any): Promise<UserModel | UserModel[]> {
+        return super.doCreate(objs, { req, user });
+    }
+
+    @Put()
+    @Validate("validate")
+    protected updateBulk(objs: UserModel[], @User user?: any): Promise<UserModel[]> {
+        return super.doBulkUpdate(objs, { user });
     }
 
     @Delete(":id")
     protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
-        await super.doDelete(id, user);
+        await super.doDelete(id, { user });
+    }
+
+    @Head(":id")
+    protected exists(@Param("id") id: string, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+        return super.doExists(id, { query, res, user });
     }
 
     @Get()
-    protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
-        return await super.doFindAll(params, query, user);
+    protected findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
+        return super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
-    protected async findById(@Param("id") id: string, @User user?: any): Promise<UserModel | void> {
-        return await super.doFindById(id, user);
+    @After("cleanPII")
+    protected findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<UserModel | null> {
+        return super.doFindById(id, { query, user });
     }
 
     @Delete()
-    protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
-        await super.doTruncate(params, query, user);
+    protected truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
+        return super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
     @Before("validate")
-    protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
-        const newObj: UserModel = new UserModel(obj);
-        return await super.doUpdate(id, newObj, user);
+    protected update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
+        return super.doUpdate(id, obj, { user });
+    }
+
+    @Put(":id/:property")
+    @Before("validate")
+    protected updateProperty(@Param("id") id: string, @Param("property") propertyName: string, obj: any, @User user?: any): Promise<UserModel> {
+        return super.doUpdateProperty(id, propertyName, obj, { user });
     }
 }
 

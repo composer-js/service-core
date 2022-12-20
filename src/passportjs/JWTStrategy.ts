@@ -73,8 +73,8 @@ export class JWTStrategy extends Strategy {
             const headers: string[] = Array.isArray(value)
                 ? (value as string[])
                 : typeof value === "string"
-                ? [value as string]
-                : [];
+                    ? [value as string]
+                    : [];
 
             // Loop throught th
             for (const header in headers) {

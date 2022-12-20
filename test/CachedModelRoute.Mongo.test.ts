@@ -4,13 +4,15 @@
 import { default as config } from "./config";
 import * as crypto from "crypto";
 import * as request from "supertest";
-import { Server, ConnectionManager, ModelUtils } from "../src";
+import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src/service_core";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import User from "./server/models/CacheUser";
-import { MongoRepository, Connection } from "typeorm";
-import CacheUser from "./server/models/CacheUser";
-import { start } from "repl";
+import User from "./models/CacheUser";
+import { MongoRepository, DataSource } from "typeorm";
+import CacheUser from "./models/CacheUser";
+import { JWTUtils, Logger } from "@composer-js/core";
+import * as rimraf from "rimraf";
 const Redis = require("ioredis-mock");
+const uuid = require("uuid");
 
 const baseCacheKey: string = "db.cache.CacheUser";
 const mongod: MongoMemoryServer = new MongoMemoryServer({
@@ -18,11 +20,9 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
         port: 9999,
         dbName: "axr-test",
     },
-    autoStart: false,
 });
 const redis: any = new Redis();
 let repo: MongoRepository<User>;
-const server: Server = new Server(config, undefined, "./test/server");
 
 const createUser = async (firstName: string, lastName: string, age: number = 100): Promise<User> => {
     const user: User = new User({
@@ -48,7 +48,7 @@ const createUsers = async (num: number): Promise<User[]> => {
  * Hashes the given query object to a unique string.
  * @param query The query object to hash.
  */
-const getCacheKey = function(query: any): string {
+const getCacheKey = function (query: any): string {
     return (
         baseCacheKey +
         "." +
@@ -62,19 +62,25 @@ const getCacheKey = function(query: any): string {
 jest.setTimeout(120000);
 
 describe("ModelRoute Tests [MongoDB with Caching]", () => {
+    const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
+    const server: Server = new Server(config, undefined, "./test", Logger(), objectFactory);
+
     beforeAll(async () => {
-        ConnectionManager.connections.set("cache", redis);
+        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");
+        connMgr.connections.set("cache", redis);
         await mongod.start();
         await server.start();
-        const conn: any = ConnectionManager.connections.get("mongodb");
-        if (conn instanceof Connection) {
-            repo = conn.getMongoRepository(User);
+        const conn: any = connMgr.connections.get("mongodb");
+        if (conn instanceof DataSource) {
+            repo = conn.getMongoRepository(User.name);
         }
     });
 
     afterAll(async () => {
         await server.stop();
         await mongod.stop();
+        await objectFactory.destroy();
+        rimraf.sync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -105,7 +111,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toEqual(user.lastName);
             expect(result.body.age).toEqual(user.age);
 
-            const stored: User | undefined = await repo.findOne({ uid: result.body.uid } as any);
+            const stored: User | null = await repo.findOne({ uid: result.body.uid } as any);
             expect(stored).toBeDefined();
             if (stored) {
                 expect(stored.uid).toEqual(user.uid);
@@ -114,7 +120,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 expect(stored.lastName).toEqual(user.lastName);
                 expect(stored.age).toEqual(user.age);
 
-                const query: any = ModelUtils.buildIdSearchQuery(repo, CacheUser, result.body.uid);
+                const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, result.body.uid);
                 const cacheKey: string = getCacheKey(query);
                 const json: string = await redis.get(cacheKey);
                 expect(json).toBeDefined();
@@ -132,8 +138,8 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const result = await request(server.getApplication()).delete("/cachedusers/" + user.uid);
             expect(result.status).toBe(204);
 
-            const existing: User | undefined = await repo.findOne({ uid: user.uid } as any);
-            expect(existing).toBeUndefined();
+            const existing: User | null = await repo.findOne({ uid: user.uid } as any);
+            expect(existing).toBeNull();
 
             const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, user.uid);
             const cacheKey: string = getCacheKey(query);
@@ -142,6 +148,28 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         });
 
         it("Can find cached document by id.", async () => {
+            const user: User = await createUser("David", "Tennant", 47);
+            const result = await request(server.getApplication())
+                .get("/cachedusers/" + user.uid)
+                .send();
+            expect(result).toHaveProperty("body");
+            expect(result.body.uid).toEqual(user.uid);
+            expect(result.body.version).toEqual(user.version);
+            expect(result.body.firstName).toEqual(user.firstName);
+            expect(result.body.lastName).toEqual(user.lastName);
+            expect(result.body.age).toEqual(user.age);
+
+            const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, result.body.uid);
+            const cacheKey: string = getCacheKey(query);
+            const json: string = await redis.get(cacheKey);
+            expect(json).toBeDefined();
+            const cachedObj: any = JSON.parse(json);
+            expect(cachedObj).toBeDefined();
+            expect(cachedObj).toEqual(result.body);
+        });
+
+        // The following test catches potential lookup errors from previously cached records
+        it("Can find cached document by id (again).", async () => {
             const user: User = await createUser("David", "Tennant", 47);
             const result = await request(server.getApplication())
                 .get("/cachedusers/" + user.uid)
@@ -178,7 +206,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toBe(user.lastName);
             expect(result.body.age).toBe(user.age);
 
-            const existing: User | undefined = await repo.findOne({ uid: user.uid } as any);
+            const existing: User | null = await repo.findOne({ uid: user.uid } as any);
             expect(existing).toBeDefined();
             if (existing) {
                 expect(existing.uid).toBe(result.body.uid);

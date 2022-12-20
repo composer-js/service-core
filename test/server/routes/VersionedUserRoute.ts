@@ -4,18 +4,18 @@
 import {
     Route,
     Get,
-    Head,
     Post,
     Validate,
     Delete,
+    Head,
     Put,
     Param,
     User,
     Query,
+    Response,
     Init,
     Model,
-    MongoRepository,
-    Response
+    MongoRepository
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
@@ -44,7 +44,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
             logger.info("Calling init counting users " + (await this.repo.count()));
         }
     }
-    
+
     private validate(obj: UserModel): void {
         if (!obj) {
             throw new Error("Did not receive object to validate");
@@ -53,49 +53,39 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
 
     @Head()
     protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
-        return await super.doCount(params, query, res, user);
+        return await super.doCount({ params, query, res, user });
     }
 
     @Post()
     @Validate("validate")
-    protected async create(obj: UserModel, @User user?: any): Promise<UserModel> {
-        return await super.doCreate(obj, user);
+    protected async create(obj: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
+        return await super.doCreate(obj, { user });
     }
 
     @Delete(":id")
-    protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
-        await super.doDelete(id, user);
-    }
-
-    @Delete(":id/version/:version")
-    protected async deleteVersion(@Param("id") id: string, @Param("version") version: string, @User user?: any): Promise<void> {
-        await super.doDeleteVersion(id, parseInt(version), user);
+    protected async delete(@Param("id") id: string, @Query("version") version?: string, @Query("purge") purge: string = "false", @User user?: any): Promise<void> {
+        await super.doDelete(id, { purge: purge === "true" ? true : false, version, user });
     }
 
     @Get()
     protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
-        return await super.doFindAll(params, query, user);
+        return await super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
-    protected async findById(@Param("id") id: string, @User user?: any): Promise<UserModel | void> {
-        return await super.doFindById(id, user);
-    }
-
-    @Get(":id/version/:version")
-    protected async findByIdAndVersion(@Param("id") id: string, @Param("version") version: string, @User user?: any): Promise<UserModel | void> {
-        return await super.doFindByIdAndVersion(id, parseInt(version), user);
+    protected async findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<UserModel | null> {
+        return await super.doFindById(id, { query, user });
     }
 
     @Delete()
     protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
-        await super.doTruncate(params, query, user);
+        await super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
     @Validate("validate")
     protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
-        return await super.doUpdate(id, obj, user);
+        return await super.doUpdate(id, obj, { user });
     }
 }
 

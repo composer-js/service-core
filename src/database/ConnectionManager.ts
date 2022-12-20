@@ -1,11 +1,9 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Logger } from "@composer-js/core";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import * as typeorm from "typeorm";
-
-const logger = Logger();
+import { Destroy, Logger } from "../decorators/ObjectDecorators";
 
 /**
  * Provides database connection management.
@@ -13,12 +11,14 @@ const logger = Logger();
  * @author Jean-Philippe Steinmetz
  */
 export class ConnectionManager {
-    public static connections: Map<string, typeorm.Connection | Redis.Redis> = new Map();
+    public connections: Map<string, typeorm.DataSource | Redis> = new Map();
+    @Logger
+    private logger: any;
 
     /**
      * Builds a compatible connection URI for the database by the provided configuration.
      */
-    private static buildConnectionUri(config: any): string {
+    private buildConnectionUri(config: any): string {
         // If a url is provided use that verbatim. We assume it's correct.
         if (config.url) {
             return config.url;
@@ -36,7 +36,7 @@ export class ConnectionManager {
      * @param datastore A map of configured datastores to be passed to the underlying engine.
      * @param models A map of model names and associated class definitions to establish database connections for.
      */
-    public static async connect(datastores: any, models: Map<string, any>): Promise<void> {
+    public async connect(datastores: any, models: Map<string, any>): Promise<void> {
         const processedModels: Map<string, string> = new Map();
         // Go through each datastore in the configuration and attempt to make a connection
         for (const name in datastores) {
@@ -44,7 +44,7 @@ export class ConnectionManager {
 
             // It's possible that the connection was already configured during a previous run. In that case we will
             // attempt to reconnect instead of creating a new connection.
-            let connection: typeorm.Connection | Redis.Redis | undefined = this.connections.get(name);
+            let connection: typeorm.DataSource | Redis | undefined = this.connections.get(name);
             try {
                 if (!connection) {
                     connection = typeorm.getConnection(name);
@@ -54,15 +54,15 @@ export class ConnectionManager {
             }
 
             if (connection) {
-                if (connection instanceof typeorm.Connection && !connection.isConnected) {
-                    logger.info(`Reconnecting to database ${name}...`);
+                if (connection instanceof typeorm.DataSource && !connection.isConnected) {
+                    this.logger.info(`Reconnecting to database ${name}...`);
                     await connection.connect();
                 }
             } else {
                 datastore.name = name;
-                const url: string = ConnectionManager.buildConnectionUri(datastore);
+                const url: string = this.buildConnectionUri(datastore);
 
-                logger.info(`Connecting to database ${name} [${url.replace(datastore.username, "****").replace(datastore.password, "****")}]...`);
+                this.logger.info(`Connecting to database ${name} [${url.replace(datastore.username, "****").replace(datastore.password, "****")}]...`);
 
                 if (datastore.type === "redis") {
                     connection = await new Redis(url);
@@ -72,7 +72,7 @@ export class ConnectionManager {
                     for (const className of models.keys()) {
                         // Get the class type
                         const clazz = models.get(className);
-                        const ds: string = Reflect.getMetadata("cjs:datastore", clazz);
+                        const ds: string = Reflect.getMetadata("axr:datastore", clazz);
                         // Search for the associated datastore with the model via either config or @Model decorator
                         if (ds === name || (datastore.entities && datastore.entities.includes(className))) {
                             const processedDatastore = processedModels.get(clazz.name);
@@ -101,24 +101,25 @@ export class ConnectionManager {
             this.connections.set(name, connection);
         }
 
-        logger.info(`Successfully connected to all configured databases.`);
+        this.logger.info(`Successfully connected to all configured databases.`);
     }
 
     /**
      * Attempts to disconnect all active database connections.
      */
-    public static async disconnect(): Promise<void> {
+    @Destroy
+    public async disconnect(): Promise<void> {
         for (const conn of this.connections.values()) {
             if (conn) {
-                if (conn instanceof typeorm.Connection && conn.isConnected) {
+                if (conn instanceof typeorm.DataSource && conn.isConnected) {
                     await conn.close();
-                } else if (conn instanceof Redis && conn.status === "connected") {
+                } else if (conn instanceof Redis && conn.status === "ready") {
                     conn.disconnect();
                 }
             }
         }
 
         this.connections.clear();
-        logger.info(`Successfully disconnected from all configured databases.`);
+        this.logger.info(`Successfully disconnected from all configured databases.`);
     }
 }

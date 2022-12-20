@@ -9,8 +9,8 @@ import "reflect-metadata";
  * @param name The time, in seconds, that an object will be cached before being invalidated.
  */
 export function Cache(ttl: number = 30) {
-    return function(target: any) {
-        Reflect.defineMetadata("cjs:cacheTTL", ttl, target);
+    return function (target: any) {
+        Reflect.defineMetadata("axr:cacheTTL", ttl, target);
         Object.defineProperty(target, "cacheTTL", {
             enumerable: true,
             writable: true,
@@ -23,7 +23,7 @@ export function Cache(ttl: number = 30) {
  * Apply this to a property that is considered a unique identifier.
  */
 export function Identifier(target: any, propertyKey: string | symbol) {
-    Reflect.defineMetadata("cjs:isIdentifier", true, target, propertyKey);
+    Reflect.defineMetadata("axr:isIdentifier", true, target, propertyKey);
     const key = `__${String(propertyKey)}`;
     Object.defineProperty(target, propertyKey, {
         enumerable: true,
@@ -38,8 +38,8 @@ export function Identifier(target: any, propertyKey: string | symbol) {
  * @param datastore The name of the datastore to store records of the decorated class.
  */
 export function Model(datastore: string) {
-    return function(target: any) {
-        Reflect.defineMetadata("cjs:datastore", datastore, target);
+    return function (target: any) {
+        Reflect.defineMetadata("axr:datastore", datastore, target);
         Object.defineProperty(target, "datastore", {
             enumerable: true,
             writable: true,
@@ -55,8 +55,8 @@ export function Model(datastore: string) {
  * versions. Default value is `-1`.
  */
 export function TrackChanges(versions: number = -1) {
-    return function(target: any) {
-        Reflect.defineMetadata("cjs:trackChanges", versions, target);
+    return function (target: any) {
+        Reflect.defineMetadata("axr:trackChanges", versions, target);
         Object.defineProperty(target, "trackChanges", {
             enumerable: true,
             writable: true,

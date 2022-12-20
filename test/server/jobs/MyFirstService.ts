@@ -2,9 +2,7 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { BackgroundService } from "../../../src/BackgroundService";
-import { Job } from "../../../src/decorators/JobDecorators";
 
-@Job("* * * * * *")
 export default class MyFirstService extends BackgroundService {
     public counter: number;
     public started: boolean;
@@ -18,7 +16,11 @@ export default class MyFirstService extends BackgroundService {
         this.stopped = true;
     }
 
-    public run(): void {
+    public get schedule(): string | undefined {
+        return "* * * * * *";
+    }
+
+    public async run(): Promise<void> {
         this.counter++;
     }
 

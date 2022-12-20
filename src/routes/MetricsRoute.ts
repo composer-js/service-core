@@ -30,7 +30,7 @@ export class MetricsRoute {
 
     @Get("/:metric")
     @ContentType(prom.register.contentType)
-    private async getSingleMetric(@Param("metric") metric: any): Promise<string> {
+    private getSingleMetric(@Param("metric") metric: any): Promise<string> {
         return this.registry.getSingleMetricAsString(metric);
     }
 }

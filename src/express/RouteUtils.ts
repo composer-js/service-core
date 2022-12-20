@@ -7,6 +7,7 @@ import { ServerResponse } from "http";
 import { Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 const passport = require("passport");
+const _ = require("lodash");
 
 /**
  * Provides a set of utilities for converting Route classes to ExpressJS middleware.
@@ -16,6 +17,26 @@ const passport = require("passport");
 export class RouteUtils {
     @Logger
     private logger?: any;
+
+    /**
+     * Creates an Express middleware function that verifies the incoming request is from a valid user with at least
+     * one of the specified roles.
+     *
+     * @param requiredRoles The list of roles that the authenticated user must have.
+     */
+    public checkRequiredRoles(requiredRoles: string[]): RequestHandler {
+        return (req: Request, res: Response, next: NextFunction) => {
+            let foundRole: boolean = UserUtils.hasRoles(req.user, requiredRoles);
+
+            if (foundRole) {
+                return next();
+            } else {
+                const err: any = new Error("You do not have permission to perform this action.");
+                err.status = 403;
+                return next(err);
+            }
+        };
+    }
 
     /**
      * Converts the given array of string or Function objects to functions bound to the given route object.
@@ -52,7 +73,7 @@ export class RouteUtils {
         let results: Map<string, any> = new Map();
 
         for (let member in route) {
-            let metadata: any = Reflect.getMetadata("cjs:route", route, member);
+            let metadata: any = Reflect.getMetadata("axr:route", route, member);
             if (metadata) {
                 results.set(member, route[member]);
             }
@@ -60,7 +81,7 @@ export class RouteUtils {
         let proto = Object.getPrototypeOf(route);
         while (proto) {
             for (let member of Object.getOwnPropertyNames(proto)) {
-                let metadata: any = Reflect.getMetadata("cjs:route", proto, member);
+                let metadata: any = Reflect.getMetadata("axr:route", proto, member);
                 if (metadata) {
                     results.set(member, route[member]);
                 }
@@ -78,7 +99,7 @@ export class RouteUtils {
      * @param route The route object to register with Express.
      */
     public async registerRoute(app: any, route: any): Promise<void> {
-        let routePaths: string[] = Reflect.getMetadata("cjs:routePaths", route);
+        let routePaths: string[] = Reflect.getMetadata("axr:routePaths", route);
         if (!routePaths) {
             throw new Error("Route must specify a path: " + JSON.stringify(route));
         }
@@ -92,7 +113,7 @@ export class RouteUtils {
             let key: string = entry[0];
             let value: any = entry[1] as any;
 
-            let metadata: any = Reflect.getMetadata("cjs:route", route, key);
+            let metadata: any = Reflect.getMetadata("axr:route", route, key);
             if (value && metadata) {
                 const { after, authRequired, before, methods, requiredRoles, validator } = metadata;
                 let { authStrategies } = metadata;
@@ -106,11 +127,16 @@ export class RouteUtils {
                 // Prepare the list of middleware to apply for the given endpoint.
                 // The order of operations for middleware is:
                 // 1. Auth Strategies
+                // 2. Required Roles
+                // 3. Required Permissions (Path Matching)
                 // 4. Validator Function
                 // 5. Before Functions
                 // 6. Decorated Function
                 // 7. After Functions
                 let middleware: Array<RequestHandler> = new Array();
+                if (requiredRoles) {
+                    middleware.push(this.checkRequiredRoles(requiredRoles));
+                }
                 if (validator) {
                     middleware = middleware.concat(this.getFuncArray(route, [validator]));
                 }
@@ -169,9 +195,15 @@ export class RouteUtils {
     public wrapMiddleware(obj: any, func: Function, send: boolean = false): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
             try {
-                const argMetadata: any = Reflect.getMetadata("cjs:args", Object.getPrototypeOf(obj), func.name);
-                const routeMetadata: any = Reflect.getMetadata("cjs:route", Object.getPrototypeOf(obj), func.name);
+                const argMetadata: any = Reflect.getMetadata("axr:args", Object.getPrototypeOf(obj), func.name);
+                const routeMetadata: any = Reflect.getMetadata("axr:route", Object.getPrototypeOf(obj), func.name);
                 const args: any[] = [];
+
+                const routeType = [...routeMetadata?.methods?.keys() || []][0];
+
+                // this.logger.debug(`Arg metadata: ${JSON.stringify(argMetadata)}`);
+                // this.logger.debug(`Route metadata: ${JSON.stringify(routeMetadata)}`);
+                // this.logger.debug(`Route type: ${JSON.stringify(routeType)}`);
 
                 // This is a hack that lets us stub out function arguments because we no longer can access
                 // them directly with func.arguments. Unfortunately this means we can't get default values
@@ -201,6 +233,14 @@ export class RouteUtils {
                                 args[i] = req.query[argMetadata[i][1]];
                             } else {
                                 args[i] = req.query;
+                            }
+
+                            const isGetRoute = routeType === 'get';
+                            const isHeadRoute = routeType === 'head';
+                            // Raw buffer encoded query
+                            if ((isGetRoute || isHeadRoute) && _.has(args[i], 'q')) {
+                                const bufferJsonString = Buffer.from(args[i]['q'], "base64").toString('ascii');
+                                args[i] = JSON.parse(bufferJsonString);
                             }
                         } else if (argMetadata[i][0] === "request") {
                             args[i] = req;
