@@ -334,9 +334,9 @@ export class Server {
 
                 // Register all found classes with the object factory
                 if (classLoader.getClasses()) {
-                    classLoader.getClasses().forEach((clazz: any, name: string) => {
+                    for (const [name, clazz] of classLoader.getClasses().entries()) {
                         this.objectFactory.register(clazz, name);
-                    });
+                    }
                 }
 
                 // Load all models
@@ -344,11 +344,11 @@ export class Server {
                 this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
                 const datastores: any = this.config.get("datastores");
                 const models: Map<string, any> = new Map();
-                classLoader.getClasses()?.forEach((clazz: any, name: string) => {
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
                     if (name.startsWith("models.")) {
                         models.set(name, clazz);
                     }
-                });
+                }
 
                 // Initiate all database connections
                 this.logger.info("Initializing database connection(s)...");
@@ -376,21 +376,21 @@ export class Server {
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
                 // Register all custom defined routes
-                await classLoader.getClasses().forEach(async (clazz: any, name: string) => {
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
                     if (name.startsWith("routes.")) {
                         const route: any = await this.instantiateRoute(clazz);
                         this.routeUtils?.registerRoute(this.app, route);
                     }
-                });
+                }
 
                 // Initialize the background service manager
                 this.logger.info("Starting background services...");
                 const bgServices: Map<string, any> = new Map();
-                classLoader.getClasses().forEach((clazz: any, name: string) => {
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
                     if (name.startsWith("jobs.")) {
                         bgServices.set(name, clazz);
                     }
-                });
+                }
                 this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, bgServices, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
