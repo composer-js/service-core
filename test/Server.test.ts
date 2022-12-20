@@ -10,7 +10,6 @@ import * as path from "path";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
-import { LicenseManager } from "@acceleratxr/licensing";
 import * as rimraf from "rimraf";
 
 import * as yamljs from "js-yaml";
