@@ -18,6 +18,7 @@
         "prebuild": "rimraf dist",
         "build": "tsc",
         "docs": "typedoc --plugin typedoc-plugin-markdown --out docs/reference --target esnext --mode file src",
+        "pretest": "node pretest.js",
         "test": "node_modules/.bin/jest -i --detectOpenHandles",
         "test:watch": "node_modules/.bin/jest --detectOpenHandles --watch",
         "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
