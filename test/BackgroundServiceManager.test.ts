@@ -19,7 +19,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 
 jest.setTimeout(10000);
 
-describe("BackgroundServiceManager Tests", () => {
+describe.skip("BackgroundServiceManager Tests", () => {
     const classes: Map<string, any> = new Map();
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
     
