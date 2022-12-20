@@ -25,7 +25,7 @@ describe.skip("BackgroundServiceManager Tests", () => {
     
     beforeAll(async () => {
         await mongod.start();
-        const classLoader: ClassLoader = new ClassLoader("./test");
+        const classLoader: ClassLoader = new ClassLoader("./test/server");
         await classLoader.load();
         classLoader.getClasses().forEach((clazz: any, name: string) => {
             if (name.startsWith("jobs.")) {

@@ -63,7 +63,7 @@ jest.setTimeout(120000);
 
 describe("ModelRoute Tests [MongoDB with Caching]", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    const server: Server = new Server(config, undefined, "./test", Logger(), objectFactory);
+    const server: Server = new Server(config, undefined, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
         const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");

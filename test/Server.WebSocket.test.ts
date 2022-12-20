@@ -29,7 +29,7 @@ describe("Server Tests", () => {
     const apiSpec: any = yamljs.load(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
     expect(apiSpec).toBeDefined();
 
-    const server: Server = new Server(config, apiSpec, "./test");
+    const server: Server = new Server(config, apiSpec, "./test/server");
 
     beforeAll(async () => {
         await mongod.start();

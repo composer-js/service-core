@@ -43,7 +43,7 @@ const createUsers = async (num: number, lastName: string = "Doctor", productUid?
 jest.setTimeout(60000);
 describe("ModelRoute Tests [MongoDB]", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    const server: Server = new Server(config, undefined, "./test", Logger(), objectFactory);
+    const server: Server = new Server(config, undefined, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
         await mongod.start();

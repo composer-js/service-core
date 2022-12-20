@@ -44,7 +44,7 @@ const createItems = async (num: number): Promise<Item[]> => {
 jest.setTimeout(120000);
 describe("ModelRoute Tests [SQL]", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    const server: Server = new Server(config, undefined, "./test", Logger(), objectFactory);
+    const server: Server = new Server(config, undefined, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
         await mongod.start();
