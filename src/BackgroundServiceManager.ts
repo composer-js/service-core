@@ -63,8 +63,8 @@ export class BackgroundServiceManager {
     public async startAll(): Promise<void> {
         // Go through all loaded background job classes and start each one
         if (this.classLoader) {
-            for (const clazz of this.classLoader.getClasses().values()) {
-                await this.start(clazz.name, clazz);
+            for (const [name, clazz] of this.classLoader.getClasses().entries()) {
+                await this.start(name, clazz);
             }
         }
     }
