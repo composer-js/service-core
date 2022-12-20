@@ -23,7 +23,7 @@ describe("BackgroundServiceManager Tests", () => {
         await objectFactory.destroy();
     })
 
-    it("Can start/stop single background service.", async () => {
+    it.skip("Can start/stop single background service.", async () => {
         const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
         await manager.start("jobs.MyFirstService");
         const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;

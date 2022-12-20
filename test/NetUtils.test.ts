@@ -13,7 +13,7 @@ const YahooIPs: string[] = [
 ];
 
 jest.setTimeout(120000);
-describe("NetUtils Tests", () => {
+describe.skip("NetUtils Tests", () => {
     it("Can extract IPv4 address from string.", async () => {
         let result: string | undefined = await NetUtils.getIPAddress("127.0.0.1");
         expect(result).toBe("127.0.0.1");
