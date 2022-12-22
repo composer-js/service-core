@@ -64,7 +64,9 @@ export class BackgroundServiceManager {
         // Go through all loaded background job classes and start each one
         if (this.classLoader) {
             for (const [name, clazz] of this.classLoader.getClasses().entries()) {
-                await this.start(name, clazz);
+                if (clazz.prototype instanceof BackgroundService) {
+                    await this.start(name, clazz);
+                }
             }
         }
     }
