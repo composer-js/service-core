@@ -415,7 +415,7 @@ export class Server {
                 this.logger.info("Scanning for routes...");
                 try {
                     for (const [name, clazz] of classLoader.getClasses().entries()) {
-                        const routePaths: string[] | undefined = Reflect.getMetadata("cjs:routePaths", clazz.prototype) || undefined;
+                        const routePaths: string[] | undefined = clazz.prototype ? Reflect.getMetadata("cjs:routePaths", clazz.prototype) : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
                             const route: any = await this.instantiateRoute(clazz);
                             await this.routeUtils.registerRoute(this.app, route);
