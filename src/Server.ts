@@ -423,7 +423,7 @@ export class Server {
                         }
                     }
                 } catch (err) {
-                    reject("Failed to scan for routes.\n" + err);
+                    reject(err);
                     return;
                 }
 
