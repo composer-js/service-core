@@ -1296,10 +1296,10 @@
   dependencies:
     chalk "^4.1.0"
 
-"@composer-js/core@^1.6.1":
-  version "1.6.1"
-  resolved "https://registry.npmjs.org/@composer-js/core/-/core-1.6.1.tgz#3aa841b7fcac8fe2d9a552bc4f02fabb69049357"
-  integrity sha512-jKZ5KZ15NnGpMcK9dhMAXBwyReOkaEgojNqBZALOkPHi8BfrfoFuE8ghwRKAq7bjJ+UhrXCjnqGDfZPNNSS8kg==
+"@composer-js/core@^1.6.4":
+  version "1.6.4"
+  resolved "https://registry.npmjs.org/@composer-js/core/-/core-1.6.4.tgz#837ee6098bc0867a1eb48dfbc6e02939a5f5f8f6"
+  integrity sha512-9tShNm/d2uv5Ip+MLJEJxHX1DU8iE2PhGvQ0wai5xQDFx+5AbRqnqX3HCgQ9flpj8IJ0Ifn1vNQHE/78gpbYDg==
   dependencies:
     "@slack/bolt" "^3.12.2"
     "@types/jsonwebtoken" "^8.5.8"
