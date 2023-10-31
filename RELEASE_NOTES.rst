@@ -2,6 +2,15 @@
 Release Notes
 =============
 
+v3.1.0
+=======
+
+- Removed `ClassLoader` dependency from `BackgroundServiceManager`
+- Various bug fixes and improvements to `NetUtils`
+- Added default `AdminRoute` for common administrative operations
+- Exposing JWT `token` and `profile` data to all incoming requests
+- Upgraded dependencies
+
 v2.12.0
 =======
 
