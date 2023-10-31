@@ -28,6 +28,7 @@ import addWebSocket from "./express/WebSocket";
 import * as session from "express-session";
 import { BulkError } from "./BulkError";
 import { BackgroundService } from "./BackgroundService";
+import { AdminRoute } from "./routes";
 
 interface Entity {
     storeName?: any;
@@ -393,6 +394,11 @@ export class Server {
                 const index: IndexRoute = await this.instantiateRoute(IndexRoute);
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
+
+                // Register the admin route
+                const admin: AdminRoute = await this.instantiateRoute(AdminRoute);
+                allRoutes.push(admin);
+                await this.routeUtils.registerRoute(this.app, admin);
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
