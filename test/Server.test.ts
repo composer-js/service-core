@@ -4,7 +4,7 @@
 const fs = require("fs");
 
 import { default as config } from "./config";
-import { Server, ObjectFactory } from "../src/service_core";
+import { Server, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as path from "path";
 import * as request from "supertest";

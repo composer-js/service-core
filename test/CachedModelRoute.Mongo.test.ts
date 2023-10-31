@@ -4,7 +4,7 @@
 import { default as config } from "./config";
 import * as crypto from "crypto";
 import * as request from "supertest";
-import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src/service_core";
+import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/CacheUser";
 import { MongoRepository, DataSource } from "typeorm";

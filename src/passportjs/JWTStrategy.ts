@@ -3,7 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { Request } from "express";
 import { Strategy } from "passport-strategy";
-import { JWTUtils, JWTUtilsConfig, JWTUser } from "@composer-js/core";
+import { JWTUtils, JWTUtilsConfig, JWTUser, JWTPayload } from "@composer-js/core";
+const dayjs = require("dayjs");
+const duration = require("dayjs/plugin/duration");
+dayjs.extend(duration);
 
 /**
  * Describes the configuration options that can be used to initialize JWTStrategy.
@@ -14,7 +17,7 @@ export class JWTStrategyOptions {
     /** Set to true to allow a failure to be processed as a success, otherwise set to false. Default value is `false`. */
     public allowFailure: boolean = false;
     /** The configuration options to pass to the JWTUtils library during token verification. */
-    public config: JWTUtilsConfig = { password: "" };
+    public config: JWTUtilsConfig = { secret: "" };
     /** The name of the header to look for when performing header based authentication. Default value is `Authorization`. */
     public headerKey: string = "authorization";
     /** The authorization scheme type when using header based authentication. Default value is `jwt`. */
@@ -56,11 +59,16 @@ export class JWTStrategy extends Strategy {
             let token: string = req.query[this.options.queryKey] as string;
 
             try {
-                user = JWTUtils.decodeToken(this.options.config, token);
+                const payload: JWTPayload = JWTUtils.decodeToken(this.options.config, token);
                 // If the verification succeeded clear out any existing error, we have success
-                if (user) {
+                if (payload && payload.profile) {
                     error = "";
+                    user = payload.profile as JWTUser;
                 }
+                // Store the payload in the request in case someone needs it
+                (req as any).authPayload = payload;
+                // Store the full token in the request in case someone needs it
+                (req as any).authToken = token;
             } catch (err: any) {
                 error = err;
             }
@@ -91,13 +99,18 @@ export class JWTStrategy extends Strategy {
 
                 let token: string = parts[1];
                 try {
-                    user = JWTUtils.decodeToken(this.options.config, token);
+                    const payload: JWTPayload = JWTUtils.decodeToken(this.options.config, token);
                     // If the verification succeeded clear out any existing error, we have success
-                    if (user) {
+                    if (payload && payload.profile) {
                         error = "";
+                        user = payload.profile as JWTUser;
                         // No need to continue checking remaining headers. We have our success.
                         break;
                     }
+                    // Store the payload in the request in case someone needs it
+                    (req as any).authPayload = payload;
+                    // Store the full token in the request in case someone needs it
+                    (req as any).authToken = token;
                 } catch (err: any) {
                     error = err;
                 }
@@ -117,11 +130,16 @@ export class JWTStrategy extends Strategy {
         // If the token has been found, verify it.
         if (!user && token && token.length > 0) {
             try {
-                user = JWTUtils.decodeToken(this.options.config, token);
+                const payload: JWTPayload = JWTUtils.decodeToken(this.options.config, token);
                 // If the verification succeeded clear out any existing error, we have success
-                if (user) {
+                if (payload && payload.profile) {
                     error = "";
+                    user = payload.profile as JWTUser;
                 }
+                // Store the payload in the request in case someone needs it
+                (req as any).authPayload = payload;
+                // Store the full token in the request in case someone needs it
+                (req as any).authToken = token;
             } catch (err: any) {
                 error = err;
             }

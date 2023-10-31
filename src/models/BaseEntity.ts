@@ -19,7 +19,7 @@ export abstract class BaseEntity {
      * The universally unique identifier of the entity.
      */
     @Identifier
-    @Index()
+    @Index("uid", { unique: true })
     @PrimaryColumn()
     public uid: string = uuid.v4();
 

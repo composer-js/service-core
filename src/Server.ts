@@ -27,6 +27,7 @@ import { Server as WebSocketServer } from "ws";
 import addWebSocket from "./express/WebSocket";
 import * as session from "express-session";
 import { BulkError } from "./BulkError";
+import { BackgroundService } from "./BackgroundService";
 
 interface Entity {
     storeName?: any;
@@ -358,7 +359,7 @@ export class Server {
                     await classLoader.load();
                 }
                 catch (e) {
-                    throw new Error(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
+                    reject(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
                 }
 
                 // Register all found classes with the object factory
@@ -406,7 +407,13 @@ export class Server {
 
                 // Initialize the background service manager
                 this.logger.info("Starting background services...");
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, classLoader, this.config, this.logger);
+                const serviceClasses: any = {};
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    if (clazz.prototype instanceof BackgroundService) {
+                        serviceClasses[name] = clazz;
+                    }
+                }
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, serviceClasses, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }

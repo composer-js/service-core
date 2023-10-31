@@ -1,18 +1,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository, AggregationCursorResult } from "typeorm";
+import { Repository, MongoRepository, AggregationCursorResult, EntityMetadata } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
 import { RedisConnection } from "../decorators/RouteDecorators";
 import * as crypto from "crypto";
-import { Logger, Config } from "../decorators/ObjectDecorators";
+import { Logger, Config, Init } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
 import { RecoverableBaseEntity } from "../models";
+import { Admin } from "mongodb";
 
 /**
  * The set of options required by all request handlers.
@@ -150,6 +151,55 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
+     * Called on server startup to initialize the route with any defaults.
+     */
+    @Init
+    private async superInitialize() {
+        // Does the model specify a MongoDB shard configuration?
+        const shardConfig: any = Reflect.getMetadata("axr:shardConfig", this.modelClass);
+        if (shardConfig && this.repo instanceof MongoRepository) {
+            const dbClient: any = this.repo.manager.mongoQueryRunner.databaseConnection;
+            if (dbClient) {
+                try {
+                    const admin: Admin = dbClient.db().admin() as Admin;
+                    if (admin) {
+                        // Find the EntityMetadata associated with this model class.
+                        let metadata: EntityMetadata | undefined = undefined;
+                        for (const md of this.repo.manager.connection.entityMetadatas) {
+                            if (md.target === this.modelClass) {
+                                metadata = md;
+                                break;
+                            }
+                        }
+
+                        if (metadata) {
+                            try {
+                                // Configure the sharded collection with the MongoDB server.
+                                const dbName: string = this.config.get(`datastores:${this.modelClass.datastore}:database`);
+                                this.logger.info(`Configuring sharding for: collection=${dbName}.${metadata.tableName}, key=${JSON.stringify(shardConfig.key)}, unique=${shardConfig.unique}, options=${JSON.stringify(shardConfig.options)})`);
+                                const result: any = await admin.command({
+                                    shardCollection: `${dbName}.${metadata.tableName}`,
+                                    key: shardConfig.key,
+                                    unique: shardConfig.unique,
+                                    ...shardConfig.options
+                                });
+                                this.logger.debug(`Result: ${JSON.stringify(result)}`);
+                            } catch (e: any) {
+                                this.logger.warn(`There was a problem trying to configure MongoDB sharding for collection '${metadata.tableName}'. Error=${e.message}`);
+                            }
+                        }
+                    } else {
+                        this.logger.debug("Failed to get mongodb admin interface.");
+                    }
+                } catch (e: any) {
+                    // Sharding is not supported or user doesnt' have permission
+                    this.logger.debug(`Sharding not supported or user lacks the clusterAdmin role. Error=${e.message}`);
+                }
+            }
+        }
+    }
+
+    /**
      * Retrieves the object with the given id from either the cache or the database. If retrieving from the database
      * the cache is populated to speed up subsequent requests.
      *
@@ -209,6 +259,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Search for existing object based on passed in id and version and product uid.
+     * 
+     * The result of this function is compatible with all `Repository.find()` functions.
      */
     private searchIdQuery(id: string, version?: number | string, productUid?: string): any {
         return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version) : version, productUid);

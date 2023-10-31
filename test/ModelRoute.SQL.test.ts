@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
-import { Server, ConnectionManager, ObjectFactory } from "../src/service_core";
+import { Server, ConnectionManager, ObjectFactory } from "../src";
 import Item from "./server/models/Item";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";

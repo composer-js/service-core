@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ClassLoader } from "@composer-js/core";
 import { BackgroundService } from "./BackgroundService";
 import * as schedule from "node-schedule";
 import { ObjectFactory } from "./ObjectFactory";
@@ -16,9 +15,9 @@ import { ObjectFactory } from "./ObjectFactory";
  * `startAll` function. When shutting your application down you should call the `stopAll` function.
  *
  * ```
- * import { BackgroundServiceManager } from "@acceleratxr/services_manager";
+ * import { BackgroundServiceManager } from "@composer-js/service-core";
  *
- * const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, scriptManager, config, logger);
+ * const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, serviceClasses, config, logger);
  * await manager.startAll();
  * ...
  * await manager.stopAll();
@@ -35,14 +34,14 @@ import { ObjectFactory } from "./ObjectFactory";
  */
 export class BackgroundServiceManager {
     private readonly config: any;
-    private classLoader: ClassLoader;
+    private classes: {};
     private jobs: any = {};
     private readonly logger: any;
     private objectFactory: ObjectFactory;
     private services: any = {};
 
-    constructor(objectFactory: ObjectFactory, classLoader: ClassLoader, config: any, logger: any) {
-        this.classLoader = classLoader;
+    constructor(objectFactory: ObjectFactory, classes: {}, config: any, logger: any) {
+        this.classes = classes;
         this.config = config;
         this.logger = logger;
         this.objectFactory = objectFactory;
@@ -62,8 +61,9 @@ export class BackgroundServiceManager {
      */
     public async startAll(): Promise<void> {
         // Go through all loaded background job classes and start each one
-        if (this.classLoader) {
-            for (const [name, clazz] of this.classLoader.getClasses().entries()) {
+        if (this.classes) {
+            for (const name in this.classes) {
+                const clazz: any = this.classes[name];
                 if (clazz.prototype instanceof BackgroundService) {
                     await this.start(name, clazz);
                 }
@@ -86,7 +86,7 @@ export class BackgroundServiceManager {
         }
 
         // Look for the class definition with the given name if not already given
-        clazz = clazz ? clazz : this.classLoader.getClass(serviceName);
+        clazz = clazz ? clazz : this.classes[serviceName];
 
         if (clazz) {
             try {

@@ -40,7 +40,7 @@ conf.defaults({
         // The default PassportJS authentication strategy to use
         strategy: "JWTStrategy",
         // The password to be used when signing or verifying authentication tokens
-        password: "MyPasswordIsSecure",
+        secret: "MyPasswordIsSecure",
         options: {
             //"algorithm": "HS256",
             expiresIn: "7 days",

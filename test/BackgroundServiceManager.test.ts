@@ -7,16 +7,22 @@ import { ClassLoader, Logger } from "@composer-js/core";
 import MyFirstService from "./server/jobs/MyFirstService";
 import MySecondService from "./server/jobs/MySecondService";
 import MyThirdService from "./server/jobs/MyThirdService";
-import { ObjectFactory } from "../src/service_core";
+import { BackgroundService, ObjectFactory } from "../src";
 
 jest.setTimeout(10000);
 
 describe("BackgroundServiceManager Tests", () => {
-    const classLoader: ClassLoader = new ClassLoader("./test/server");
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
+    const serviceClasses: any = {};
 
     beforeAll(async () => {
+        const classLoader: ClassLoader = new ClassLoader("./test/server");
         await classLoader.load();
+        for (const [name, clazz] of classLoader.getClasses().entries()) {
+            if (clazz.prototype instanceof BackgroundService) {
+                serviceClasses[name] = clazz;
+            }
+        }
     });
 
     afterAll(async () => {
@@ -24,7 +30,7 @@ describe("BackgroundServiceManager Tests", () => {
     })
 
     it("Can start/stop single background service.", async () => {
-        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
+        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, serviceClasses, config, Logger());
         await manager.start("jobs.MyFirstService");
         const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
         expect(service).toBeDefined();
@@ -54,7 +60,7 @@ describe("BackgroundServiceManager Tests", () => {
     });
 
     it("Can start/stop multiple background services.", async () => {
-        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, classLoader, config, Logger());
+        const manager: BackgroundServiceManager = new BackgroundServiceManager(objectFactory, serviceClasses, config, Logger());
         await manager.startAll();
         const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
         expect(service).toBeDefined();

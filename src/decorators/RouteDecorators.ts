@@ -39,6 +39,24 @@ export function Auth(strategies: string | string[], require: boolean = true) {
 }
 
 /**
+ * Injects the authenticated JWT token payload as the value of the decorated argument.
+ */
+export function AuthPayload(target: any, propertyKey: string, index: number) {
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
+    args[index] = ["authPayload"];
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
+}
+
+/**
+ * Injects the authenticated JWT token as the value of the decorated argument.
+ */
+export function AuthToken(target: any, propertyKey: string, index: number) {
+    let args: any = Reflect.getMetadata("cjs:args", target, propertyKey) || {};
+    args[index] = ["authToken"];
+    Reflect.defineMetadata("cjs:args", args, target, propertyKey);
+}
+
+/**
  * Indicates a provided function or list of functions to execute *before* the decorated function.
  *
  * @param func The function or list of functions to execute *before* the decorated function.

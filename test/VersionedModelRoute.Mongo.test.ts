@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
-import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src/service_core";
+import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/VersionedUser";
 import { MongoRepository, DataSource } from "typeorm";

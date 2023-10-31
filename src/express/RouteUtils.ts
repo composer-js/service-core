@@ -216,7 +216,11 @@ export class RouteUtils {
                 if (argMetadata) {
                     for (const key in argMetadata) {
                         const i: number = Number(key);
-                        if (argMetadata[i][0] === "header") {
+                        if (argMetadata[i][0] === "authPayload") {
+                            args[i] = (req as any).authPayload;
+                        } else if (argMetadata[i][0] === "authToken") {
+                            args[i] = (req as any).authToken;
+                        } else if (argMetadata[i][0] === "header") {
                             if (argMetadata[i][1]) {
                                 args[i] = req.headers[argMetadata[i][1]];
                             } else {

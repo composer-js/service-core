@@ -342,6 +342,8 @@ export class ModelUtils {
      * * `range` - Returns matches whose parameter is greater than or equal to first given value and less than or equal to the second. e.g. `param between(1,100)`
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
+     * 
+     * NOTE: The result of this function is only compatible with the `aggregate()` function when MongoDB is used.
      *
      * @param modelClass The class definition of the data model to build a search query for.
      * @param repo The repository to build a search query for.
@@ -529,6 +531,8 @@ export class ModelUtils {
      * * `range` - Returns matches whose parameter is greater than or equal to first given value and less than or equal to the second. e.g. `param between(1,100)`
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
+     * 
+     * NOTE: The result of this function is only compatible with the `aggregate()` function.
      *
      * @param modelClass The class definition of the data model to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
@@ -611,7 +615,7 @@ export class ModelUtils {
 
             if (key === '$or') {
                 // Array of OR queries
-                let orResults = [];
+                let orResults: any[] = [];
                 for (const query of (queryParams[key] as Array<any>)) {
                     const subQueryOrResult = this.buildSearchQueryMongo(modelClass, undefined, query, exactMatch, user);
                     const validSubQueryResult = subQueryOrResult && subQueryOrResult.length > 0 && subQueryOrResult[0]['$match'];
