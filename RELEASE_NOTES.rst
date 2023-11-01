@@ -2,6 +2,12 @@
 Release Notes
 =============
 
+v3.2.0
+======
+
+- Moved all database decorators to their own namespace `DatabaseDecorators`
+- Fixed export for `addWebSocket` function
+
 v3.1.0
 =======
 
