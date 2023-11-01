@@ -49,6 +49,24 @@ export function Model(datastore: string) {
 }
 
 /**
+ * Indicates that the class describes an entity that will be persisted in a sharded database collection.
+ * 
+ * Note: Only supported by MongoDB.
+ *
+ * @param config The sharding configuration to pass to the database server. Default value is `{ key: { uid: 1 }, unique: false, options: {} }`.
+ */
+export function Shard(config: any = { key: { uid: 1 }, unique: false, options: {} }) {
+    return function (target: any) {
+        Reflect.defineMetadata("cjs:shardConfig", config, target);
+        Object.defineProperty(target, "shardConfig", {
+            enumerable: true,
+            writable: true,
+            value: config,
+        });
+    };
+}
+
+/**
  * Indicates that the class will track changes for each document update limited to the specified number of versions.
  *
  * @param versions The number of versions that will be tracked for each document change. Set to `-1` to store all
