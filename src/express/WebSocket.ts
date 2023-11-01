@@ -26,7 +26,7 @@ export interface RequestWS extends Request {
  * @param app The Expressjs application to add WebSocket support to.
  * @param wss The WebSocketServer server that will be configured for Express.
  */
-export default function addWebSocket(app: Application, wss: WebSocketServer): any {
+export function addWebSocket(app: Application, wss: WebSocketServer): any {
     wss.on("connection", async (socket: WebSocket, request: RequestWS) => {
         // Set the socket onto the request so that the Express handler has access to it
         request.websocket = socket;

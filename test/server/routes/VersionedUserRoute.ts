@@ -14,14 +14,14 @@ import {
     Query,
     Response,
     Init,
-    Model,
-    MongoRepository
+    Model
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/VersionedUser";
 import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
+import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 
 const logger = Logger();
 

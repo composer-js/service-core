@@ -6,7 +6,7 @@ import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
-import { RedisConnection } from "../decorators/RouteDecorators";
+import { RedisConnection } from "../decorators/DatabaseDecorators";
 import * as crypto from "crypto";
 import { Logger, Config, Init } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";

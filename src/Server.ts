@@ -24,7 +24,7 @@ import { ObjectFactory } from "./ObjectFactory";
 import { BackgroundServiceManager } from "./BackgroundServiceManager";
 import { RouteUtils } from "./express/RouteUtils";
 import { Server as WebSocketServer } from "ws";
-import addWebSocket from "./express/WebSocket";
+import { addWebSocket } from "./express/WebSocket";
 import * as session from "express-session";
 import { BulkError } from "./BulkError";
 import { BackgroundService } from "./BackgroundService";

@@ -15,7 +15,6 @@ import {
     Init,
     Before,
     Model,
-    MongoRepository,
     Request,
     Response,
     After
@@ -25,6 +24,7 @@ import { Logger } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
+import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 
 const logger = Logger();
 

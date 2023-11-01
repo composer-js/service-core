@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Query, Param, Route, User, Get, Head, Post, Response, Validate, Delete, Put, Model, Repository } from "../../../src/decorators/RouteDecorators";
+import { Query, Param, Route, User, Get, Head, Post, Response, Validate, Delete, Put, Model } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import Item from "../models/Item";
 import { Repository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
+import { Repository } from "../../../src/decorators/DatabaseDecorators";
 
 @Model(Item)
 @Route("/items")

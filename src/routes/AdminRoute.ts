@@ -5,7 +5,8 @@ import { JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
 import Redis, { ScanStream } from "ioredis";
 import * as Transport from "winston-transport";
 import { Config, Logger } from "../decorators/ObjectDecorators"
-import { Auth, ContentType, Get, Init, RedisConnection, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
+import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
+import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws from "ws";
 
 /**
