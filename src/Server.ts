@@ -17,9 +17,7 @@ import { IndexRoute } from "./routes/IndexRoute";
 import { JWTStrategy, JWTStrategyOptions } from "./passportjs/JWTStrategy";
 import { ClassLoader, Logger } from "@composer-js/core";
 import { OpenAPIRoute } from "./routes/OpenAPIRoute";
-import { DataSource, MongoRepository, Repository } from "typeorm";
 import { MetricsRoute } from "./routes/MetricsRoute";
-import * as Redis from "ioredis";
 import { ObjectFactory } from "./ObjectFactory";
 import { BackgroundServiceManager } from "./BackgroundServiceManager";
 import { RouteUtils } from "./express/RouteUtils";
@@ -166,30 +164,30 @@ export class Server {
     ///////////////////////////////////////////////////////////////////////////
     // METRICS VARIABLES
     ///////////////////////////////////////////////////////////////////////////
-    protected static metricRequestPath: prom.Histogram<string> = new prom.Histogram({
+    protected metricRequestPath: prom.Histogram<string> = new prom.Histogram({
         name: "request_path",
         help: "A histogram of the number of handled requests by the requested path.",
         labelNames: ["path"],
     });
-    protected static metricRequestStatus: prom.Histogram<string> = new prom.Histogram({
+    protected metricRequestStatus: prom.Histogram<string> = new prom.Histogram({
         name: "request_status",
         help: "A histogram of the resulting status code of handled requests by the requested path.",
         labelNames: ["path", "code"],
     });
-    protected static metricRequestTime: prom.Summary<string> = new prom.Summary({
+    protected metricRequestTime: prom.Summary<string> = new prom.Summary({
         name: "request_time",
         help: "A histogram of the response time of handled requests by the requested path.",
         labelNames: ["path"],
     });
-    protected static metricCompletedRequests: prom.Counter<string> = new prom.Counter({
+    protected metricCompletedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_completed_requests",
         help: "The total number of successfully completed requests.",
     });
-    protected static metricFailedRequests: prom.Counter<string> = new prom.Counter({
+    protected metricFailedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_failed_requests",
         help: "The total number of failed requests.",
     });
-    protected static metricTotalRequests: prom.Counter<string> = new prom.Counter({
+    protected metricTotalRequests: prom.Counter<string> = new prom.Counter({
         name: "num_total_requests",
         help: "The total number of requests processed.",
     });
