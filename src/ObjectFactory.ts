@@ -21,7 +21,7 @@ interface Entity {
  */
 export class ObjectFactory {
     /** A map for string fully qualified class names to their class types. */
-    private classes: Map<string, any> = new Map();
+    public readonly classes: Map<string, any> = new Map();
 
     /** The global application configuration object. */
     private config: any;
