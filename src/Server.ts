@@ -490,15 +490,15 @@ export class Server {
                             res.json(err.stack ? { ...formattedError, stack: err.stack } : formattedError);
                         }
 
-                        Server.metricFailedRequests.inc(1);
+                        this.metricFailedRequests.inc(1);
                     }
 
                     return next();
                 });
 
                 this.app.use((req: Request, res: Response) => {
-                    Server.metricRequestPath.labels(req.path).observe(1);
-                    Server.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
+                    this.metricRequestPath.labels(req.path).observe(1);
+                    this.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
                     return !res.writableEnded ? res.send() : res;
                 });
 
