@@ -344,7 +344,7 @@ export class Server {
 
                 // Set x-powered-by header
                 this.app.use((req: Request, res: Response, next: NextFunction) => {
-                    res.setHeader("x-powered-by", "AcceleratXR");
+                    res.setHeader("x-powered-by", "ComposerJS");
                     return next();
                 });
 
