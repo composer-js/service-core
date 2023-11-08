@@ -1248,9 +1248,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@npm:^2.0.2":
-  version: 2.1.0
-  resolution: "@composer-js/core@npm:2.1.0"
+"@composer-js/core@npm:^2.1.4":
+  version: 2.1.4
+  resolution: "@composer-js/core@npm:2.1.4"
   dependencies:
     "@slack/bolt": "npm:^3.13.0"
     "@types/jsonwebtoken": "npm:^9.0.1"
@@ -1270,7 +1270,7 @@ __metadata:
     uuid: "npm:^9.0.1"
     winston: "npm:^3.8.2"
     winston-transport: "npm:^4.6.0"
-  checksum: 6177ec2c782fd43fbcd32803b8171e511470e236708b88e7f6d797560219f65b2e75e9aaf9851ac44b823e55ee94ebfd3e0adb25b29048c204b6300643947a55
+  checksum: 4aeaedabc902f97a8022b65fdd2b83aa243153c459dc3139196c870afa89245a6321b43ddceb014f39bf361c72facb6a64d94e4c5e876fbc54d4915ab564bf04
   languageName: node
   linkType: hard
 
@@ -1280,7 +1280,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^17.3.0"
     "@commitlint/config-conventional": "npm:^17.3.0"
-    "@composer-js/core": "npm:^2.0.2"
+    "@composer-js/core": "npm:^2.1.4"
     "@types/app-module-path": "npm:^2.2.0"
     "@types/cookie-parser": "npm:^1.4.3"
     "@types/cors": "npm:^2.8.13"

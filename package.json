@@ -147,7 +147,7 @@
         "typedoc-plugin-markdown": "^3.14.0"
     },
     "dependencies": {
-        "@composer-js/core": "^2.0.2",
+        "@composer-js/core": "^2.1.4",
         "app-module-path": "^2.2.0",
         "axios": "^1.6.0",
         "cookie-parser": "^1.4.6",
