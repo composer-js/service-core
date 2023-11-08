@@ -11,12 +11,11 @@
         "dist"
     ],
     "engines": {
-        "node": ">=10.0.0"
+        "node": ">=18.0.0"
     },
     "scripts": {
         "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
-        "prebuild": "rimraf dist",
-        "build": "tsc",
+        "build": "rimraf dist && tsc",
         "docs": "typedoc --plugin typedoc-plugin-markdown --out docs/reference --target esnext --mode file src",
         "test": "node_modules/.bin/jest -i --detectOpenHandles",
         "test:watch": "node_modules/.bin/jest --detectOpenHandles --watch",
@@ -185,5 +184,6 @@
         "azure-storage": "^2.10.7",
         "bunnycdn-storage": "^1.0.4",
         "swift": "^2.8.0"
-    }
+    },
+    "packageManager": "yarn@4.0.1"
 }

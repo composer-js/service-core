@@ -26,6 +26,5 @@ publish:
     image: node:lts-buster
     stage: deploy
     script:
-        - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
         - yarn build
         - npm publish --access public
