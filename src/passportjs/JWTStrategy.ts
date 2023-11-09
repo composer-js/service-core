@@ -21,7 +21,7 @@ export class JWTStrategyOptions {
     /** The name of the header to look for when performing header based authentication. Default value is `Authorization`. */
     public headerKey: string = "authorization";
     /** The authorization scheme type when using header based authentication. Default value is `jwt`. */
-    public headerScheme: string = "jwt";
+    public headerScheme: string = "(jwt|bearer)";
     /** The name of the cookie to retrieve the token from when using cookie based authentication. Default value is `jwt`. */
     public cookieName: string = "jwt";
     /** The name of the secured cookie to retreive the token from when using cookie based authentication. */

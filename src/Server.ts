@@ -335,11 +335,17 @@ export class Server {
                 passport.serializeUser((profile: any, done: any) => {
                     done(null, profile);
                 });
-                if (this.config.get("auth:strategy") === "JWTStrategy") {
+
+                // Register the default auth strategy classes
+                this.objectFactory.register(JWTStrategy, "passportjs.JWTStrategy");
+
+                // Instantiate the desired auth strategy
+                if (this.config.get("auth:strategy")) {
                     const jwtOptions: JWTStrategyOptions = new JWTStrategyOptions();
-                    jwtOptions.headerScheme = "(jwt|bearer)";
                     jwtOptions.config = this.config.get("auth");
-                    passport.use("jwt", new JWTStrategy(jwtOptions));
+                    passport.use("jwt", await this.objectFactory.newInstance(this.config.get("auth:strategy"), "default", jwtOptions));
+                } else {
+                    this.logger.warn("No JWT authentication strategy has been set.");
                 }
 
                 // Set x-powered-by header
