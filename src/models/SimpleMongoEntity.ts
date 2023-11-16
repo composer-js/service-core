@@ -1,8 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ObjectID, ObjectIdColumn } from "typeorm";
+import { ObjectId } from "mongodb";
 import { SimpleEntity } from "./SimpleEntity";
+import { ObjectIdColumn } from "typeorm";
 
 /**
  * Provides a simple base class for all entity's that will be persisted with TypeORM in a MongoDB database. Unlike
@@ -15,7 +16,7 @@ export abstract class SimpleMongoEntity extends SimpleEntity {
      * The internal unique identifier used by MongoDB.
      */
     @ObjectIdColumn()
-    public _id?: ObjectID;
+    public _id?: ObjectId;
 
     constructor(other?: any) {
         super(other);
