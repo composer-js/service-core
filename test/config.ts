@@ -9,6 +9,8 @@ var conf = require("nconf")
         parseValues: true,
     });
 
+conf.use("memory");
+
 conf.defaults({
     service_name: "api_service",
     version: "1.0",

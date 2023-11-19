@@ -7,7 +7,7 @@ import * as Transport from "winston-transport";
 import { Config, Logger } from "../decorators/ObjectDecorators"
 import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
-import ws from "ws";
+import ws, { createWebSocketStream } from "ws";
 
 /**
  * Implements a Winston transport that pipes incoming log messages to a configured redis pubsub channel.
@@ -45,6 +45,9 @@ export class RedisTransport extends Transport {
  */
 @Route("/admin")
 export class AdminRoute {
+    /** A map of user uid's to active sockets. */
+    private activeSockets: Map<string,any[]> = new Map();
+
     @RedisConnection("cache")
     protected cacheClient?: Redis;
 
@@ -114,51 +117,54 @@ export class AdminRoute {
         }
     }
 
-    @WebSocket("/logs")
-    private async logs(@Socket ws: ws, @User user?: JWTUser): Promise<void> {
-        if (!this.logsConnConfig) {
-            throw new Error("Logs connection config is not set.");
-        }
-        if (!this.serviceName) {
-            throw new Error("serviceName is not set.");
-        }
-        if (!this.trustedRoles) {
-            throw new Error("trustedRoles is not set.");
+    @Auth(["jwt"])
+    @WebSocket("/inspect")
+    private async inspect(@Socket socket: ws, @User user: JWTUser): Promise<void> {
+        if (!UserUtils.hasRoles(user, this.trustedRoles)) {
+            socket.close(1002, "User does not have permission to perform this action.");
+            return;
         }
 
-        if (user && user.uid && UserUtils.hasRoles(user, this.trustedRoles)) {
-            this.registerSocket(ws, user);
-        } else {
-            // If no user has auth'd yet then wait for a login message to arrive.
-            ws.once("message", async (data: any, isBinary: boolean) => {
-                if (!isBinary) {
-                    try {
-                        // Decode the incoming message
-                        const message: any = JSON.parse(data);
+        // Create a websocket connection to the debug inspector and forward all traffic between the two
+        const sDuplex = createWebSocketStream(socket);
+        const iws: ws = new ws("ws://localhost:9229");
+        const iDuplex = createWebSocketStream(iws);
+        sDuplex.pipe(iDuplex);
+        iDuplex.pipe(sDuplex);
 
-                        // Ensure that this is a login request
-                        if (message.type === "LOGIN") {
-                            // Is the provided auth token valid?
-                            const payload: JWTPayload = JWTUtils.decodeToken(this.authConfig, message.data);
-                            const user: JWTUser | null = payload && payload.profile ? payload.profile as JWTUser : null;
-                            if (user && user.uid && UserUtils.hasRoles(user, this.trustedRoles || [])) {
-                                await this.registerSocket(ws, user);
-                                ws.send(JSON.stringify({ type: "LOGIN_RESPONSE", data: "OK" }));
-                            } else {
-                                ws.close(1002, "User does not have permission to perform this action.");
-                            }
-                        } else {
-                            ws.close(1002, "Invalid message or request.");    
-                        }
-                    } catch (err: any) {
-                        ws.close(1002, "Invalid message or authentication token.");
-                    }
-                }
-            });
-        }
+        // Add the sockets to our tracked list
+        const socks: any[] = this.activeSockets.get(user.uid) || [];
+        socks.push(sDuplex);
+        socks.push(iDuplex);
+        this.activeSockets.set(user.uid, socks);
+
+        socket.on("close", async (code: number, reason: string) => {
+            iws.close();
+
+            // Remove the sockets from our tracked list
+            const socks: any[] = this.activeSockets.get(user.uid) || [];
+            socks.splice(socks.indexOf(sDuplex));
+            socks.splice(socks.indexOf(iDuplex));
+            this.activeSockets.set(user.uid, socks);
+        });
     }
 
-    private async registerSocket(ws: ws, user: JWTUser): Promise<void> {
+    @Auth(["jwt"])
+    @WebSocket("/logs")
+    private async logs(@Socket socket: ws, @User user: JWTUser): Promise<void> {
+        if (!UserUtils.hasRoles(user, this.trustedRoles)) {
+            socket.close(1002, "User does not have permission to perform this action.");
+            return;
+        }
+        if (!this.logsConnConfig) {
+            socket.close(1002, "Logs connection config is not set.");
+            return;
+        }
+        if (!this.serviceName) {
+            socket.close(1002, "serviceName is not set.");
+            return;
+        }
+
         // Create a new redis connection for this client
         const redis: Redis = await new Redis(this.logsConnConfig.url, this.logsConnConfig.options);
 
@@ -168,24 +174,41 @@ export class AdminRoute {
             this.logger.info(`User ${user.uid} successfully subscribed to logging channel.`);
             redis.on("message", (channel: string, message: string) => {
                 // Forward the message to the client
-                ws.send(message, (err) => {
+                socket.send(message, (err) => {
                     if (err) {
-                        this.logger.error(`Failed to forward message to client ${user.uid}.`);
+                        this.logger.error(`Failed to forward message to client ${user.uid}, channel=${channel}.`);
                         this.logger.debug(err);
                     }
                 });
             });
+            socket.send(JSON.stringify({ id: 0, type: "SUBSCRIBED", success: true, data: channelName }));
+
+            socket.on("close", async (code: number, reason: string) => {
+                // Unsubscribe from all redis pub/sub channels
+                await redis.unsubscribe(channelName);
+                // Disconnect the redis client
+                redis.disconnect();
+    
+                // Remove the socket from our tracked list
+                const socks: any[] = this.activeSockets.get(user.uid) || [];
+                socks.splice(socks.indexOf(socket), 1);
+                this.activeSockets.set(user.uid, socks);
+            });
+    
+            // Add the socket to our tracked list
+            const socks: any[] = this.activeSockets.get(user.uid) || [];
+            socks.push(socket);
+            this.activeSockets.set(user.uid, socks);
         } catch (err: any) {
             this.logger.error(`User ${user.uid} failed to subscribe to logging channel.`);
             this.logger.debug(err);
-            ws.close();
+            socket.close();
+
+            // Remove the socket from our tracked list
+            const socks: any[] = this.activeSockets.get(user.uid) || [];
+            socks.splice(socks.indexOf(socket), 1);
+            this.activeSockets.set(user.uid, socks);
         }
-        ws.on("close", async (code: number, reason: string) => {
-            // Unsubscribe from all redis pub/sub channels
-            await redis.unsubscribe(channelName);
-            // Disconnect the redis client
-            redis.disconnect();
-        });
     }
 
     @Auth("jwt")

@@ -2,6 +2,20 @@
 Release Notes
 =============
 
+v3.6.0
+======
+
+- Adding automatic authentication handshaking for all @WebSocket endpoints
+- Added `/admin/inspect` endpoint for exposing NodeJS inspector for remote debugging
+- Fixed issues with `/admin/logs` endpoint
+- `SimpleMongoEntity` now uses `ObjectId` class from mongodb driver instead of typeorm copy
+- Upgraded `core` dependency
+- Various fixes to CI/CD pipeline
+- Upgraded to yarn v4
+- `ObjectFactor.classes` is now public
+- Fixed `X-Powered-By` header output
+- Prometheus metrics are no longer defined as static variables
+
 v3.2.0
 ======
 

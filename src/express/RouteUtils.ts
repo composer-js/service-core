@@ -1,10 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { UserUtils } from "@composer-js/core";
+import { JWTPayload, JWTUser, JWTUtils, UserUtils, sleep } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ServerResponse } from "http";
-import { Inject, Logger } from "../decorators/ObjectDecorators";
+import { Config, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 const passport = require("passport");
 const _ = require("lodash");
@@ -15,8 +15,111 @@ const _ = require("lodash");
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class RouteUtils {
+    @Config("auth")
+    private authConfig: any;
+
+    @Config("auth:socketTimeout", 2000)
+    private authSocketTimeout: number = 2000;
+    
     @Logger
     private logger?: any;
+
+    /**
+     * Returns a request handler function that will perform authentication of a websocket connection. Authentication
+     * can be handled in two ways:
+     * 
+     * 1. Authorization header
+     * 2. Negotiation via handshake
+     * 
+     * This middleware function primarily provides the implementation for item 2 above.
+     * 
+     * @param required Set to `true` to indicate that auth is required, otherwise `false`.
+     */
+    public authWebSocket(required: boolean): RequestHandler {
+        return (req: Request, res: Response, next: NextFunction) => {
+            const sock: any = (req as RequestWS).websocket || req.socket;
+            const user: JWTUser | undefined = req.user as JWTUser;
+
+            if (user && user.uid) {
+                next();
+            } else {
+                // Set a timer to allow the login message to arrive. If the timer expires before
+                // a login message is received we'll proceed processing in order to prevent
+                // blocking up the handler.
+                let timer: NodeJS.Timeout = setTimeout(() => {
+                    if (required) {
+                        const error: any = new Error("Failed to authenticate.");
+                        error.status = 401;
+                        sock.close(1002, error.message);
+                        next(error);
+                    } else {
+                        // Auth isn't required so just move along
+                        next();
+                    }
+                }, this.authSocketTimeout);
+
+                // If no user has auth'd yet then wait for a login message to arrive.
+                sock.once("message", (data: any, isBinary: boolean) => {
+                    clearTimeout(timer);
+                    if (!isBinary) {
+                        try {
+                            // Decode the incoming message
+                            const message: any = JSON.parse(data);
+
+                            // Ensure that this is a login request
+                            if (message.type === "LOGIN") {
+                                // Is the provided auth token valid?
+                                const payload: JWTPayload = JWTUtils.decodeToken(this.authConfig, message.data);
+                                const user: JWTUser | null = payload && payload.profile ? payload.profile as JWTUser : null;
+                                if (user && user.uid) {
+                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: true }));
+                                    req.user = user;
+                                    next();
+                                } else if (required) {
+                                    const error: any = new Error("Invalid authentication token.");
+                                    error.status = 401;
+                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: error.message }));
+                                    sock.close(1002, error.message);
+                                    next(error);
+                                } else {
+                                    // Notify the client that their token was bad, but we'll proceed anyway
+                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: "Invalid authentication token." }));
+                                    // Auth isn't required so just move along
+                                    next();
+                                }
+                            } else if (required) {
+                                const error: any = new Error("Invalid message or request.");
+                                error.status = 400;
+                                sock.close(1002, error.message);
+                                next(error);
+                            } else {
+                                // Auth isn't required so just move along
+                                next();
+                            }
+                        } catch (err: any) {
+                            if (required) {
+                                const error: any = new Error("Invalid message or request.");
+                                error.status = 400;
+                                sock.close(1002, error.message);
+                                next(error);
+                            } else {
+                                // Auth isn't required so just move along
+                                next();
+                            }
+                        }
+                    } else if (required) {
+                        const error: any = new Error("Invalid message or request.");
+                        error.status = 400;
+                        sock.close(1002, error.message);
+                        next(error);
+                    } else {
+                        // Auth isn't required so just move along
+                        next();
+                    }
+                });
+            }
+        }
+    }
 
     /**
      * Creates an Express middleware function that verifies the incoming request is from a valid user with at least
@@ -115,7 +218,8 @@ export class RouteUtils {
 
             let metadata: any = Reflect.getMetadata("cjs:route", route, key);
             if (value && metadata) {
-                const { after, authRequired, before, methods, requiredRoles, validator } = metadata;
+                let { authRequired } = metadata;
+                const { after, before, methods, requiredRoles, validator } = metadata;
                 let { authStrategies } = metadata;
                 let verbMap: Map<string, string> = methods as Map<string, string>;
 
@@ -163,6 +267,10 @@ export class RouteUtils {
                             // We add .websocket to the end of the path so that other routes using different
                             // verbs will still function correctly
                             path += ".websocket";
+                            // Also add the websocket auth handler as the first middleware function
+                            middleware.unshift(this.authWebSocket(authRequired));
+                            // Set authRequired to false since we enforce it in the authWebSocket function
+                            authRequired = false;
                         }
 
                         // If auth strategies are provided add the necessary passport middleware
