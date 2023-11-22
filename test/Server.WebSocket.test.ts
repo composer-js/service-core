@@ -7,14 +7,11 @@ import { default as config } from "./config";
 import { Server } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as http from "http";
-import * as path from "path";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
 import requestws from "superwstest";
 
-import * as yamljs from "js-yaml";
 import { JWTUtils } from "@composer-js/core";
-import { sleep } from "@composer-js/core";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
@@ -26,10 +23,7 @@ const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
 jest.setTimeout(60000);
 
 describe("Server WebSocket Tests", () => {
-    const apiSpec: any = yamljs.load(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
-    expect(apiSpec).toBeDefined();
-
-    const server: Server = new Server(config, apiSpec, "./test/server");
+    const server: Server = new Server(config, "./test/server");
 
     beforeAll(async () => {
         await mongod.start();

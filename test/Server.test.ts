@@ -6,13 +6,11 @@ const fs = require("fs");
 import { default as config } from "./config";
 import { Server, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import * as path from "path";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
 import * as rimraf from "rimraf";
 
-import * as yamljs from "js-yaml";
 import { JWTUtils, Logger } from "@composer-js/core";
 import { sleep } from "@composer-js/core";
 
@@ -26,11 +24,8 @@ const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
 jest.setTimeout(60000);
 
 describe("Server Tests", () => {
-    const apiSpec: any = yamljs.load(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
-    expect(apiSpec).toBeDefined();
-
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    const server: Server = new Server(config, apiSpec, "./test/server", Logger(), objectFactory);
+    const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
         await mongod.start();

@@ -53,7 +53,7 @@ const createUsers = async (num: number, versions: number = 1): Promise<User[]> =
 jest.setTimeout(120000);
 describe("VersionedModelRoute Tests [MongoDB]", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
-    const server: Server = new Server(config, undefined, "./test/server", Logger(), objectFactory);
+    const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
         await mongod.start();

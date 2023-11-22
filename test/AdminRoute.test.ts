@@ -15,14 +15,11 @@ jest.mock('ioredis', () => {
 import { default as config } from "./config";
 import { Server } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import * as path from "path";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
 import requestws from "superwstest";
 
-import * as yamljs from "js-yaml";
 import { JWTUtils } from "@composer-js/core";
-import { sleep } from "@composer-js/core";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
@@ -35,9 +32,7 @@ jest.setTimeout(60000);
 
 describe("AdminRoute Tests", () => {
     const basePath = "/admin";
-    const apiSpec: any = yamljs.load(fs.readFileSync(path.resolve("./test/openapi.yaml"))); //OASUtils.loadSpec(path.resolve("./test/openapi.yaml"));
-    expect(apiSpec).toBeDefined();
-    const server: Server = new Server(config, apiSpec, "./test/server");
+    const server: Server = new Server(config, "./test/server");
     const serviceName: string = config.get("service_name");
     const admin: any = {
         uid: uuid.v4(),
