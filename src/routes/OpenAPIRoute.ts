@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { OpenApiSpec } from "../OpenApiSpec";
+import { Inject } from "../decorators/ObjectDecorators";
 import { Get, Route, ContentType } from "../decorators/RouteDecorators";
 const swagger = require("swagger-ui-express");
 
@@ -13,25 +15,23 @@ const swagger = require("swagger-ui-express");
 @Route("/")
 export class OpenAPIRoute {
     /** The underlying OpenAPI specification. */
-    private apiSpec: any;
-
-    /**
-     * Constructs a new `OpenAPIController` object with the specified defaults.
-     *
-     * @param apiSpec The OpenAPI specification object to serve.
-     */
-    constructor(apiSpec: any) {
-        this.apiSpec = apiSpec;
-    }
+    @Inject(OpenApiSpec)
+    private apiSpec: OpenApiSpec = new OpenApiSpec();
 
     @Get("api-docs")
     @ContentType("text/html")
-    private get(): any {
-        return swagger.generateHTML(this.apiSpec);
+    public getHTML(): string {
+        return swagger.generateHTML(this.apiSpec.getSpec());
     }
 
     @Get("openapi.json")
-    private getJSON(): any {
-        return this.apiSpec;
+    public getJSON(): string {
+        return this.apiSpec.getSpecAsJson();
+    }
+
+    @Get("openapi.yaml")
+    @ContentType("text/yaml")
+    public getYAML(): string {
+        return this.apiSpec.getSpecAsYaml();
     }
 }

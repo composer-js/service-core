@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { JWTPayload, JWTUser, JWTUtils, UserUtils, sleep } from "@composer-js/core";
+import { JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ServerResponse } from "http";
-import { Config, Logger } from "../decorators/ObjectDecorators";
+import { Config, Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
+import { OpenApiSpec } from "../OpenApiSpec";
 const passport = require("passport");
 const _ = require("lodash");
 
@@ -15,6 +16,9 @@ const _ = require("lodash");
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class RouteUtils {
+    @Inject(OpenApiSpec)
+    private apiSpec: OpenApiSpec = new OpenApiSpec();
+    
     @Config("auth")
     private authConfig: any;
 
@@ -260,6 +264,9 @@ export class RouteUtils {
                                 ? basePath + subpath
                                 : basePath + "/" + subpath;
 
+                        // Update our OpenAPI spec object with the details of this route.
+                        this.apiSpec.addRoute(path, route, value);
+
                         // If the verb is `ws` we need to translate this accordingly
                         if (verb === "ws") {
                             // Rewrite our verb to be `get` so that Express' internal plumbing works correctly
@@ -286,6 +293,7 @@ export class RouteUtils {
                         } else {
                             app[verb](path, ...middleware);
                         }
+
                         this.logger.info("Registered Route: " + verb.toUpperCase() + " " + path);
                     }
                 }

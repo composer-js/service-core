@@ -27,6 +27,7 @@ import * as session from "express-session";
 import { BulkError } from "./BulkError";
 import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
+import { OpenApiSpec } from "./OpenApiSpec";
 
 interface Entity {
     storeName?: any;
@@ -139,7 +140,7 @@ export default ItemRoute;
  */
 export class Server {
     /** The OpenAPI specification object to use to construct the server with. */
-    protected readonly apiSpec?: any;
+    protected apiSpec?: OpenApiSpec;
     /** The underlying ExpressJS application that provides HTTP processing services. */
     protected app: Application;
     /** The base file system path that will be searched for models and routes. */
@@ -196,21 +197,18 @@ export class Server {
      * Creates a new instance of Server with the specified defaults.
      *
      * @param {any} config The nconf-compatible configuration object to initialize the server with.
-     * @param {any} apiSpec The optional OpenAPI specification object to initialize the server with.
      * @param {string} basePath The base file system path that models and routes will be searched from.
      * @param {Logger} logger The logging utility to use for outputing to console/file.
      * @param objectFactory The object factory to use for automatic dependency injection (IOC).
      */
     constructor(
         config: any,
-        apiSpec?: any,
         basePath: string = ".",
         logger: any = Logger(),
         objectFactory?: ObjectFactory,
     ) {
         this.app = express();
         this.config = config;
-        this.apiSpec = apiSpec;
         this.basePath = basePath;
         this.logger = logger;
         this.objectFactory = objectFactory ? objectFactory : new ObjectFactory(config, logger);
@@ -283,6 +281,9 @@ export class Server {
         return new Promise(async (resolve, reject) => {
             try {
                 this.logger.info("Starting server...");
+
+                // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
+                this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, "default");
 
                 // Express configuration
                 this.app = express();
@@ -378,6 +379,7 @@ export class Server {
                     const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", clazz) || undefined;
                     if (datastore) {
                         models.set(name, clazz);
+                        this.apiSpec.addModel(name, clazz);
                     }
                 }
 

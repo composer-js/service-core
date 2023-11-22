@@ -1341,6 +1341,7 @@ __metadata:
     node-diff3: "npm:^3.1.2"
     node-schedule: "npm:^2.1.0"
     nodemailer: "npm:^6.9.7"
+    openapi3-ts: "npm:^4.1.2"
     passport: "npm:^0.6.0"
     passport-strategy: "npm:^1.0.0"
     pg: "npm:^8.8.0"
@@ -1390,6 +1391,7 @@ __metadata:
     nconf: ^0.12.0
     node-diff3: ^3.1.2
     node-schedule: ^2.1.0
+    openapi3-ts: ^4.1.2
     passport: ^0.6.0
     passport-strategy: ^1.0.0
     prom-client: ^14.1.0
@@ -10529,6 +10531,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openapi3-ts@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "openapi3-ts@npm:4.1.2"
+  dependencies:
+    yaml: "npm:^2.2.2"
+  checksum: c57712ab922a6c733ac256f0d86700ab64dc787ecd1a60ab5835550dbde99dc122f02f8ec773460ae2c64b6b68a516b33304b9bb7ef93af5c7bf157a803cf3f4
+  languageName: node
+  linkType: hard
+
 "opener@npm:^1.5.2":
   version: 1.5.2
   resolution: "opener@npm:1.5.2"
@@ -14274,6 +14285,13 @@ __metadata:
   version: 1.10.2
   resolution: "yaml@npm:1.10.2"
   checksum: 5c28b9eb7adc46544f28d9a8d20c5b3cb1215a886609a2fd41f51628d8aaa5878ccd628b755dbcd29f6bb4921bd04ffbc6dcc370689bb96e594e2f9813d2605f
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.2.2":
+  version: 2.3.4
+  resolution: "yaml@npm:2.3.4"
+  checksum: cf03b68f8fef5e8516b0f0b54edaf2459f1648317fc6210391cf606d247e678b449382f4bd01f77392538429e306c7cba8ff46ff6b37cac4de9a76aff33bd9e1
   languageName: node
   linkType: hard
 
