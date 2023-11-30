@@ -220,6 +220,7 @@ export class RouteUtils {
             let key: string = entry[0];
             let value: any = entry[1] as any;
 
+            let docs: any = Reflect.getMetadata("cjs:docs", route, key);
             let metadata: any = Reflect.getMetadata("cjs:route", route, key);
             if (value && metadata) {
                 let { authRequired } = metadata;
@@ -264,9 +265,6 @@ export class RouteUtils {
                                 ? basePath + subpath
                                 : basePath + "/" + subpath;
 
-                        // Update our OpenAPI spec object with the details of this route.
-                        this.apiSpec.addRoute(path, route, value);
-
                         // If the verb is `ws` we need to translate this accordingly
                         if (verb === "ws") {
                             // Rewrite our verb to be `get` so that Express' internal plumbing works correctly
@@ -295,6 +293,9 @@ export class RouteUtils {
                         }
 
                         this.logger.info("Registered Route: " + verb.toUpperCase() + " " + path);
+
+                        // Update our OpenAPI spec object with the details of this route.
+                        this.apiSpec.addRoute(key, path, verb, metadata, docs, route);
                     }
                 }
             }

@@ -379,7 +379,9 @@ export class Server {
                     const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", clazz) || undefined;
                     if (datastore) {
                         models.set(name, clazz);
-                        this.apiSpec.addModel(name, clazz);
+                        // Don't use the fqn when registering the class name. This is to ensure proper
+                        // referencing when using reflection data that doesn't have the fqn available.
+                        this.apiSpec.addModel(clazz.name, clazz);
                     }
                 }
 
