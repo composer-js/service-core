@@ -28,7 +28,7 @@ export class RedisTransport extends Transport {
     }
 
     public log(info: any, next: Function): any {
-        this.redis.publish(this.channel, JSON.stringify(info));
+        void this.redis.publish(this.channel, JSON.stringify(info));
         next();
     }
 }
@@ -85,7 +85,7 @@ export class AdminRoute {
             const channelName: string = this.serviceName + "-logs";
             this.logger.add(new RedisTransport({
                 channelName,
-                redis: await new Redis(this.logsConnConfig.url, this.logsConnConfig.options)
+                redis: new Redis(this.logsConnConfig.url, this.logsConnConfig.options)
             }));
         } else {
             this.logger.warn("Could not initialize `/admin/logs` route. The `logs` datastore is not not configured.");
@@ -168,7 +168,7 @@ export class AdminRoute {
         }
 
         // Create a new redis connection for this client
-        const redis: Redis = await new Redis(this.logsConnConfig.url, this.logsConnConfig.options);
+        const redis: Redis = new Redis(this.logsConnConfig.url, this.logsConnConfig.options);
 
         const channelName: string = this.serviceName + "-logs";
         try {

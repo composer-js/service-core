@@ -11,8 +11,7 @@ import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
 import * as rimraf from "rimraf";
 
-import { JWTUtils, Logger } from "@composer-js/core";
-import { sleep } from "@composer-js/core";
+import { JWTUtils, Logger, sleep } from "@composer-js/core";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
@@ -33,8 +32,11 @@ describe("Server Tests", () => {
 
     afterAll(async () => {
         await mongod.stop();
-        return new Promise<void>((resolve) => {
+        return await new Promise<void>((resolve) => {
             sqlite.close(err => {
+                if (err) {
+                    throw new Error(err.message);
+                }
                 rimraf.sync("tmp-*");
                 resolve();
             });

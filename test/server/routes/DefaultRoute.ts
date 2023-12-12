@@ -14,10 +14,14 @@ class DefaultRoute {
     /**
      * Initializes a new instance with the specified defaults.
      */
-    constructor() { }
+    constructor() { 
+        // NO-OP
+    }
 
     @Init
-    private async initialize() { }
+    private async initialize() { 
+        // NO-OP
+    }
 
     @Get("hello")
     @Description("Returns `Hello World!`.")

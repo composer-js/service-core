@@ -37,7 +37,7 @@ export function addWebSocket(app: Application, wss: WebSocketServer): any {
         const response: ServerResponse = new ServerResponse(request);
         // Shouldn't need to cast `response` as any here but for some reason compiler isn't liking it
         // despite the function declaration clearly accepting the `ServerResponse` type.
-        await app(request, response as any, (err: any) => {
+        app(request, response as any, (err: any) => {
             // If `wsHandled` is not set to true or an error was thrown then we did not handle the WebSocket request properly.
             // Close the connection and exit.
             if (err || !request.wsHandled) {

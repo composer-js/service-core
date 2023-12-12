@@ -15,47 +15,47 @@ const YahooIPs: string[] = [
 jest.setTimeout(120000);
 describe.skip("NetUtils Tests", () => {
     it("Can extract IPv4 address from string.", async () => {
-        let result: string | undefined = await NetUtils.getIPAddress("127.0.0.1");
+        let result: string | undefined = NetUtils.getIPAddress("127.0.0.1");
         expect(result).toBe("127.0.0.1");
-        result = await NetUtils.getIPAddress("127.0.0.1:1234");
+        result = NetUtils.getIPAddress("127.0.0.1:1234");
         expect(result).toBe("127.0.0.1");
     });
 
     it("Can extract IPv6 address from string.", async () => {
-        let result: string | undefined = await NetUtils.getIPAddress("::1");
+        let result: string | undefined = NetUtils.getIPAddress("::1");
         expect(result).toBe("::1");
-        result = await NetUtils.getIPAddress("[::1]:7777");
+        result = NetUtils.getIPAddress("[::1]:7777");
         expect(result).toBe("::1");
-        result = await NetUtils.getIPAddress("2001:4860:4860::8888");
+        result = NetUtils.getIPAddress("2001:4860:4860::8888");
         expect(result).toBe("2001:4860:4860::8888");
-        result = await NetUtils.getIPAddress("[2001:4860:4860::8888]:1234");
+        result = NetUtils.getIPAddress("[2001:4860:4860::8888]:1234");
         expect(result).toBe("2001:4860:4860::8888");
-        result = await NetUtils.getIPAddress("2001:db8::1:0:0:1");
+        result = NetUtils.getIPAddress("2001:db8::1:0:0:1");
         expect(result).toBe("2001:db8::1:0:0:1");
-        result = await NetUtils.getIPAddress("[2001:db8::1:0:0:1]:1234");
+        result = NetUtils.getIPAddress("[2001:db8::1:0:0:1]:1234");
         expect(result).toBe("2001:db8::1:0:0:1");
-        result = await NetUtils.getIPAddress("2001:db8::2:1");
+        result = NetUtils.getIPAddress("2001:db8::2:1");
         expect(result).toBe("2001:db8::2:1");
-        result = await NetUtils.getIPAddress("[2001:db8::2:1]:1234");
+        result = NetUtils.getIPAddress("[2001:db8::2:1]:1234");
         expect(result).toBe("2001:db8::2:1");
     });
 
     it("Can extract IP address from URL string.", async () => {
-        let result: string | undefined = await NetUtils.getIPAddress("http://127.0.0.1");
+        let result: string | undefined = NetUtils.getIPAddress("http://127.0.0.1");
         expect(result).toBe("127.0.0.1");
-        result = await NetUtils.getIPAddress("http://127.0.0.1:1234");
+        result = NetUtils.getIPAddress("http://127.0.0.1:1234");
         expect(result).toBe("127.0.0.1");
-        result = await NetUtils.getIPAddress("http://[2001:db8::2:1]:1234");
+        result = NetUtils.getIPAddress("http://[2001:db8::2:1]:1234");
         expect(result).toBe("2001:db8::2:1");
 
-        result = await NetUtils.getIPAddress("http://yahoo.com");
+        result = NetUtils.getIPAddress("http://yahoo.com");
         expect(YahooIPs).toContain(result);
-        result = await NetUtils.getIPAddress("http://yahoo.com:1234");
+        result = NetUtils.getIPAddress("http://yahoo.com:1234");
         expect(YahooIPs).toContain(result);
 
-        result = await NetUtils.getIPAddress("http://localhost");
+        result = NetUtils.getIPAddress("http://localhost");
         expect(result).toBe("127.0.0.1");
-        result = await NetUtils.getIPAddress("http://localhost:1234");
+        result = NetUtils.getIPAddress("http://localhost:1234");
         expect(result).toBe("127.0.0.1");
     });
 });

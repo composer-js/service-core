@@ -6,6 +6,7 @@ export class CircularClassB {
     public dep?: CircularClassA;
 
     constructor() {
+        // NO-OP
     }
 
     @Destroy
