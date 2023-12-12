@@ -8,6 +8,7 @@ import { Config, Logger } from "../decorators/ObjectDecorators"
 import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
+import { Returns } from "../decorators/DocDecorators";
 
 /**
  * Implements a Winston transport that pipes incoming log messages to a configured redis pubsub channel.
@@ -93,7 +94,8 @@ export class AdminRoute {
 
     @Auth(["jwt"])
     @Get("/clear-cache")
-    private async clearCache(@User user?: JWTUser): Promise<any> {
+    @Returns([null])
+    private async clearCache(@User user?: JWTUser): Promise<void> {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
             const error: any = new Error("User does not have permission to perform this action.");
             error.status = 403;
@@ -214,7 +216,8 @@ export class AdminRoute {
     @Auth("jwt")
     @Get("/release-notes")
     @ContentType("text/x-rst")
-    private get(@User user?: JWTUser): any {
+    @Returns([String])
+    private get(@User user?: JWTUser): string {
         if (!this.trustedRoles) {
             throw new Error("trustedRoles is not set.");
         }
@@ -230,7 +233,8 @@ export class AdminRoute {
 
     @Auth(["jwt"])
     @Get("/restart")
-    private restart(@User user?: JWTUser): any {
+    @Returns([null])
+    private restart(@User user?: JWTUser): void {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
             const error: any = new Error("User does not have permission to perform this action.");
             error.status = 403;

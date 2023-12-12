@@ -1,155 +1,789 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
-  description: An API spec for a micro-service.
-  version: 1.0.0
-  title: CRUDS Template
-  termsOfService: 'http://acceleratxr.com/terms/'
-  contact:
-    email: info@acceleratxr.com
-  license:
-    name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-components:
-  parameters:
-    id:
-      name: id
-      description: The unique identifier of the object.
-      in: path
-      required: true
-      schema:
-        type: string
-    jwt_token:
-      name: jwt_token
-      in: query
-      description: The JWT access token to use for user authentication.
-      required: false
-      schema:
-        type: string
-    maxResults:
-      name: maxResults
-      in: query
-      description: The maximum number of results to return. Cannot exceed 1000.
-      required: false
-      schema:
-        type: integer
-        format: int32
-    page:
-      name: page
-      in: query
-      description: 'The page number, or offset, of the search results to search for and return.'
-      required: false
-      schema:
-        type: integer
-        format: int32
-    sort:
-      name: sort
-      in: query
-      description: 'A mapping of property to 1 or -1 that indicates the order to sort results by. 1 indicates ascending order, -1 descending.'
-      required: false
-      schema:
-        type: string
-  schemas:
-    authToken:
-      type: object
-      properties:
-        token:
-          type: string
-          format: JWT
-    count:
-      type: object
-      properties:
-        count:
-          type: integer
-          format: int
-    Item:
-      type: object
-      x-dbId: mongo1
-      properties:
-        uid:
-          type: string
-          format: uuid
-          nullable: false
-          x-identifier: true
-          x-index: true
-          x-unique: true
-        dateCreated:
-          type: string
-          format: date-time
-          nullable: false
-        dateModified:
-          type: string
-          format: date-time
-          nullable: false
-        version:
-          type: integer
-          nullable: false
-          default: 0
-        userId:
-          type: string
-          format: uuid
-          nullable: false
-        name:
-          type: string
-          nullable: false
-          x-identifier: true
-          x-index: true
-          x-unique: true
-        description:
-          type: string
-        quantity:
-          type: integer
-        metaData:
-          type: object
-          additionalProperties:
-            type: string
-  securitySchemes:
-    jwt:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    basic:
-      type: http
-      scheme: basic
+  version: "1.0"
 paths:
-  /hello:
+  /:
+    parameters: []
+    x-name: Index
     get:
-      x-behaviors: 'helloWorld'
-  /login:
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+      x-name: get
+  /admin/clear-cache:
+    parameters: []
+    x-name: Admin
     get:
-      parameters:
-        - $ref: '#/components/parameters/jwt_token'
-      security:
-        - basic: []
-  /token:
-    get:
-      parameters:
-        - $ref: '#/components/parameters/jwt_token'
+      responses:
+        "204":
+          description: No Content
       security:
         - jwt: []
-        - basic: []
-  /items:
-    parameters:
-      - $ref: '#/components/parameters/jwt_token'
+      x-name: clearCache
+  /admin/inspect.websocket:
+    parameters: []
+    x-name: Admin
+    x-upgrade: true
     get:
-      parameters:
-        - $ref: '#/components/parameters/maxResults'
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/sort'
-      description: Returns all items from the system that the user has access to
-      x-behaviors:
-        - 'models.Item.findAll'
-        - 'helloWorld'
       responses:
-        '200':
-          description: A list of items.
+        "204":
+          description: No Content
+      security:
+        - jwt: []
+      x-name: inspect
+  /admin/logs.websocket:
+    parameters: []
+    x-name: Admin
+    x-upgrade: true
+    get:
+      responses:
+        "204":
+          description: No Content
+      security:
+        - jwt: []
+      x-name: logs
+  /admin/release-notes:
+    parameters: []
+    x-name: Admin
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            text/x-rst:
+              schema:
+                type: string
+      security:
+        - j: []
+        - w: []
+        - t: []
+      x-name: get
+  /admin/restart:
+    parameters: []
+    x-name: Admin
+    get:
+      responses:
+        "204":
+          description: No Content
+      security:
+        - jwt: []
+      x-name: restart
+  /api-docs:
+    parameters: []
+    x-name: OpenAPI
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            text/html:
+              schema:
+                type: string
+      x-name: getHTML
+  /openapi.json:
+    parameters: []
+    x-name: OpenAPI
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: string
+      x-name: getJSON
+  /openapi.yaml:
+    parameters: []
+    x-name: OpenAPI
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            text/yaml:
+              schema:
+                type: string
+      x-name: getYAML
+  /metrics:
+    parameters: []
+    x-name: Metrics
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            text/plain; version=0.0.4; charset=utf-8:
+              schema:
+                type: string
+      x-name: getMetrics
+  /metrics/:metric:
+    parameters: []
+    x-name: Metrics
+    get:
+      responses:
+        "200":
+          description: ""
+          content:
+            text/plain; version=0.0.4; charset=utf-8:
+              schema:
+                type: string
+      x-name: getSingleMetric
+  /cachedusers:
+    parameters: []
+    x-schema: CacheUser
+    head:
+      description: Returns the total number of user accounts matching the given search
+        criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/CacheUser"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/CacheUser"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CacheUser"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/CacheUser"
+      x-name: create
+    get:
+      description: Returns all user accounts matching the given search criteria.
+      responses:
+        "200":
+          description: ""
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Item'
+                  $ref: "#/components/schemas/CacheUser"
+      x-name: findAll
+    delete:
+      description: Deletes all existing user accounts matching the given search criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /cachedusers/:id:
+    parameters: []
+    x-schema: CacheUser
+    delete:
+      description: Deletes an existing user account.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    get:
+      description: Returns the user account with the given unique identifier.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheUser"
+      x-name: findById
+    put:
+      description: Updates an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CacheUser"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheUser"
+      x-name: update
+  /hello:
+    parameters: []
+    x-name: Default
+    get:
+      description: Returns `Hello World!`.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+      x-name: helloWorld
+  /token:
+    parameters: []
+    x-name: Default
+    get:
+      description: Returns the user data for a valid authenticated user.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - jwt: []
-externalDocs:
-  description: Powered by AcceleratXR Core technology.
-  url: 'https://acceleratxr.com'
+      x-name: authToken
+  /error:
+    parameters: []
+    x-name: Default
+    get:
+      description: Throws a 400-level error and returns the error as the response body.
+      responses:
+        "204":
+          description: No Content
+      x-name: throwError
+  /connect.websocket:
+    parameters: []
+    x-name: Default
+    x-upgrade: true
+    get:
+      description: Establishes a socket connection that responds to all messages with
+        `echo ${msg}`.
+      responses:
+        "204":
+          description: No Content
+      x-name: wsConnect
+  /connect-secure.websocket:
+    parameters: []
+    x-name: Default
+    x-upgrade: true
+    get:
+      description: Establishes a secured socket connection that responds to all
+        messages with `echo ${msg}`.
+      responses:
+        "204":
+          description: No Content
+      security:
+        - jwt: []
+      x-name: wsConnectSecure
+  /items:
+    parameters: []
+    x-schema: Item
+    head:
+      description: Returns the total number of items matching the given search criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new item.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/Item"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Item"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Item"
+      x-name: create
+    get:
+      description: Returns all items matching the given search criteria.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+      x-name: findAll
+    delete:
+      description: Deletes all existing items matching the given search criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /items/:id:
+    parameters: []
+    x-schema: Item
+    delete:
+      description: Deletes an existing item.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    get:
+      description: Returns the item with the given unique identifier.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+      x-name: findById
+    put:
+      description: Updates an existing item.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+      x-name: update
+  /users:
+    parameters: []
+    x-schema: User
+    head:
+      description: Returns the total number of user accounts matching the given search
+        criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/User"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/User"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+      x-name: create
+    put:
+      description: Updates multiple user accounts in bulk.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+      x-name: updateBulk
+    get:
+      description: Returns all user accounts matching the given search criteria.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+      x-name: findAll
+    delete:
+      description: Deletes all existing user accounts matching the given search criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /users/:id:
+    parameters: []
+    x-schema: User
+    delete:
+      description: Deletes an existing user account.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    head:
+      description: Returns a boolean integer indicating whether or not a user account
+        with the given unique identifier exists.
+      responses:
+        "204":
+          description: No Content
+      x-name: exists
+    x-after:
+      - cleanPII
+    get:
+      description: Returns the user account with the given unique identifier.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+      x-name: findById
+    x-before:
+      - validate
+    put:
+      description: Updates an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: promise
+      x-name: update
+  /users/:id/:property:
+    parameters: []
+    x-before:
+      - validate
+    x-schema: User
+    put:
+      description: Updates a single property of an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+      x-name: updateProperty
+  /versionedusers:
+    parameters: []
+    x-schema: VersionedUser
+    head:
+      description: Returns the total number of user accounts matching the given search
+        criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/VersionedUser"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/VersionedUser"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/VersionedUser"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/VersionedUser"
+      x-name: create
+    get:
+      description: Returns all user accounts matching the given search criteria.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VersionedUser"
+      x-name: findAll
+    delete:
+      description: Deletes all existing user accounts matching the given search criteria.
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /versionedusers/:id:
+    parameters: []
+    x-schema: VersionedUser
+    delete:
+      description: Deletes an existing user account.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    get:
+      description: Returns the user account with the given unique identifier.
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionedUser"
+      x-name: findById
+    put:
+      description: Updates an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedUser"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionedUser"
+      x-name: update
+components:
+  schemas:
+    CacheUser:
+      properties:
+        uid:
+          default: 0d9073c8-1d6e-4ff0-bab9-08f2e4d59126
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: 2023-12-12T21:07:36.906Z
+          description: The date and time that the entity was created.
+          type: date
+        dateModified:
+          default: 2023-12-12T21:07:36.906Z
+          description: The date and time that the entity was last modified.
+          type: date
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        firstName:
+          default: ""
+          description: The first name of the user.
+          type: string
+        lastName:
+          default: ""
+          description: The surname of the user.
+          type: string
+        age:
+          default: 0
+          description: The age of the user.
+          type: number
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - firstName
+        - lastName
+        - age
+      x-baseClass: BaseMongoEntity
+      x-cache: 30
+      x-datastore: mongodb
+    Item:
+      properties:
+        uid:
+          default: 4122db29-88db-4ca8-807b-780cc2522382
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was created.
+          type: date
+        dateModified:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was last modified.
+          type: date
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        name:
+          default: ""
+          description: The unique name of the item.
+          type: string
+          x-identifier: true
+        quantity:
+          default: 0
+          description: The amount of the item that exists.
+          type: number
+        cost:
+          default: 0
+          description: The cost that must be paid by the user to acquire the item.
+          type: number
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - name
+        - quantity
+        - cost
+      x-baseClass: BaseEntity
+      x-datastore: sqlite
+    User:
+      properties:
+        uid:
+          default: 8faa9502-234b-4990-9ede-f69bb0b9ee71
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was created.
+          type: date
+        dateModified:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was last modified.
+          type: date
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        name:
+          default: ""
+          description: The unique identifier of the user.
+          type: string
+          x-identifier: true
+        firstName:
+          default: ""
+          description: The first name of the user.
+          type: string
+        lastName:
+          default: ""
+          description: The surname of the user.
+          type: string
+        age:
+          default: 0
+          description: The age of the user.
+          type: number
+        productUid:
+          description: The uuid of the product that is associated with this user.
+          type: string
+          x-identifier: true
+        uType:
+          oneOf:
+            - type: string
+            - type: number
+            - {}
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - name
+        - firstName
+        - lastName
+        - age
+      x-baseClass: BaseMongoEntity
+      x-datastore: mongodb
+    VersionedUser:
+      properties:
+        uid:
+          default: d5943cd7-4e26-4f39-84a0-0d4274c28e72
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was created.
+          type: date
+        dateModified:
+          default: 2023-12-12T21:07:36.907Z
+          description: The date and time that the entity was last modified.
+          type: date
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        deleted:
+          default: false
+          type: boolean
+        name:
+          default: ""
+          description: The unique identifier of the user.
+          type: string
+          x-identifier: true
+        firstName:
+          default: ""
+          description: The first name of the user.
+          type: string
+        lastName:
+          default: ""
+          description: The surname of the user.
+          type: string
+        age:
+          default: 0
+          description: The age of the user.
+          type: number
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - deleted
+        - name
+        - firstName
+        - lastName
+        - age
+      x-baseClass: RecoverableBaseMongoEntity
+      x-datastore: mongodb
+      x-versioned: -1
+  responses: {}
+  parameters: {}
+  examples: {}
+  requestBodies: {}
+  headers: {}
+  securitySchemes: {}
+  links: {}
+  callbacks: {}
+tags: []
+servers:
+  - {}

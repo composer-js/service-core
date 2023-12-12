@@ -220,8 +220,8 @@ export class RouteUtils {
             let key: string = entry[0];
             let value: any = entry[1] as any;
 
-            let docs: any = Reflect.getMetadata("cjs:docs", route, key);
-            let metadata: any = Reflect.getMetadata("cjs:route", route, key);
+            let docs: any = Reflect.getMetadata("cjs:docs", route, key) || {};
+            let metadata: any = Reflect.getMetadata("cjs:route", route, key) || {};
             if (value && metadata) {
                 let { authRequired } = metadata;
                 const { after, before, methods, requiredRoles, validator } = metadata;

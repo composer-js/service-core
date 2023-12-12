@@ -4,6 +4,7 @@
 import * as prom from "prom-client";
 import { Config } from "../decorators/ObjectDecorators";
 import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
+import { Returns } from "../decorators/DocDecorators";
 
 /**
  * Handles all REST API requests for the endpoint `/metrics'. This route handler produces Prometheus compatible metrics
@@ -24,12 +25,14 @@ export class MetricsRoute {
 
     @Get()
     @ContentType(prom.register.contentType)
+    @Returns([String])
     private async getMetrics(): Promise<string> {
         return this.registry.metrics();
     }
 
     @Get("/:metric")
     @ContentType(prom.register.contentType)
+    @Returns([String])
     private getSingleMetric(@Param("metric") metric: any): Promise<string> {
         return this.registry.getSingleMetricAsString(metric);
     }

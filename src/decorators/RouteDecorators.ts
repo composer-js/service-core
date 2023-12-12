@@ -195,6 +195,15 @@ export function Param(name: string | undefined = undefined) {
 }
 
 /**
+ * Indicates that the decorated function handles incoming `PATCH` requests at the given sub-path.
+ *
+ * @param path The sub-path that the route will handle requests for.
+ */
+export function Patch(path?: string) {
+    return Method("patch", path);
+}
+
+/**
  * Indicates that the decorated function handles incoming `POST` requests at the given sub-path.
  *
  * @param path The sub-path that the route will handle requests for.

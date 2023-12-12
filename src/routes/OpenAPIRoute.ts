@@ -2,6 +2,7 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { OpenApiSpec } from "../OpenApiSpec";
+import { Returns } from "../decorators/DocDecorators";
 import { Inject } from "../decorators/ObjectDecorators";
 import { Get, Route, ContentType } from "../decorators/RouteDecorators";
 const swagger = require("swagger-ui-express");
@@ -20,17 +21,20 @@ export class OpenAPIRoute {
 
     @Get("api-docs")
     @ContentType("text/html")
+    @Returns([String])
     public getHTML(): string {
         return swagger.generateHTML(this.apiSpec.getSpec());
     }
 
     @Get("openapi.json")
+    @Returns([String])
     public getJSON(): string {
         return this.apiSpec.getSpecAsJson();
     }
 
     @Get("openapi.yaml")
     @ContentType("text/yaml")
+    @Returns([String])
     public getYAML(): string {
         return this.apiSpec.getSpecAsYaml();
     }

@@ -7,9 +7,11 @@ import Item from "../models/Item";
 import { Repository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
 import { Repository } from "../../../src/decorators/DatabaseDecorators";
+import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 
 @Model(Item)
 @Route("/items")
+@Description("Handles processing of all HTTP requests for the path `/items`")
 class ItemRoute extends ModelRoute<Item> {
     @Repository(Item)
     protected repo?: Repo<Item>;
@@ -28,38 +30,54 @@ class ItemRoute extends ModelRoute<Item> {
     }
 
     @Head()
-    protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
-        return await super.doCount({ params, query, res, user });
+    @Description("Returns the total number of items matching the given search criteria.")
+    @Returns([null])
+    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+        return super.doCount({ params, query, res, user });
     }
 
     @Post()
     @Validate("validate")
-    protected async create(obj: Item | Item[], @User user?: any): Promise<Item | Item[]> {
-        return await super.doCreate(obj, { user });
+    @Description("Creates a new item.")
+    @TypeInfo([Item, [Array, Item]])
+    @Returns([Item, [Array, Item]])
+    protected create(obj: Item | Item[], @User user?: any): Promise<Item | Item[]> {
+        return super.doCreate(obj, { user });
     }
 
     @Delete(":id")
-    protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
-        await super.doDelete(id, { user });
+    @Description("Deletes an existing item.")
+    @Returns([null])
+    protected delete(@Param("id") id: string, @User user?: any): Promise<void> {
+        return super.doDelete(id, { user });
     }
 
     @Get()
+    @Description("Returns all items matching the given search criteria.")
+    @Returns([[Array, Item]])
     protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<Item[]> {
         return await super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
+    @Description("Returns the item with the given unique identifier.")
+    @Returns([Item])
     protected async findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<Item | null> {
         return await super.doFindById(id, { query, user });
     }
 
     @Delete()
-    protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
-        await super.doTruncate({ params, query, user });
+    @Description("Deletes all existing items matching the given search criteria.")
+    @Returns([null])
+    protected truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
+        return super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
     @Validate("validate")
+    @Description("Updates an existing item.")
+    @TypeInfo([Item])
+    @Returns([Item])
     protected async update(@Param("id") id: string, obj: Item, @User user?: any): Promise<Item> {
         const newObj: Item = new Item(obj);
         return await super.doUpdate(id, newObj, { user });

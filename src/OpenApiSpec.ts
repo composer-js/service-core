@@ -4,6 +4,7 @@
 import * as oa from "openapi3-ts/oas31";
 import { Config, Init } from "./decorators/ObjectDecorators";
 import { BaseMongoEntity } from "./models";
+import { DocumentsData } from "./decorators/DocDecorators";
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
@@ -61,13 +62,16 @@ export class OpenApiSpec {
 
     @Init
     private init(): void {
-        this.builder.addInfo({
+        this.addInfo({
             title: this.config.get("title"),
             description: this.config.get("description"),
             termsOfService: this.config.get("termsOfService"),
             contact: this.config.get("contact"),
             license: this.config.get("license"),
-            version: this.config.get("version")
+            version: this.config.get("version"),
+        });
+        this.addServer({
+            url: this.config.get("cluster_url")
         });
     }
 
@@ -200,7 +204,7 @@ export class OpenApiSpec {
      * @param clazz The class prototype to build the schema from.
      */
     public addModel(name: string, clazz: any): OpenApiSpec {
-        const schema: oa.SchemaObject = this.createSchemaObject(clazz);
+        const schema: oa.SchemaObject = this.createSchemaClass(clazz);
         this.builder.addSchema(name, schema);
         return this;
     }
@@ -215,46 +219,66 @@ export class OpenApiSpec {
      * @param docs The object containing all documentation information about the route handler.
      * @param routeClass The parent route class that the route handler belongs to.
      */
-    public addRoute(name: string, path: string, method: string, metadata: any, docs: any, routeClass: any): OpenApiSpec {
+    public addRoute(name: string, path: string, method: string, metadata: any, docs: DocumentsData, routeClass: any): OpenApiSpec {
         const { after, authRequired, before } = metadata;
         let { authStrategies } = metadata;
         const { description, example, summary, tags } = docs;
         const contentType = metadata.contentType || "application/json";
+        const data: oa.PathItemObject = {};
+        let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name); 
+        let returnTypes: any = Reflect.getMetadata("design:returntype", routeClass, name);
+        let security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
+        let requestSchemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
+        const responseSchemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
+
+        data.parameters = [];
 
         if (authRequired && !authStrategies) {
             authStrategies = ["jwt"];
         }
 
-        const extensions: oa.ISpecificationExtension[] = [];
-        let parameters: (oa.ParameterObject | oa.ReferenceObject)[] | undefined = undefined;
-        let schema: oa.SchemaObject | oa.ReferenceObject | undefined = undefined;
-        const security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
-
         if (after) {
-            extensions.push({ "x-after": after });
+            data["x-after"] = after;
         }
 
         if (before) {
-            extensions.push({ "x-before": before });
+            data["x-before"] = before;
+        }
+
+        // Make sure return type info is always expressed as an array
+        if (!Array.isArray(requestTypes)) {
+            // Ignore the Function type, it means an explicit request type wasn't provided
+            requestTypes = requestTypes?.name.toLowerCase() !== "function" ? [requestTypes] : [];
+        }
+
+        // Create the list of accepted request schemas based on the metadata
+        for (const typeInfo of requestTypes) {
+            if (typeInfo) {
+                requestSchemas.push(this.createSchemaObject(typeInfo));
+            }
         }
         
         if (routeClass.modelClass) {
             // Look up reference to schema for route's associated data model (where applicable)
             const fqn: string = routeClass.modelClass.name;
-            schema = this.getSchemaReference(fqn);
+            let schema: oa.SchemaObject | oa.ReferenceObject | undefined = this.getSchemaReference(fqn);
             // If no reference was found we'll create the schema definition now and link it
             if (!schema) {
                 this.addModel(fqn, routeClass.modelClass);
                 schema = this.getSchemaReference(fqn);
             }
-            extensions.push({"x-schema": fqn });
-        } else {
-            extensions.push({"x-name": routeClass.name.replace("Route", "") });
-        }
 
-        // If the path has `.websocket` at the end, make sure to add the `x-upgrade` extension
-        if (path.includes(".websocket")) {
-            extensions.push({ "x-upgrade": true });
+            if (schema) {
+                data["x-schema"] = fqn;
+
+                // If the request schemas aren't explicitly declared we will infer them based on the method
+                // type and model class.
+                if (requestSchemas.length === 0 && ["patch", "post", "put"].includes(method.toLowerCase())) {
+                    requestSchemas.push(schema);
+                }
+            }
+        } else {
+            data["x-name"] = routeClass.constructor.name.replace("Route", "");
         }
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
@@ -263,40 +287,72 @@ export class OpenApiSpec {
                 security.push({ [authStrategy]: [] });
             }
         }
+
+        // Make sure return type info is always expressed as an array
+        if (!Array.isArray(returnTypes)) {
+            // Ignore the Function type, it means an explicit request type wasn't provided
+            // Treat Promises as standard objects, we don't know for sure if the promise has a return value,
+            // but it's a fairly safe assumption.
+            if (returnTypes) {
+                if (returnTypes.name.toLowerCase() !== "promise") {
+                    returnTypes = [Object];
+                } else if (returnTypes.name.toLowerCase() !== "function") {
+                    returnTypes = [returnTypes];
+                }
+            } else {
+                returnTypes = [];
+            }
+        }
+
+        for (const typeInfo of returnTypes) {
+            if (typeInfo) {
+                responseSchemas.push(this.createSchemaObject(typeInfo));
+            }
+        }
+
+        // If the path has `.websocket` at the end, make sure to add the `x-upgrade` extension
+        // Also remove all response schemas since they don't apply.
+        if (path.includes(".websocket")) {
+            data["x-upgrade"] = true;
+            responseSchemas.splice(0, responseSchemas.length);
+        }
         
-        const data: oa.PathItemObject = {
-            [method]: {
-                description,
-                parameters,
-                requestBody: ["patch", "post", "put"].includes(method.toLowerCase()) ? {
+        // Finally add the operation object for the given method
+        const opObject: oa.OperationObject = {
+            description,
+            requestBody: requestSchemas.length > 0 ? {
+                content: {
+                    [contentType]: {
+                        example: example,
+                        schema: requestSchemas.length > 1 ? {
+                            oneOf: requestSchemas
+                        } : requestSchemas[0]
+                    }
+                }
+            } : undefined,
+            responses: {
+                ["200"]: responseSchemas.length > 0 ? {
+                    description: "", // TODO
                     content: {
                         [contentType]: {
-                            schema,
-                            example,
-                            // encoding?: EncodingObject; TODO?
+                            schema: responseSchemas.length > 1 ? {
+                                oneOf: responseSchemas
+                            } : responseSchemas[0]
                         }
                     }
                 } : undefined,
-                responses: {
-                    default: {
-                        description: "", // TODO
-                        content: {
-                            [contentType]: {
-                                schema,
-                                example,
-                                // encoding?: EncodingObject; TODO?
-                            }
-                        }
-                    }
-                },
-                security,
-                summary,
-                tags,
-                "x-name": name
+                ["204"]: responseSchemas.length === 0 ? {
+                    description: "No Content"
+                } : undefined
             },
-            parameters,
-            ...extensions
+            security,
+            summary,
+            tags,
+            "x-name": name
         };
+
+        data[method] = opObject;
+
         this.builder.addPath(path, data);
 
         return this;
@@ -308,16 +364,14 @@ export class OpenApiSpec {
      * @returns 
      */
     private isBuiltInType(value: any): boolean {
-        // Is it a primitive type?
-        if (typeof value !== 'object' || value === null) {
+        // Is it a null or undefined type?
+        if (!value) {
             return true;
         }
-      
-        const constructor = value.constructor;
-      
+
         // Check against common built-in types
-        const builtInTypes = [Object, Array, Date, RegExp, Map, Set, Promise, Function];
-        return builtInTypes.some((type) => constructor === type || constructor.prototype instanceof type);
+        const builtInTypes = [Object, Array, Boolean, Date, RegExp, Map, Number, Set, String, Promise, Function];
+        return builtInTypes.some((type) => value === type);
     }
 
     /**
@@ -326,7 +380,7 @@ export class OpenApiSpec {
      * @param clazz The class prototype to build a schema object from.
      * @returns The schema object with all information derived from the given class prototype.
      */
-    public createSchemaObject(clazz: any): oa.SchemaObject {
+    public createSchemaClass(clazz: any): oa.SchemaObject {
         const baseClass: any = Object.getPrototypeOf(clazz);
         const cache: any = Reflect.getMetadata("cjs:cacheTTL", clazz);
         const datastore: any = Reflect.getMetadata("cjs:datastore", clazz);
@@ -356,54 +410,124 @@ export class OpenApiSpec {
 
         const propertyNames: string[] = Object.getOwnPropertyNames(defaults);
         for (const member of propertyNames) {
-            const docs: any = Reflect.getMetadata("cjs:docs", defaults, member);
+            const docs: any = Reflect.getMetadata("cjs:docs", defaults, member) || {};
             const { description, example, format } = docs;
             const identifier: boolean = Reflect.getMetadata("cjs:isIdentifier", defaults, member);
-            const typeInfo: any = Reflect.getMetadata("design:type", defaults, member);
-            const subTypeInfo: any = Reflect.getMetadata("design:subtype", defaults, member);
+            let typesInfo: any = Reflect.getMetadata("design:type", defaults, member);
 
-            // Is the type a primitive or built-in? If it's a built-in type we'll construct a SchemaObject for it.
-            // If it's not a primitive or built-in, then it should have its own schema definition in the spec.
-            if (this.isBuiltInType(typeInfo)) {
-                const propSchema: oa.SchemaObject = {
-                    default: defaults[member],
+            // Make sure type info is always expressed as an array
+            if (!Array.isArray(typesInfo)) {
+                typesInfo = [typesInfo];
+            }
+
+            const schemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
+            for (const typeInfo of typesInfo) {
+                schemas.push(this.createSchemaObject(typeInfo, defaults[member], description, example, format, identifier));
+            }
+
+            if (schemas.length > 1) {
+                result.properties[member] = {
+                    default: docs.default || defaults[member],
                     description,
                     example,
-                    format,
-                    type: typeInfo.name,
+                    oneOf: schemas
                 };
-
-                if (identifier) {
-                    propSchema["x-identifier"] = identifier;
-                }
-
-                // When a sub-type is specified it's because we're either dealing with a container or an enum.
-                if (subTypeInfo) {
-                    // Enums have a main type of `string`, whereas containers will be an `array`,
-                    if (typeInfo.name.toLowerCase() === "string") {
-                        propSchema.enum = Object.getOwnPropertyNames(subTypeInfo).map((key: string) => subTypeInfo[key]);
-                    } else if (typeInfo.name.toLowerCase() === "array") {
-                        propSchema.items = this.getSchemaReference(subTypeInfo.name) || this.createSchemaObject(subTypeInfo);
-                    } else {
-                        propSchema["$ref"] = this.getSchemaReference(subTypeInfo.name);
-                    }
-                }
-                
-                result.properties[member] = propSchema;
-            } else {
-                // Unfortunately the TypeInfo information obtained from reflection here is not the same as the one
-                // that you get from the import itself, it's just a constructor, with all other metadata and
-                // inheritance information gone. So we're going to do something uncooth and assume we can link
-                // to a schema even if one doesn't exist at this very moment (the schema for this type may not have
-                // been created yet).
+            } else if (schemas.length === 1) {
                 result.properties[member] = {
-                    $ref: `#/components/schemas/${subTypeInfo.name}`
+                    default: docs.default || defaults[member],
+                    description,
+                    example,
+                    ...schemas[0]
                 };
             }
 
-            if (defaults[member] !== undefined) {
+            if (schemas.length > 0 && defaults[member] !== undefined) {
                 result.required.push(member);
             }
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a schema object for the given type.
+     * 
+     * @param typeInfo 
+     * @param defaultValue 
+     * @param description 
+     * @param example 
+     * @param format 
+     * @param identifier 
+     * @returns 
+     */
+    public createSchemaObject(typeInfo: any, defaultValue?: any, description?: string, example?: any, format?: string, identifier?: boolean): oa.SchemaObject | oa.ReferenceObject {
+        let result: oa.SchemaObject | oa.ReferenceObject = {
+            default: defaultValue,
+            description,
+            example,
+            format,
+            type: typeInfo?.name,
+        };
+
+        if (identifier) {
+            result["x-identifier"] = identifier;
+        }
+
+        // Generics (e.g. containers) are expressed as an array of types.
+        if (Array.isArray(typeInfo)) {
+            const contType: any = typeInfo[0];
+            const subTypeInfo: any = typeInfo[1];
+
+            // Set the container type as the primary schema type
+            if (contType.name.toLowerCase() === "map") {
+                result.type = "object";
+            } else {
+                result.type = contType.name.toLowerCase();
+            }
+
+            // Enums have a main type of `string`, whereas containers will be an `array`,
+            if (contType.name.toLowerCase() === "string") {
+                result.enum = Object.getOwnPropertyNames(subTypeInfo).map((key: string) => subTypeInfo[key]);
+            } else if (contType.name.toLowerCase() === "array") {
+                result.items = this.getSchemaReference(subTypeInfo.name) || this.createSchemaObject(subTypeInfo);
+            } else if (contType.name.toLowerCase() === "map") {
+                if (subTypeInfo.name.toLowerCase() !== "string") {
+                    throw new Error("Maps in OpenAPI must have a key type of string.");
+                }
+
+                const valType: any = typeInfo[2];
+                if (!valType) {
+                    throw new Error("Map types require three arguments. e.g. `[Map, string, string]`");
+                }
+
+                // Maps are encoded as an `object` with additional properties whose type is the value type. In OpenAPI,
+                // map keys must always be strings.
+                result.type = "object";
+
+                if (this.isBuiltInType(valType)) {
+                    result.additionalProperties = {
+                        type: valType.name.toLowerCase()
+                    };
+                } else {
+                    result.additionalProperties = this.getSchemaReference(valType.name);
+                }
+            } else {
+                result["$ref"] = this.getSchemaReference(subTypeInfo.name);
+            }
+        } else if (this.isBuiltInType(typeInfo)) {
+            // Convert the name to lowercase as that is compliant with OpenAPI
+            if (typeInfo) {
+                result.type = typeInfo.name.toLowerCase();
+            }
+        } else {
+            // Unfortunately the TypeInfo information obtained from reflection here is not the same as the one
+            // that you get from the import itself, it's just a constructor, with all other metadata and
+            // inheritance information gone. So we're going to do something uncooth and assume we can link
+            // to a schema even if one doesn't exist at this very moment (the schema for this type may not have
+            // been created yet).
+            result = {
+                $ref: `#/components/schemas/${typeInfo.name}`
+            };
         }
 
         return result;

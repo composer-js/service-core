@@ -5,6 +5,7 @@ export * from "./Server";
 export * from "./NetUtils";
 export * from "./ObjectFactory";
 export * from "./OpenApiSpec";
+export * from "./Types";
 
 export * from "./database";
 export * from "./decorators";

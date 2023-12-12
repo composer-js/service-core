@@ -22,11 +22,13 @@ import UserModel from "../models/VersionedUser";
 import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
+import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 
 const logger = Logger();
 
 @Model(UserModel)
 @Route("/versionedusers")
+@Description("Handles processing of all HTTP requests for the path `/versionedusers`.")
 class VersionedUserRoute extends ModelRoute<UserModel> {
     @MongoRepository(UserModel)
     protected repo?: Repo<UserModel>;
@@ -52,40 +54,56 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
     }
 
     @Head()
-    protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
-        return await super.doCount({ params, query, res, user });
+    @Description("Returns the total number of user accounts matching the given search criteria.")
+    @Returns([null])
+    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+        return super.doCount({ params, query, res, user });
     }
 
     @Post()
     @Validate("validate")
-    protected async create(obj: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
-        return await super.doCreate(obj, { user });
+    @Description("Creates a new user account.")
+    @TypeInfo([UserModel, [Array, UserModel]])
+    @Returns([UserModel, [Array, UserModel]])
+    protected create(obj: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
+        return super.doCreate(obj, { user });
     }
 
     @Delete(":id")
-    protected async delete(@Param("id") id: string, @Query("version") version?: string, @Query("purge") purge: string = "false", @User user?: any): Promise<void> {
-        await super.doDelete(id, { purge: purge === "true" ? true : false, version, user });
+    @Description("Deletes an existing user account.")
+    @Returns([null])
+    protected delete(@Param("id") id: string, @Query("version") version?: string, @Query("purge") purge: string = "false", @User user?: any): Promise<void> {
+        return super.doDelete(id, { purge: purge === "true" ? true : false, version, user });
     }
 
     @Get()
-    protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
-        return await super.doFindAll({ params, query, user });
+    @Description("Returns all user accounts matching the given search criteria.")
+    @Returns([[Array, UserModel]])
+    protected findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
+        return super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
-    protected async findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<UserModel | null> {
-        return await super.doFindById(id, { query, user });
+    @Description("Returns the user account with the given unique identifier.")
+    @Returns([UserModel])
+    protected findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<UserModel | null> {
+        return super.doFindById(id, { query, user });
     }
 
     @Delete()
-    protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
-        await super.doTruncate({ params, query, user });
+    @Description("Deletes all existing user accounts matching the given search criteria.")
+    @Returns([null])
+    protected truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
+        return super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
     @Validate("validate")
-    protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
-        return await super.doUpdate(id, obj, { user });
+    @Description("Updates an existing user account.")
+    @TypeInfo([UserModel])
+    @Returns([UserModel])
+    protected update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
+        return super.doUpdate(id, obj, { user });
     }
 }
 

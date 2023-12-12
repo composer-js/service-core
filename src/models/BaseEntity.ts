@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { Default, Description } from "../decorators/DocDecorators";
 import { Identifier } from "../decorators/ModelDecorators";
 import { Column, Index, PrimaryColumn } from "typeorm";
 const uuid = require("uuid");
@@ -18,6 +19,8 @@ export abstract class BaseEntity {
     /**
      * The universally unique identifier of the entity.
      */
+    @Description("The universally unique identifier of the entity.")
+    @Default("randomUUID()")
     @Identifier
     @Index("uid", { unique: true })
     @PrimaryColumn()
@@ -26,18 +29,23 @@ export abstract class BaseEntity {
     /**
      * The date and time that the entity was created.
      */
+    @Description("The date and time that the entity was created.")
+    @Default("new Date()")
     @Column()
     public dateCreated: Date = new Date();
 
     /**
      * The date and time that the entity was last modified.
      */
+    @Description("The date and time that the entity was last modified.")
+    @Default("new Date()")
     @Column()
     public dateModified: Date = new Date();
 
     /**
      * The optimistic lock version.
      */
+    @Description("The optimistic lock version.")
     @Column()
     public version: number = 0;
 

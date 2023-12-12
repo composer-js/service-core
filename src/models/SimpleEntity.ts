@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { Default, Description } from "../decorators/DocDecorators";
 import { Identifier } from "../decorators/ModelDecorators";
 import { Index, PrimaryColumn } from "typeorm";
 const uuid = require("uuid");
@@ -15,6 +16,8 @@ export abstract class SimpleEntity {
     /**
      * The universally unique identifier of the entity.
      */
+    @Description("The universally unique identifier of the entity.")
+    @Default("randomUUID()")
     @Identifier
     @Index()
     @PrimaryColumn()

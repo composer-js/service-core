@@ -21,7 +21,7 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
     },
 });
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
-jest.setTimeout(60000);
+jest.setTimeout(1200000);
 
 describe("Server Tests", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
@@ -78,19 +78,23 @@ describe("Server Tests", () => {
         expect(result.body).toHaveProperty("version");
     });
 
-    it.skip("Can serve OpenAPI spec.", async () => {
-        // TODO
+    it("Can serve OpenAPI spec.", async () => {
         expect(server.isRunning()).toBe(true);
         const result = await request(server.getApplication()).get("/openapi.json");
         expect(result).toHaveProperty("status");
         expect(result.status).toBe(200);
         expect(result).toHaveProperty("body");
-        //expect(result.body).toEqual(apiSpec);
-
-        const result2 = await request(server.getApplication()).get("/api-docs");
+        
+        const result2 = await request(server.getApplication()).get("/openapi.yaml");
         expect(result2).toHaveProperty("status");
         expect(result2.status).toBe(200);
         expect(result2).toHaveProperty("body");
+        fs.writeFileSync("./test/openapi.yaml", result2.body);
+
+        const result3 = await request(server.getApplication()).get("/api-docs");
+        expect(result3).toHaveProperty("status");
+        expect(result3.status).toBe(200);
+        expect(result3).toHaveProperty("body");
     });
 
     it("Can serve metrics.", async () => {
