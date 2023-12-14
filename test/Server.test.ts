@@ -91,7 +91,8 @@ describe("Server Tests", () => {
         expect(result2).toHaveProperty("status");
         expect(result2.status).toBe(200);
         expect(result2).toHaveProperty("body");
-        fs.writeFileSync("./test/openapi.yaml", result2.body);
+        const testFile: string = fs.readFileSync("./test/openapi.yaml").toString("utf-8");
+        expect(result2.body).toEqual(testFile);
 
         const result3 = await request(server.getApplication()).get("/api-docs");
         expect(result3).toHaveProperty("status");

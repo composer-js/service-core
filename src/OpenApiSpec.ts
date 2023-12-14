@@ -371,7 +371,9 @@ export class OpenApiSpec {
         // Create the list of accepted request schemas based on the metadata
         for (const typeInfo of requestTypes) {
             if (typeInfo) {
-                requestSchemas.push(this.createSchemaObject(typeInfo));
+                if (typeInfo) {
+                    requestSchemas.push(this.createSchemaObject(typeInfo));
+                }
             }
         }
         
@@ -540,7 +542,9 @@ export class OpenApiSpec {
 
             const schemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
             for (const typeInfo of typesInfo) {
-                schemas.push(this.createSchemaObject(typeInfo, defaults[member], description, example, format, identifier));
+                if (typeInfo) {
+                    schemas.push(this.createSchemaObject(typeInfo, docs.default || defaults[member], description, example, format, identifier));
+                }
             }
 
             if (schemas.length > 1) {
@@ -635,7 +639,17 @@ export class OpenApiSpec {
         } else if (this.isBuiltInType(typeInfo)) {
             // Convert the name to lowercase as that is compliant with OpenAPI
             if (typeInfo) {
-                result.type = typeInfo.name.toLowerCase();
+                // Buffers need to be encoded as 'byte'
+                if (typeInfo.name.toLowerCase() === "buffer") {
+                    result.type = "string";
+                    result.format = "byte";
+                // Date is a special case as it is represented as a string in OpenAPI with format "date"
+                } else if (typeInfo.name.toLowerCase() === "date") {
+                    result.type = "string";
+                    result.format = "date";
+                } else {
+                    result.type = typeInfo.name.toLowerCase();
+                }
             }
         } else {
             // Unfortunately the TypeInfo information obtained from reflection here is not the same as the one

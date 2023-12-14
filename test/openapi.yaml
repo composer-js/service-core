@@ -660,18 +660,20 @@ components:
     CacheUser:
       properties:
         uid:
-          default: 1cbffd72-5cc5-4a6d-a8a0-2303b8cb8ec3
+          default: randomUUID()
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-14T02:47:54.244Z
+          default: new Date()
           description: The date and time that the entity was created.
-          type: date
+          format: date
+          type: string
         dateModified:
-          default: 2023-12-14T02:47:54.244Z
+          default: new Date()
           description: The date and time that the entity was last modified.
-          type: date
+          format: date
+          type: string
         version:
           default: 0
           description: The optimistic lock version.
@@ -702,18 +704,20 @@ components:
     Item:
       properties:
         uid:
-          default: 815c8883-9c56-461b-973e-14d7b59f616c
+          default: randomUUID()
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was created.
-          type: date
+          format: date
+          type: string
         dateModified:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was last modified.
-          type: date
+          format: date
+          type: string
         version:
           default: 0
           description: The optimistic lock version.
@@ -744,18 +748,20 @@ components:
     User:
       properties:
         uid:
-          default: 40d278b6-4ae3-45e4-ac68-9a9f54f8ac3d
+          default: randomUUID()
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was created.
-          type: date
+          format: date
+          type: string
         dateModified:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was last modified.
-          type: date
+          format: date
+          type: string
         version:
           default: 0
           description: The optimistic lock version.
@@ -785,7 +791,6 @@ components:
           oneOf:
             - type: string
             - type: number
-            - {}
       required:
         - uid
         - dateCreated
@@ -800,18 +805,20 @@ components:
     VersionedUser:
       properties:
         uid:
-          default: 7ac86afe-1bee-4c75-8dc0-674a09d6aae3
+          default: randomUUID()
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was created.
-          type: date
+          format: date
+          type: string
         dateModified:
-          default: 2023-12-14T02:47:54.245Z
+          default: new Date()
           description: The date and time that the entity was last modified.
-          type: date
+          format: date
+          type: string
         version:
           default: 0
           description: The optimistic lock version.
