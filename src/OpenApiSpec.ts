@@ -70,6 +70,66 @@ export class OpenApiSpec {
             license: this.config.get("license"),
             version: this.config.get("version"),
         });
+        this.addParameter("id", {
+            description: "The unique identifier of the resource.",
+            name: "id",
+            in: "path",
+            required: true,
+            schema: {
+                type: "string"
+            }
+        });
+        this.addParameter("page", {
+            description: "The index of the current page when retrieving paginated results.",
+            name: "page",
+            in: "query",
+            required: false,
+            schema: {
+                type: "number"
+            }
+        });
+        this.addParameter("limit", {
+            description: "The maximum number of records to retrieve.",
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: {
+                type: "number"
+            }
+        });
+        this.addParameter("sort", {
+            description: "The property and direction with which to sort the results by.",
+            name: "sort",
+            in: "query",
+            required: false,
+            schema: {
+                oneOf: [
+                    {
+                        description: "The name of the property to sort by, in ascending order.",
+                        type: "string",
+                        example: "propertyName"
+                    },
+                    {
+                        description: "The name of the property to sort by, in ascending order.",
+                        type: "object",
+                        example: {
+                            "<propertyName>": "<direction>"
+                        }
+                    }
+                ]
+            }
+        });
+        this.addParameter("version", {
+            description: "The unique version of the resource.",
+            name: "version",
+            in: "path",
+            required: false,
+            schema: {
+                type: "number"
+            }
+        });
+
+        // Add the URL to this cluster
         this.addServer({
             url: this.config.get("cluster_url")
         });
@@ -225,13 +285,70 @@ export class OpenApiSpec {
         const { description, example, summary, tags } = docs;
         const contentType = metadata.contentType || "application/json";
         const data: oa.PathItemObject = {};
+        const mParams: (oa.ParameterObject | oa.ReferenceObject)[] = [];
         let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name); 
         let returnTypes: any = Reflect.getMetadata("design:returntype", routeClass, name);
         let security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
         let requestSchemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
         const responseSchemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
 
-        data.parameters = [];
+        // Extract all path parameters
+        const parameters: (oa.ParameterObject | oa.ReferenceObject)[] = [];
+        const regex = new RegExp(/(:[a-zA-Z0-9\-_+]+)/g);
+        const matches: RegExpMatchArray | null = path.match(regex);
+        if (matches) {
+            for (const param of matches) {
+                const name: string = param.substring(1);
+                const ref: oa.ReferenceObject | undefined = this.getParameterReference(name);
+                if (ref) {
+                    parameters.push(ref);
+                } else {
+                    parameters.push({
+                        name,
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string"
+                        }
+                    });
+                }
+            }
+        }
+
+        if (parameters.length > 0) {
+            data.parameters = parameters;
+        }
+
+        // Does the endpoint use query params?
+        const argMetadata: any = Reflect.getMetadata("cjs:args", Object.getPrototypeOf(routeClass), name);
+        let hasQuery: boolean = false;
+        for (const key in argMetadata) {
+            const i: number = Number(key);
+            if (argMetadata[i][0] === "query") {
+                hasQuery = true;
+                const qName: string | undefined = argMetadata[i][1]
+                if (qName && !["page", "limit", "sort"].includes(qName)) {
+                    const ref: oa.ReferenceObject | undefined = this.getParameterReference(qName);
+                    if (ref) {
+                        mParams.push(ref);
+                    } else {
+                        mParams.push({
+                            name,
+                            in: "query",
+                            schema: {
+                                type: "string"
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        if (hasQuery) {
+            // The following casts are really dirty, but we know for sure the params exist.
+            mParams.push(this.getParameterReference("limit") as any);
+            mParams.push(this.getParameterReference("page") as any);
+            mParams.push(this.getParameterReference("sort") as any);
+        }
 
         if (authRequired && !authStrategies) {
             authStrategies = ["jwt"];
@@ -320,6 +437,7 @@ export class OpenApiSpec {
         // Finally add the operation object for the given method
         const opObject: oa.OperationObject = {
             description,
+            parameters: mParams.length > 0 ? mParams : undefined,
             requestBody: requestSchemas.length > 0 ? {
                 content: {
                     [contentType]: {
@@ -531,6 +649,22 @@ export class OpenApiSpec {
         }
 
         return result;
+    }
+
+    /**
+     * Returns a reference to an existing parameter defined in the OpenAPI specification for the given name.
+     * 
+     * @param name The name of the parameter to find a reference for.
+     * @returns The reference to the parameter with the given name, otherwise `undefined`.
+     */
+    public getParameterReference(name: string): oa.ReferenceObject | undefined {
+        const components: oa.ComponentsObject | undefined = this.components;
+        if (components && components.parameters && components.parameters[name]) {
+            return {
+                $ref: `#/components/parameters/${name}`
+            };
+        }
+        return undefined;
     }
 
     /**

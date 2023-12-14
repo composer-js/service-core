@@ -3,7 +3,6 @@ info:
   version: "1.0"
 paths:
   /:
-    parameters: []
     x-name: Index
     get:
       responses:
@@ -15,7 +14,6 @@ paths:
                 type: object
       x-name: get
   /admin/clear-cache:
-    parameters: []
     x-name: Admin
     get:
       responses:
@@ -25,7 +23,6 @@ paths:
         - jwt: []
       x-name: clearCache
   /admin/inspect.websocket:
-    parameters: []
     x-name: Admin
     x-upgrade: true
     get:
@@ -36,7 +33,6 @@ paths:
         - jwt: []
       x-name: inspect
   /admin/logs.websocket:
-    parameters: []
     x-name: Admin
     x-upgrade: true
     get:
@@ -47,7 +43,6 @@ paths:
         - jwt: []
       x-name: logs
   /admin/release-notes:
-    parameters: []
     x-name: Admin
     get:
       responses:
@@ -63,7 +58,6 @@ paths:
         - t: []
       x-name: get
   /admin/restart:
-    parameters: []
     x-name: Admin
     get:
       responses:
@@ -73,7 +67,6 @@ paths:
         - jwt: []
       x-name: restart
   /api-docs:
-    parameters: []
     x-name: OpenAPI
     get:
       responses:
@@ -85,7 +78,6 @@ paths:
                 type: string
       x-name: getHTML
   /openapi.json:
-    parameters: []
     x-name: OpenAPI
     get:
       responses:
@@ -97,7 +89,6 @@ paths:
                 type: string
       x-name: getJSON
   /openapi.yaml:
-    parameters: []
     x-name: OpenAPI
     get:
       responses:
@@ -109,7 +100,6 @@ paths:
                 type: string
       x-name: getYAML
   /metrics:
-    parameters: []
     x-name: Metrics
     get:
       responses:
@@ -121,7 +111,12 @@ paths:
                 type: string
       x-name: getMetrics
   /metrics/:metric:
-    parameters: []
+    parameters:
+      - name: metric
+        in: path
+        required: true
+        schema:
+          type: string
     x-name: Metrics
     get:
       responses:
@@ -133,11 +128,14 @@ paths:
                 type: string
       x-name: getSingleMetric
   /cachedusers:
-    parameters: []
     x-schema: CacheUser
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
@@ -167,6 +165,10 @@ paths:
       x-name: create
     get:
       description: Returns all user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -179,12 +181,17 @@ paths:
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
       x-name: truncate
   /cachedusers/:id:
-    parameters: []
+    parameters:
+      - $ref: "#/components/parameters/id"
     x-schema: CacheUser
     delete:
       description: Deletes an existing user account.
@@ -194,6 +201,10 @@ paths:
       x-name: delete
     get:
       description: Returns the user account with the given unique identifier.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -218,7 +229,6 @@ paths:
                 $ref: "#/components/schemas/CacheUser"
       x-name: update
   /hello:
-    parameters: []
     x-name: Default
     get:
       description: Returns `Hello World!`.
@@ -231,7 +241,6 @@ paths:
                 type: object
       x-name: helloWorld
   /token:
-    parameters: []
     x-name: Default
     get:
       description: Returns the user data for a valid authenticated user.
@@ -246,7 +255,6 @@ paths:
         - jwt: []
       x-name: authToken
   /error:
-    parameters: []
     x-name: Default
     get:
       description: Throws a 400-level error and returns the error as the response body.
@@ -255,7 +263,6 @@ paths:
           description: No Content
       x-name: throwError
   /connect.websocket:
-    parameters: []
     x-name: Default
     x-upgrade: true
     get:
@@ -266,7 +273,6 @@ paths:
           description: No Content
       x-name: wsConnect
   /connect-secure.websocket:
-    parameters: []
     x-name: Default
     x-upgrade: true
     get:
@@ -279,10 +285,13 @@ paths:
         - jwt: []
       x-name: wsConnectSecure
   /items:
-    parameters: []
     x-schema: Item
     head:
       description: Returns the total number of items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
@@ -312,6 +321,10 @@ paths:
       x-name: create
     get:
       description: Returns all items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -324,12 +337,17 @@ paths:
       x-name: findAll
     delete:
       description: Deletes all existing items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
       x-name: truncate
   /items/:id:
-    parameters: []
+    parameters:
+      - $ref: "#/components/parameters/id"
     x-schema: Item
     delete:
       description: Deletes an existing item.
@@ -339,6 +357,10 @@ paths:
       x-name: delete
     get:
       description: Returns the item with the given unique identifier.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -363,11 +385,14 @@ paths:
                 $ref: "#/components/schemas/Item"
       x-name: update
   /users:
-    parameters: []
     x-schema: User
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
@@ -416,6 +441,10 @@ paths:
       x-name: updateBulk
     get:
       description: Returns all user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -428,12 +457,17 @@ paths:
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
       x-name: truncate
   /users/:id:
-    parameters: []
+    parameters:
+      - $ref: "#/components/parameters/id"
     x-schema: User
     delete:
       description: Deletes an existing user account.
@@ -444,6 +478,10 @@ paths:
     head:
       description: Returns a boolean integer indicating whether or not a user account
         with the given unique identifier exists.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
@@ -452,6 +490,10 @@ paths:
       - cleanPII
     get:
       description: Returns the user account with the given unique identifier.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -478,7 +520,13 @@ paths:
                 type: promise
       x-name: update
   /users/:id/:property:
-    parameters: []
+    parameters:
+      - $ref: "#/components/parameters/id"
+      - name: property
+        in: path
+        required: true
+        schema:
+          type: string
     x-before:
       - validate
     x-schema: User
@@ -498,11 +546,14 @@ paths:
                 $ref: "#/components/schemas/User"
       x-name: updateProperty
   /versionedusers:
-    parameters: []
     x-schema: VersionedUser
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
@@ -532,6 +583,10 @@ paths:
       x-name: create
     get:
       description: Returns all user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -544,21 +599,39 @@ paths:
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
       x-name: truncate
   /versionedusers/:id:
-    parameters: []
+    parameters:
+      - $ref: "#/components/parameters/id"
     x-schema: VersionedUser
     delete:
       description: Deletes an existing user account.
+      parameters:
+        - $ref: "#/components/parameters/version"
+        - name: delete
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "204":
           description: No Content
       x-name: delete
     get:
       description: Returns the user account with the given unique identifier.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
       responses:
         "200":
           description: ""
@@ -587,16 +660,16 @@ components:
     CacheUser:
       properties:
         uid:
-          default: 0d9073c8-1d6e-4ff0-bab9-08f2e4d59126
+          default: 1cbffd72-5cc5-4a6d-a8a0-2303b8cb8ec3
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-12T21:07:36.906Z
+          default: 2023-12-14T02:47:54.244Z
           description: The date and time that the entity was created.
           type: date
         dateModified:
-          default: 2023-12-12T21:07:36.906Z
+          default: 2023-12-14T02:47:54.244Z
           description: The date and time that the entity was last modified.
           type: date
         version:
@@ -629,16 +702,16 @@ components:
     Item:
       properties:
         uid:
-          default: 4122db29-88db-4ca8-807b-780cc2522382
+          default: 815c8883-9c56-461b-973e-14d7b59f616c
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was created.
           type: date
         dateModified:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was last modified.
           type: date
         version:
@@ -671,16 +744,16 @@ components:
     User:
       properties:
         uid:
-          default: 8faa9502-234b-4990-9ede-f69bb0b9ee71
+          default: 40d278b6-4ae3-45e4-ac68-9a9f54f8ac3d
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was created.
           type: date
         dateModified:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was last modified.
           type: date
         version:
@@ -727,16 +800,16 @@ components:
     VersionedUser:
       properties:
         uid:
-          default: d5943cd7-4e26-4f39-84a0-0d4274c28e72
+          default: 7ac86afe-1bee-4c75-8dc0-674a09d6aae3
           description: The universally unique identifier of the entity.
           type: string
           x-identifier: true
         dateCreated:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was created.
           type: date
         dateModified:
-          default: 2023-12-12T21:07:36.907Z
+          default: 2023-12-14T02:47:54.245Z
           description: The date and time that the entity was last modified.
           type: date
         version:
@@ -777,7 +850,49 @@ components:
       x-datastore: mongodb
       x-versioned: -1
   responses: {}
-  parameters: {}
+  parameters:
+    id:
+      description: The unique identifier of the resource.
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    page:
+      description: The index of the current page when retrieving paginated results.
+      name: page
+      in: query
+      required: false
+      schema:
+        type: number
+    limit:
+      description: The maximum number of records to retrieve.
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: number
+    sort:
+      description: The property and direction with which to sort the results by.
+      name: sort
+      in: query
+      required: false
+      schema:
+        oneOf:
+          - description: The name of the property to sort by, in ascending order.
+            type: string
+            example: propertyName
+          - description: The name of the property to sort by, in ascending order.
+            type: object
+            example:
+              <propertyName>: <direction>
+    version:
+      description: The unique version of the resource.
+      name: version
+      in: path
+      required: false
+      schema:
+        type: number
   examples: {}
   requestBodies: {}
   headers: {}
