@@ -396,9 +396,9 @@ export class OpenApiSpec {
                     requestSchemas.push(schema);
                 }
             }
-        } else {
-            data["x-name"] = routeClass.constructor.name.replace("Route", "");
         }
+        
+        data["x-name"] = routeClass.constructor.name.replace("Route", "");
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
         if (security) {

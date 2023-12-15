@@ -6,12 +6,12 @@ import { Config } from "../decorators/ObjectDecorators";
 import { Description, Returns } from "../decorators/DocDecorators";
 
 /**
- * The `StatusRoute` provides a default `/` endpoint the returns metadata information about the service such as
+ * The `StatusRoute` provides a default `/status` endpoint the returns metadata information about the service such as
  * name, version.
  *
  * @author Jean-Philippe Steinmetz
  */
-@Route("/")
+@Route("/status")
 export class StatusRoute {
     @Config()
     private config: any;

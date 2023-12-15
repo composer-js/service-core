@@ -20,7 +20,7 @@ export class OpenAPIRoute {
     private apiSpec: OpenApiSpec = new OpenApiSpec();
 
     @Description("Returns the OpenAPI specification for the service in HTML format.")
-    @Get("api-docs")
+    @Get()
     @ContentType("text/html")
     @Returns([String])
     public getHTML(): string {
