@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   version: "1.0"
 paths:
-  /:
+  /status:
     x-name: Status
     get:
       description: Returns information about the service and it's operational status.
@@ -71,7 +71,7 @@ paths:
       security:
         - jwt: []
       x-name: restart
-  /api-docs:
+  /:
     x-name: OpenAPI
     get:
       description: Returns the OpenAPI specification for the service in HTML format.
@@ -140,6 +140,7 @@ paths:
       x-name: getSingleMetric
   /cachedusers:
     x-schema: CacheUser
+    x-name: _a
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
@@ -204,6 +205,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/id"
     x-schema: CacheUser
+    x-name: _a
     delete:
       description: Deletes an existing user account.
       responses:
@@ -297,6 +299,7 @@ paths:
       x-name: wsConnectSecure
   /items:
     x-schema: Item
+    x-name: _a
     head:
       description: Returns the total number of items matching the given search criteria.
       parameters:
@@ -360,6 +363,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/id"
     x-schema: Item
+    x-name: _a
     delete:
       description: Deletes an existing item.
       responses:
@@ -397,6 +401,7 @@ paths:
       x-name: update
   /users:
     x-schema: User
+    x-name: _a
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
@@ -480,6 +485,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/id"
     x-schema: User
+    x-name: _a
     delete:
       description: Deletes an existing user account.
       responses:
@@ -541,6 +547,7 @@ paths:
     x-before:
       - validate
     x-schema: User
+    x-name: _a
     put:
       description: Updates a single property of an existing user account.
       requestBody:
@@ -558,6 +565,7 @@ paths:
       x-name: updateProperty
   /versionedusers:
     x-schema: VersionedUser
+    x-name: _a
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
@@ -622,6 +630,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/id"
     x-schema: VersionedUser
+    x-name: _a
     delete:
       description: Deletes an existing user account.
       parameters:
