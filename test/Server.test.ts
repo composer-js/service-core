@@ -70,9 +70,9 @@ describe("Server Tests", () => {
         expect(server.isRunning()).toBe(true);
     });
 
-    it("Can serve index.", async () => {
+    it("Can serve status.", async () => {
         expect(server.isRunning()).toBe(true);
-        const result = await request(server.getApplication()).get("/");
+        const result = await request(server.getApplication()).get("/status");
         expect(result).toHaveProperty("status");
         expect(result.status).toBe(200);
         expect(result).toHaveProperty("body");
