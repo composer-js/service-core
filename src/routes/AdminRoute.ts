@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
+import { JWTUser, UserUtils } from "@composer-js/core";
 import Redis, { ScanStream } from "ioredis";
 import * as Transport from "winston-transport";
 import { Config, Logger } from "../decorators/ObjectDecorators"
 import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
-import { Returns } from "../decorators/DocDecorators";
+import { Description, Returns } from "../decorators/DocDecorators";
 
 /**
  * Implements a Winston transport that pipes incoming log messages to a configured redis pubsub channel.
@@ -52,14 +52,16 @@ export class AdminRoute {
     @RedisConnection("cache")
     protected cacheClient?: Redis;
 
+    @Config("datastores:cache", null)
+    private cacheConnConfig: any;
+
     @Logger
     private logger: any;
 
-    @Config("auth")
-    private authConfig: any;
-
     @Config("datastores:logs", null)
     private logsConnConfig: any;
+
+    private redisClient?: Redis;
 
     /** The underlying ReleaseNotes specification. */
     private releaseNotes: string;
@@ -81,6 +83,20 @@ export class AdminRoute {
 
     @Init
     private async init(): Promise<void> {
+        if (this.cacheConnConfig) {
+            const adminChannel: string = this.serviceName || "service_admin";
+            this.redisClient = new Redis(this.cacheConnConfig.url, this.cacheConnConfig.options);
+            this.redisClient.subscribe(adminChannel);
+            this.redisClient.on("message", (channel: string, message: string) => {
+                if (channel === adminChannel) {
+                    if (message === "RESTART") {
+                        this.logger.info("Received RESTART signal. Restarting service...");
+                        process.kill(process.pid, "SIGINT");
+                    }
+                }
+            });
+        }
+
         if (this.logsConnConfig) {
             const channelName: string = this.serviceName + "-logs";
             this.logger.add(new RedisTransport({
@@ -92,6 +108,7 @@ export class AdminRoute {
         }
     }
 
+    @Description("Flushes the second-level cache so that subsequent requests will pull directly from the database.")
     @Auth(["jwt"])
     @Get("/clear-cache")
     @Returns([null])
@@ -119,6 +136,7 @@ export class AdminRoute {
         }
     }
 
+    @Description("Establishes a connection to the remote NodeJS debug inspector.")
     @Auth(["jwt"])
     @WebSocket("/inspect")
     private async inspect(@Socket socket: ws, @User user: JWTUser): Promise<void> {
@@ -151,6 +169,7 @@ export class AdminRoute {
         });
     }
 
+    @Description("Establishes a connection to the live log socket.")
     @Auth(["jwt"])
     @WebSocket("/logs")
     private async logs(@Socket socket: ws, @User user: JWTUser): Promise<void> {
@@ -213,6 +232,7 @@ export class AdminRoute {
         }
     }
 
+    @Description("Returns the release notes file for the service.")
     @Auth("jwt")
     @Get("/release-notes")
     @ContentType("text/x-rst")
@@ -231,6 +251,7 @@ export class AdminRoute {
         }
     }
 
+    @Description("Immediately restarts the service.")
     @Auth(["jwt"])
     @Get("/restart")
     @Returns([null])
@@ -241,9 +262,8 @@ export class AdminRoute {
             throw error;
         }
 
-        // Send the kill signal. This will cause the system to clean up and then will be automatically restarted
-        // by Docker/Kubernetes.
-        this.logger.info("Restarting service...");
-        process.kill(process.pid, "SIGINT");
+        // Send the restart signal to all services.
+        const channelName: string = this.serviceName || "service_admin";
+        this.redisClient?.publish(channelName, "RESTART");
     }
 }

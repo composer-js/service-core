@@ -1,5 +1,5 @@
 export * from "./AdminRoute";
-export * from "./IndexRoute";
+export * from "./StatusRoute";
 export * from "./MetricsRoute";
 export * from "./ModelRoute";
 export * from "./OpenAPIRoute";

@@ -26,7 +26,7 @@
 * [BaseMongoEntity](classes/basemongoentity.md)
 * [ConnectionManager](classes/connectionmanager.md)
 * [EventListenerManager](classes/eventlistenermanager.md)
-* [IndexRoute](classes/indexroute.md)
+* [StatusRoute](classes/indexroute.md)
 * [JWTStrategy](classes/jwtstrategy.md)
 * [MetricsRoute](classes/metricsroute.md)
 * [ModelRoute](classes/modelroute.md)

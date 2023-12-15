@@ -13,7 +13,7 @@ import "reflect-metadata";
 import { Application, Response, Request, NextFunction } from "express";
 import { ConnectionManager } from "./database/ConnectionManager";
 import { CorsOptions } from "cors";
-import { IndexRoute } from "./routes/IndexRoute";
+import { StatusRoute } from "./routes/StatusRoute";
 import { JWTStrategy, JWTStrategyOptions } from "./passportjs/JWTStrategy";
 import { ClassLoader, Logger } from "@composer-js/core";
 import { OpenAPIRoute } from "./routes/OpenAPIRoute";
@@ -399,7 +399,7 @@ export class Server {
                 }
 
                 // Register the index route
-                const index: IndexRoute = await this.instantiateRoute(IndexRoute);
+                const index: StatusRoute = await this.instantiateRoute(StatusRoute);
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 

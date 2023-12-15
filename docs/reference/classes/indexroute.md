@@ -1,15 +1,15 @@
-[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [IndexRoute](indexroute.md)
+[@acceleratxr/service-core](../README.md) › [Globals](../globals.md) › [StatusRoute](indexroute.md)
 
-# Class: IndexRoute
+# Class: StatusRoute
 
-The `IndexRoute` provides a default `/` endpoint the returns metadata information about the service such as
+The `StatusRoute` provides a default `/` endpoint the returns metadata information about the service such as
 name, version.
 
 **`author`** Jean-Philippe Steinmetz
 
 ## Hierarchy
 
-* **IndexRoute**
+* **StatusRoute**
 
 ## Index
 
@@ -29,9 +29,9 @@ name, version.
 
 ###  constructor
 
-\+ **new IndexRoute**(`config`: any): *[IndexRoute](indexroute.md)*
+\+ **new StatusRoute**(`config`: any): *[StatusRoute](indexroute.md)*
 
-Defined in src/routes/IndexRoute.ts:15
+Defined in src/routes/StatusRoute.ts:15
 
 **Parameters:**
 
@@ -39,7 +39,7 @@ Name | Type |
 ------ | ------ |
 `config` | any |
 
-**Returns:** *[IndexRoute](indexroute.md)*
+**Returns:** *[StatusRoute](indexroute.md)*
 
 ## Properties
 
@@ -47,7 +47,7 @@ Name | Type |
 
 • **config**: *any*
 
-Defined in src/routes/IndexRoute.ts:15
+Defined in src/routes/StatusRoute.ts:15
 
 ## Methods
 
@@ -55,6 +55,6 @@ Defined in src/routes/IndexRoute.ts:15
 
 ▸ **get**(): *any*
 
-Defined in src/routes/IndexRoute.ts:22
+Defined in src/routes/StatusRoute.ts:22
 
 **Returns:** *any*

@@ -3,8 +3,9 @@ info:
   version: "1.0"
 paths:
   /:
-    x-name: Index
+    x-name: Status
     get:
+      description: Returns information about the service and it's operational status.
       responses:
         "200":
           description: ""
@@ -16,6 +17,8 @@ paths:
   /admin/clear-cache:
     x-name: Admin
     get:
+      description: Flushes the second-level cache so that subsequent requests will
+        pull directly from the database.
       responses:
         "204":
           description: No Content
@@ -26,6 +29,7 @@ paths:
     x-name: Admin
     x-upgrade: true
     get:
+      description: Establishes a connection to the remote NodeJS debug inspector.
       responses:
         "204":
           description: No Content
@@ -36,6 +40,7 @@ paths:
     x-name: Admin
     x-upgrade: true
     get:
+      description: Establishes a connection to the live log socket.
       responses:
         "204":
           description: No Content
@@ -45,6 +50,7 @@ paths:
   /admin/release-notes:
     x-name: Admin
     get:
+      description: Returns the release notes file for the service.
       responses:
         "200":
           description: ""
@@ -60,6 +66,7 @@ paths:
   /admin/restart:
     x-name: Admin
     get:
+      description: Immediately restarts the service.
       responses:
         "204":
           description: No Content
@@ -69,6 +76,7 @@ paths:
   /api-docs:
     x-name: OpenAPI
     get:
+      description: Returns the OpenAPI specification for the service in HTML format.
       responses:
         "200":
           description: ""
@@ -80,6 +88,7 @@ paths:
   /openapi.json:
     x-name: OpenAPI
     get:
+      description: Returns the OpenAPI specification for the service in JSON format.
       responses:
         "200":
           description: ""
@@ -91,6 +100,7 @@ paths:
   /openapi.yaml:
     x-name: OpenAPI
     get:
+      description: Returns the OpenAPI specification for the service in YAML format.
       responses:
         "200":
           description: ""
@@ -102,6 +112,7 @@ paths:
   /metrics:
     x-name: Metrics
     get:
+      description: Returns all Prometheus metrics emitted by this service.
       responses:
         "200":
           description: ""
@@ -119,6 +130,8 @@ paths:
           type: string
     x-name: Metrics
     get:
+      description: Returns the Prometheus metric emitted by this service with the
+        given name.
       responses:
         "200":
           description: ""
