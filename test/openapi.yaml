@@ -59,9 +59,7 @@ paths:
               schema:
                 type: string
       security:
-        - j: []
-        - w: []
-        - t: []
+        - jwt: []
       x-name: get
   /admin/restart:
     x-name: Admin
