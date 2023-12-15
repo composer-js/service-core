@@ -233,7 +233,7 @@ export class AdminRoute {
     }
 
     @Description("Returns the release notes file for the service.")
-    @Auth("jwt")
+    @Auth(["jwt"])
     @Get("/release-notes")
     @ContentType("text/x-rst")
     @Returns([String])
