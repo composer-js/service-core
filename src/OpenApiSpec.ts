@@ -122,10 +122,29 @@ export class OpenApiSpec {
         this.addParameter("version", {
             description: "The unique version of the resource.",
             name: "version",
-            in: "path",
+            in: "query",
             required: false,
             schema: {
                 type: "number"
+            }
+        });
+        this.addSchema("Error", {
+            description: "Describes an error that has occurred within the service.",
+            type: "object",
+            properties: {
+                "message": {
+                    description: "The textual description of the error.",
+                    type: "string"
+                },
+                "stack": {
+                    description: "The stack trace of the error. Only available when `environment` is set to `dev`.",
+                    type: "object"
+                },
+                "status": {
+                    description: "The HTTP status code of the error.",
+                    type: "number",
+                    example: 400
+                },
             }
         });
 
@@ -343,7 +362,13 @@ export class OpenApiSpec {
                 }
             }
         }
-        if (hasQuery) {
+        // When the query is referenced as a function arg it's likely because this is a search function.
+        // However, this isn't always the case. For example, endpoints that have document version tracking
+        // may use the query parameter to refer to a specific version or have operands such as `purge`.
+        // In these cases we don't want to list search query parameters. Unfortunately there's no easy
+        // way to gaurantee detectin of this so we will do something dirty and assume anytime there's a
+        // `:id` in the path, that it is not in fact a search endpoint.
+        if (hasQuery && !path.includes(":id")) {
             // The following casts are really dirty, but we know for sure the params exist.
             mParams.push(this.getParameterReference("limit") as any);
             mParams.push(this.getParameterReference("page") as any);
@@ -397,7 +422,7 @@ export class OpenApiSpec {
                 }
             }
         }
-        
+
         data["x-name"] = routeClass.constructor.name.replace("Route", "");
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
@@ -452,7 +477,7 @@ export class OpenApiSpec {
             } : undefined,
             responses: {
                 ["200"]: responseSchemas.length > 0 ? {
-                    description: "", // TODO
+                    description: "Returned when the operation is successful.",
                     content: {
                         [contentType]: {
                             schema: responseSchemas.length > 1 ? {
@@ -463,6 +488,22 @@ export class OpenApiSpec {
                 } : undefined,
                 ["204"]: responseSchemas.length === 0 ? {
                     description: "No Content"
+                } : undefined,
+                ["400"]: requestSchemas.length > 0 ? {
+                    description: "Returned when the request content is invalid.",
+                    content: {
+                        [contentType]: {
+                            schema: this.getSchemaReference("Error")
+                        }
+                    }
+                } : undefined,
+                ["401"]: authRequired ? {
+                    description: "Returned when a valid authentication token is not provided.",
+                    content: {
+                        [contentType]: {
+                            schema: this.getSchemaReference("Error")
+                        }
+                    }
                 } : undefined
             },
             security,
