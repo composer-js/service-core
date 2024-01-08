@@ -404,7 +404,7 @@ export class OpenApiSpec {
         
         if (routeClass.modelClass) {
             // Look up reference to schema for route's associated data model (where applicable)
-            const fqn: string = routeClass.modelClass.name;
+            const fqn: string = routeClass.modelClass.fqn || routeClass.modelClass.name;
             let schema: oa.SchemaObject | oa.ReferenceObject | undefined = this.getSchemaReference(fqn);
             // If no reference was found we'll create the schema definition now and link it
             if (!schema) {
@@ -423,7 +423,7 @@ export class OpenApiSpec {
             }
         }
 
-        data["x-name"] = routeClass.constructor.name.replace("Route", "");
+        data["x-name"] = routeClass.fqn?.replace("Route", "") || routeClass.constructor.name.replace("Route", "");
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
         if (security) {
@@ -553,8 +553,8 @@ export class OpenApiSpec {
         result.properties = {};
         result.required = [];
 
-        if (baseClass && baseClass.name) {
-            result["x-baseClass"] = baseClass.name;
+        if (baseClass) {
+            result["x-baseClass"] = baseClass.fqn || baseClass.name;
         }
         if (cache) {
             result["x-cache"] = cache;
