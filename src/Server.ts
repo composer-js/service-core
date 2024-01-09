@@ -258,23 +258,6 @@ export class Server {
     }
 
     /**
-     * Intantiates the given route class definition into an object that can be registered to Express.
-     *
-     * @param classDef The class definition of the route to instantiate.
-     * @returns A new instance of the provided class definition that implements the Route interface.
-     */
-    protected async instantiateRoute(classDef: any): Promise<any> {
-        const obj: any = new classDef();
-        Object.defineProperty(obj, "class", {
-            enumerable: true,
-            writable: false,
-            value: classDef,
-        });
-        await this.injectProperties(classDef, obj);
-        return obj;
-    }
-
-    /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
     public start(): Promise<void> {
@@ -399,12 +382,12 @@ export class Server {
                 }
 
                 // Register the index route
-                const index: StatusRoute = await this.instantiateRoute(StatusRoute);
+                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute);
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 
                 // Register the admin route
-                const admin: AdminRoute = await this.instantiateRoute(AdminRoute);
+                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute);
                 allRoutes.push(admin);
                 await this.routeUtils.registerRoute(this.app, admin);
 
@@ -416,7 +399,7 @@ export class Server {
                 }
 
                 // Register the metrics route
-                const metricsRoute: MetricsRoute = await this.instantiateRoute(MetricsRoute);
+                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute);
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
                 // Initialize the background service manager
@@ -438,7 +421,7 @@ export class Server {
                     for (const [name, clazz] of classLoader.getClasses().entries()) {
                         const routePaths: string[] | undefined = clazz.prototype ? Reflect.getMetadata("cjs:routePaths", clazz.prototype) : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
-                            const route: any = await this.instantiateRoute(clazz);
+                            const route: any = await this.objectFactory.newInstance(clazz);
                             await this.routeUtils.registerRoute(this.app, route);
                             allRoutes.push(route);
                         }
