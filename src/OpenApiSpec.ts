@@ -423,7 +423,7 @@ export class OpenApiSpec {
             }
         }
 
-        data["x-name"] = routeClass.fqn || routeClass.name || routeClass.constructor.fqn || routeClass.constructor.name;
+        data["x-name"] = routeClass.fqn || routeClass.constructor.fqn || routeClass.constructor.name;
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
         if (security) {
@@ -699,7 +699,7 @@ export class OpenApiSpec {
             // to a schema even if one doesn't exist at this very moment (the schema for this type may not have
             // been created yet).
             result = {
-                $ref: `#/components/schemas/${typeInfo.name}`
+                $ref: `#/components/schemas/${typeInfo.fqn || typeInfo.name}`
             };
         }
 
