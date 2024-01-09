@@ -3,7 +3,7 @@ info:
   version: "1.0"
 paths:
   /status:
-    x-name: Status
+    x-name: StatusRoute
     get:
       description: Returns information about the service and it's operational status.
       responses:
@@ -15,7 +15,7 @@ paths:
                 type: object
       x-name: get
   /admin/clear-cache:
-    x-name: Admin
+    x-name: AdminRoute
     get:
       description: Flushes the second-level cache so that subsequent requests will
         pull directly from the database.
@@ -32,7 +32,7 @@ paths:
         - jwt: []
       x-name: clearCache
   /admin/inspect.websocket:
-    x-name: Admin
+    x-name: AdminRoute
     x-upgrade: true
     get:
       description: Establishes a connection to the remote NodeJS debug inspector.
@@ -49,7 +49,7 @@ paths:
         - jwt: []
       x-name: inspect
   /admin/logs.websocket:
-    x-name: Admin
+    x-name: AdminRoute
     x-upgrade: true
     get:
       description: Establishes a connection to the live log socket.
@@ -66,7 +66,7 @@ paths:
         - jwt: []
       x-name: logs
   /admin/release-notes:
-    x-name: Admin
+    x-name: AdminRoute
     get:
       description: Returns the release notes file for the service.
       responses:
@@ -86,7 +86,7 @@ paths:
         - jwt: []
       x-name: get
   /admin/restart:
-    x-name: Admin
+    x-name: AdminRoute
     get:
       description: Immediately restarts the service.
       responses:
@@ -102,7 +102,7 @@ paths:
         - jwt: []
       x-name: restart
   /:
-    x-name: OpenAPI
+    x-name: OpenAPIRoute:default
     get:
       description: Returns the OpenAPI specification for the service in HTML format.
       responses:
@@ -114,7 +114,7 @@ paths:
                 type: string
       x-name: getHTML
   /openapi.json:
-    x-name: OpenAPI
+    x-name: OpenAPIRoute:default
     get:
       description: Returns the OpenAPI specification for the service in JSON format.
       responses:
@@ -126,7 +126,7 @@ paths:
                 type: string
       x-name: getJSON
   /openapi.yaml:
-    x-name: OpenAPI
+    x-name: OpenAPIRoute:default
     get:
       description: Returns the OpenAPI specification for the service in YAML format.
       responses:
@@ -138,7 +138,7 @@ paths:
                 type: string
       x-name: getYAML
   /metrics:
-    x-name: Metrics
+    x-name: MetricsRoute
     get:
       description: Returns all Prometheus metrics emitted by this service.
       responses:
@@ -156,7 +156,7 @@ paths:
         required: true
         schema:
           type: string
-    x-name: Metrics
+    x-name: MetricsRoute
     get:
       description: Returns the Prometheus metric emitted by this service with the
         given name.
@@ -280,7 +280,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       x-name: update
   /hello:
-    x-name: Default
+    x-name: DefaultRoute
     get:
       description: Returns `Hello World!`.
       responses:
@@ -292,7 +292,7 @@ paths:
                 type: object
       x-name: helloWorld
   /token:
-    x-name: Default
+    x-name: DefaultRoute
     get:
       description: Returns the user data for a valid authenticated user.
       responses:
@@ -312,7 +312,7 @@ paths:
         - jwt: []
       x-name: authToken
   /error:
-    x-name: Default
+    x-name: DefaultRoute
     get:
       description: Throws a 400-level error and returns the error as the response body.
       responses:
@@ -320,7 +320,7 @@ paths:
           description: No Content
       x-name: throwError
   /connect.websocket:
-    x-name: Default
+    x-name: DefaultRoute
     x-upgrade: true
     get:
       description: Establishes a socket connection that responds to all messages with
@@ -330,7 +330,7 @@ paths:
           description: No Content
       x-name: wsConnect
   /connect-secure.websocket:
-    x-name: Default
+    x-name: DefaultRoute
     x-upgrade: true
     get:
       description: Establishes a secured socket connection that responds to all
