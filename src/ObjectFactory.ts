@@ -296,8 +296,7 @@ export class ObjectFactory {
         // If an class type was given extract it's fqn
         const className = typeof type === "string"
             ? type
-            : (type.name
-                ? type.name : (type.constructor ? type.constructor.name : undefined));
+            : (type.fqn || type.name || type.constructor.name);
 
         // Generate a name if none was given
         if (!name) {
@@ -335,7 +334,18 @@ export class ObjectFactory {
         const instance: T = new clazz(...args);
 
         // Save the name to the object
-        (instance as any).name = name;
+        Object.defineProperty(instance as any, "_name", {
+            enumerable: false,
+            writable: false,
+            value: name,
+        })
+
+        // Also store the fqn for reference
+        Object.defineProperty(instance as any, "_fqn", {
+            enumerable: false,
+            writable: false,
+            value: className,
+        })
 
         // Store the instance in our list of objects
         if (name) {
@@ -355,7 +365,7 @@ export class ObjectFactory {
      * @param fqn The fully qualified name of the class to register. If not specified, the class name will be used.
      */
     public register(clazz: any, fqn?: string): void {
-        const name: string = fqn ? fqn : (clazz.fqn ? clazz.fqn : clazz.name);
+        const name: string = fqn ? fqn : (clazz.fqn || clazz.name);
         if (!this.classes.has(name)) {
             this.logger.info(`Registering class ${name}`);
             this.classes.set(name, clazz);

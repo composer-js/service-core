@@ -170,7 +170,7 @@ paths:
       x-name: getSingleMetric
   /cachedusers:
     x-schema: CacheUser
-    x-name: _a
+    x-name: routes.CacheUserRoute
     head:
       description: Returns the total number of user accounts matching the given search
         criteria.
@@ -241,7 +241,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/id"
     x-schema: CacheUser
-    x-name: _a
+    x-name: routes.CacheUserRoute
     delete:
       description: Deletes an existing user account.
       responses:
@@ -280,7 +280,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       x-name: update
   /hello:
-    x-name: DefaultRoute
+    x-name: routes.DefaultRoute
     get:
       description: Returns `Hello World!`.
       responses:
@@ -292,7 +292,7 @@ paths:
                 type: object
       x-name: helloWorld
   /token:
-    x-name: DefaultRoute
+    x-name: routes.DefaultRoute
     get:
       description: Returns the user data for a valid authenticated user.
       responses:
@@ -312,7 +312,7 @@ paths:
         - jwt: []
       x-name: authToken
   /error:
-    x-name: DefaultRoute
+    x-name: routes.DefaultRoute
     get:
       description: Throws a 400-level error and returns the error as the response body.
       responses:
@@ -320,7 +320,7 @@ paths:
           description: No Content
       x-name: throwError
   /connect.websocket:
-    x-name: DefaultRoute
+    x-name: routes.DefaultRoute
     x-upgrade: true
     get:
       description: Establishes a socket connection that responds to all messages with
@@ -330,7 +330,7 @@ paths:
           description: No Content
       x-name: wsConnect
   /connect-secure.websocket:
-    x-name: DefaultRoute
+    x-name: routes.DefaultRoute
     x-upgrade: true
     get:
       description: Establishes a secured socket connection that responds to all
@@ -347,6 +347,413 @@ paths:
       security:
         - jwt: []
       x-name: wsConnectSecure
+  /items:
+    x-schema: Item
+    x-name: routes.ItemRoute
+    head:
+      description: Returns the total number of items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new item.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/Item"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Item"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Item"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: create
+    get:
+      description: Returns all items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+      x-name: findAll
+    delete:
+      description: Deletes all existing items matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /items/:id:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    x-schema: Item
+    x-name: routes.ItemRoute
+    delete:
+      description: Deletes an existing item.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    get:
+      description: Returns the item with the given unique identifier.
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+      x-name: findById
+    put:
+      description: Updates an existing item.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: update
+  /users:
+    x-schema: User
+    x-name: routes.UserRoute
+    head:
+      description: Returns the total number of user accounts matching the given search
+        criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/User"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/User"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: create
+    put:
+      description: Updates multiple user accounts in bulk.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: updateBulk
+    get:
+      description: Returns all user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+      x-name: findAll
+    delete:
+      description: Deletes all existing user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /users/:id:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    x-schema: User
+    x-name: routes.UserRoute
+    delete:
+      description: Deletes an existing user account.
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    head:
+      description: Returns a boolean integer indicating whether or not a user account
+        with the given unique identifier exists.
+      responses:
+        "204":
+          description: No Content
+      x-name: exists
+    x-after:
+      - cleanPII
+    get:
+      description: Returns the user account with the given unique identifier.
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+      x-name: findById
+    x-before:
+      - validate
+    put:
+      description: Updates an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: update
+  /users/:id/:property:
+    parameters:
+      - $ref: "#/components/parameters/id"
+      - name: property
+        in: path
+        required: true
+        schema:
+          type: string
+    x-before:
+      - validate
+    x-schema: User
+    x-name: routes.UserRoute
+    put:
+      description: Updates a single property of an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: updateProperty
+  /versionedusers:
+    x-schema: VersionedUser
+    x-name: routes.VersionedUserRoute
+    head:
+      description: Returns the total number of user accounts matching the given search
+        criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: count
+    post:
+      description: Creates a new user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/VersionedUser"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/VersionedUser"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/VersionedUser"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/VersionedUser"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: create
+    get:
+      description: Returns all user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VersionedUser"
+      x-name: findAll
+    delete:
+      description: Deletes all existing user accounts matching the given search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: truncate
+  /versionedusers/:id:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    x-schema: VersionedUser
+    x-name: routes.VersionedUserRoute
+    delete:
+      description: Deletes an existing user account.
+      parameters:
+        - $ref: "#/components/parameters/version"
+        - name: delete
+          in: query
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+      x-name: delete
+    get:
+      description: Returns the user account with the given unique identifier.
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionedUser"
+      x-name: findById
+    put:
+      description: Updates an existing user account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionedUser"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionedUser"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: update
 components:
   schemas:
     Error:

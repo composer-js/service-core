@@ -62,12 +62,19 @@ describe("ObjectFactory Tests", () => {
         const instance: TestClassA = await factory.newInstance(TestClassA.name, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
+        expect(instance).toHaveProperty("_name");
+        expect(instance["_name"]).toBe(`${TestClassA.name}:myInstance`);
+        expect(instance).toHaveProperty("_fqn");
+        expect(instance["_fqn"]).toBe(TestClassA.name);
     });
 
     it("Can create new class instances by type.", async () => {
         const instance: TestClassA = await factory.newInstance(TestClassA, "myInstance");
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassA);
+        expect(instance["_name"]).toBe(`${TestClassA.name}:myInstance`);
+        expect(instance).toHaveProperty("_fqn");
+        expect(instance["_fqn"]).toBe(TestClassA.name);
     });
 
     it("Can create new default class instances by name with circular dependencies.", async () => {

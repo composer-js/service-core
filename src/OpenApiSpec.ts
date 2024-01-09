@@ -423,7 +423,7 @@ export class OpenApiSpec {
             }
         }
 
-        data["x-name"] = routeClass.fqn || routeClass.constructor.fqn || routeClass.constructor.name;
+        data["x-name"] = routeClass._fqn || routeClass.fqn || routeClass.constructor.fqn || routeClass.constructor.name;
 
         // Convert the list of authStrategies to a SecurityRequirementObject array
         if (security) {

@@ -185,7 +185,7 @@
         "ws": "^8.11.0"
     },
     "peerDependencies": {
-        "@composer-js/core": "^2.2.0",
+        "@composer-js/core": "^2.4.1",
         "@google-cloud/storage": "^5.19.4",
         "app-module-path": "^2.2.0",
         "aws-sdk": "^2.1134.0",

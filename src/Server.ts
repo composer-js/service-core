@@ -418,10 +418,11 @@ export class Server {
                 // Perform automatic discovery of all other routes
                 this.logger.info("Scanning for routes...");
                 try {
-                    for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    for (const [fqn, clazz] of classLoader.getClasses().entries()) {
                         const routePaths: string[] | undefined = clazz.prototype ? Reflect.getMetadata("cjs:routePaths", clazz.prototype) : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
-                            const route: any = await this.objectFactory.newInstance(clazz);
+                            this.objectFactory.register(clazz, fqn);
+                            const route: any = await this.objectFactory.newInstance(fqn);
                             await this.routeUtils.registerRoute(this.app, route);
                             allRoutes.push(route);
                         }
