@@ -89,7 +89,7 @@
     "devDependencies": {
         "@commitlint/cli": "^17.3.0",
         "@commitlint/config-conventional": "^17.3.0",
-        "@composer-js/core": "^2.2.0",
+        "@composer-js/core": "^2.4.1",
         "@google-cloud/storage": "^5.19.4",
         "@slack/bolt": "^3.14.0",
         "@slack/web-api": "^6.9.1",

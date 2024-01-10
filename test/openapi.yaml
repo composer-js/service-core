@@ -169,7 +169,7 @@ paths:
                 type: string
       x-name: getSingleMetric
   /cachedusers:
-    x-schema: CacheUser
+    x-schema: models.CacheUser
     x-name: routes.CacheUserRoute
     head:
       description: Returns the total number of user accounts matching the given search
@@ -189,10 +189,10 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/CacheUser"
+                - $ref: "#/components/schemas/models.CacheUser"
                 - type: array
                   items:
-                    $ref: "#/components/schemas/CacheUser"
+                    $ref: "#/components/schemas/models.CacheUser"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -200,10 +200,10 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/CacheUser"
+                  - $ref: "#/components/schemas/models.CacheUser"
                   - type: array
                     items:
-                      $ref: "#/components/schemas/CacheUser"
+                      $ref: "#/components/schemas/models.CacheUser"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -225,7 +225,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/CacheUser"
+                  $ref: "#/components/schemas/models.CacheUser"
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
@@ -240,7 +240,7 @@ paths:
   /cachedusers/:id:
     parameters:
       - $ref: "#/components/parameters/id"
-    x-schema: CacheUser
+    x-schema: models.CacheUser
     x-name: routes.CacheUserRoute
     delete:
       description: Deletes an existing user account.
@@ -256,7 +256,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CacheUser"
+                $ref: "#/components/schemas/models.CacheUser"
       x-name: findById
     put:
       description: Updates an existing user account.
@@ -264,14 +264,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CacheUser"
+              $ref: "#/components/schemas/models.CacheUser"
       responses:
         "200":
           description: Returned when the operation is successful.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CacheUser"
+                $ref: "#/components/schemas/models.CacheUser"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -348,7 +348,7 @@ paths:
         - jwt: []
       x-name: wsConnectSecure
   /items:
-    x-schema: Item
+    x-schema: models.Item
     x-name: routes.ItemRoute
     head:
       description: Returns the total number of items matching the given search criteria.
@@ -367,10 +367,10 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/Item"
+                - $ref: "#/components/schemas/models.Item"
                 - type: array
                   items:
-                    $ref: "#/components/schemas/Item"
+                    $ref: "#/components/schemas/models.Item"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -378,10 +378,10 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Item"
+                  - $ref: "#/components/schemas/models.Item"
                   - type: array
                     items:
-                      $ref: "#/components/schemas/Item"
+                      $ref: "#/components/schemas/models.Item"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -403,7 +403,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Item"
+                  $ref: "#/components/schemas/models.Item"
       x-name: findAll
     delete:
       description: Deletes all existing items matching the given search criteria.
@@ -418,7 +418,7 @@ paths:
   /items/:id:
     parameters:
       - $ref: "#/components/parameters/id"
-    x-schema: Item
+    x-schema: models.Item
     x-name: routes.ItemRoute
     delete:
       description: Deletes an existing item.
@@ -434,7 +434,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Item"
+                $ref: "#/components/schemas/models.Item"
       x-name: findById
     put:
       description: Updates an existing item.
@@ -442,14 +442,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Item"
+              $ref: "#/components/schemas/models.Item"
       responses:
         "200":
           description: Returned when the operation is successful.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Item"
+                $ref: "#/components/schemas/models.Item"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -458,7 +458,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       x-name: update
   /users:
-    x-schema: User
+    x-schema: models.User
     x-name: routes.UserRoute
     head:
       description: Returns the total number of user accounts matching the given search
@@ -478,10 +478,10 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/User"
+                - $ref: "#/components/schemas/models.User"
                 - type: array
                   items:
-                    $ref: "#/components/schemas/User"
+                    $ref: "#/components/schemas/models.User"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -489,10 +489,10 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/User"
+                  - $ref: "#/components/schemas/models.User"
                   - type: array
                     items:
-                      $ref: "#/components/schemas/User"
+                      $ref: "#/components/schemas/models.User"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -508,7 +508,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/models.User"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -517,7 +517,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/User"
+                  $ref: "#/components/schemas/models.User"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -539,7 +539,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/User"
+                  $ref: "#/components/schemas/models.User"
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
@@ -554,7 +554,7 @@ paths:
   /users/:id:
     parameters:
       - $ref: "#/components/parameters/id"
-    x-schema: User
+    x-schema: models.User
     x-name: routes.UserRoute
     delete:
       description: Deletes an existing user account.
@@ -579,7 +579,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/models.User"
       x-name: findById
     x-before:
       - validate
@@ -589,7 +589,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/models.User"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -614,7 +614,7 @@ paths:
           type: string
     x-before:
       - validate
-    x-schema: User
+    x-schema: models.User
     x-name: routes.UserRoute
     put:
       description: Updates a single property of an existing user account.
@@ -629,7 +629,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/models.User"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -638,7 +638,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       x-name: updateProperty
   /versionedusers:
-    x-schema: VersionedUser
+    x-schema: models.VersionedUser
     x-name: routes.VersionedUserRoute
     head:
       description: Returns the total number of user accounts matching the given search
@@ -658,10 +658,10 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/VersionedUser"
+                - $ref: "#/components/schemas/models.VersionedUser"
                 - type: array
                   items:
-                    $ref: "#/components/schemas/VersionedUser"
+                    $ref: "#/components/schemas/models.VersionedUser"
       responses:
         "200":
           description: Returned when the operation is successful.
@@ -669,10 +669,10 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/VersionedUser"
+                  - $ref: "#/components/schemas/models.VersionedUser"
                   - type: array
                     items:
-                      $ref: "#/components/schemas/VersionedUser"
+                      $ref: "#/components/schemas/models.VersionedUser"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -694,7 +694,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/VersionedUser"
+                  $ref: "#/components/schemas/models.VersionedUser"
       x-name: findAll
     delete:
       description: Deletes all existing user accounts matching the given search criteria.
@@ -709,7 +709,7 @@ paths:
   /versionedusers/:id:
     parameters:
       - $ref: "#/components/parameters/id"
-    x-schema: VersionedUser
+    x-schema: models.VersionedUser
     x-name: routes.VersionedUserRoute
     delete:
       description: Deletes an existing user account.
@@ -731,7 +731,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VersionedUser"
+                $ref: "#/components/schemas/models.VersionedUser"
       x-name: findById
     put:
       description: Updates an existing user account.
@@ -739,14 +739,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VersionedUser"
+              $ref: "#/components/schemas/models.VersionedUser"
       responses:
         "200":
           description: Returned when the operation is successful.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VersionedUser"
+                $ref: "#/components/schemas/models.VersionedUser"
         "400":
           description: Returned when the request content is invalid.
           content:
@@ -771,7 +771,7 @@ components:
           description: The HTTP status code of the error.
           type: number
           example: 400
-    CacheUser:
+    models.CacheUser:
       properties:
         uid:
           default: randomUUID()
@@ -815,7 +815,7 @@ components:
       x-baseClass: BaseMongoEntity
       x-cache: 30
       x-datastore: mongodb
-    Item:
+    models.Item:
       properties:
         uid:
           default: randomUUID()
@@ -859,7 +859,7 @@ components:
         - cost
       x-baseClass: BaseEntity
       x-datastore: sqlite
-    User:
+    models.User:
       properties:
         uid:
           default: randomUUID()
@@ -916,7 +916,7 @@ components:
         - age
       x-baseClass: BaseMongoEntity
       x-datastore: mongodb
-    VersionedUser:
+    models.VersionedUser:
       properties:
         uid:
           default: randomUUID()
