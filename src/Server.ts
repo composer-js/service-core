@@ -237,27 +237,6 @@ export class Server {
     }
 
     /**
-     * Injects all known dependencies into the given object based on the property decorators.
-     *
-     * @param clazz The class type of the object to inject.
-     * @param obj The object whose dependencies will be injected.
-     */
-    protected injectProperties(clazz: any, obj: any): Promise<void> {
-        // Set the cache TTL if set on the model
-        if (clazz.modelClass && clazz.modelClass.cacheTTL) {
-            obj.cacheTTL = clazz.modelClass.cacheTTL;
-        }
-
-        // Set the trackChanges if set on the model
-        if (clazz.modelClass && clazz.modelClass.trackChanges) {
-            obj.trackChanges = clazz.modelClass.trackChanges;
-        }
-
-        // Initialize the object with the ObjectFactory
-        return this.objectFactory.initialize(obj);
-    }
-
-    /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
     public start(): Promise<void> {
