@@ -209,16 +209,6 @@ export class ObjectFactory {
                 }
             }
 
-            // Set the cache TTL if set on the model
-            if (proto.modelClass && proto.modelClass.cacheTTL) {
-                obj.cacheTTL = proto.modelClass.cacheTTL;
-            }
-
-            // Set the trackChanges if set on the model
-            if (proto.modelClass && proto.modelClass.trackChanges) {
-                obj.trackChanges = proto.modelClass.trackChanges;
-            }
-
             proto = Object.getPrototypeOf(proto);
         }
 

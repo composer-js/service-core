@@ -155,6 +155,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     @Init
     private async superInitialize() {
+        // Pull the cache and version configuration from the model class where applicable 
+        if (this.modelClass) {
+            this.cacheTTL = this.modelClass.cacheTTL || this.cacheTTL;
+            this.trackChanges = this.modelClass.trackChanges || this.trackChanges;
+        }
+
         // Does the model specify a MongoDB shard configuration?
         const shardConfig: any = Reflect.getMetadata("axr:shardConfig", this.modelClass);
         if (shardConfig && this.repo instanceof MongoRepository) {
