@@ -469,7 +469,7 @@ export class Server {
 
                 this.app.use((req: Request, res: Response) => {
                     this.metricRequestPath.labels(req.path).observe(1);
-                    this.metricRequestStatus.labels(req.path, String(res.status)).observe(1);
+                    this.metricRequestStatus.labels(req.path, String(res.statusCode)).observe(1);
                     return !res.writableEnded ? res.send() : res;
                 });
 
