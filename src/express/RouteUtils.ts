@@ -18,13 +18,13 @@ const _ = require("lodash");
 export class RouteUtils {
     @Inject(OpenApiSpec)
     private apiSpec: OpenApiSpec = new OpenApiSpec();
-    
+
     @Config("auth")
     private authConfig: any;
 
     @Config("auth:socketTimeout", 2000)
     private authSocketTimeout: number = 2000;
-    
+
     @Logger
     private logger?: any;
 
@@ -218,7 +218,7 @@ export class RouteUtils {
         let methods: Map<string, any> = this.getRouteMethods(route);
         for (let entry of methods.entries()) {
             let key: string = entry[0];
-            let value: any = entry[1] as any;
+            let value: any = entry[1];
 
             let docs: any = Reflect.getMetadata("cjs:docs", route, key) || {};
             let metadata: any = Reflect.getMetadata("cjs:route", route, key) || {};
@@ -250,7 +250,7 @@ export class RouteUtils {
                     middleware = middleware.concat(this.getFuncArray(route, [validator]));
                 }
                 middleware = middleware.concat(this.getFuncArray(route, before));
-                middleware.push(this.wrapMiddleware(route, value, after == undefined));
+                middleware.push(this.wrapMiddleware(route, value, after === undefined));
                 middleware = middleware.concat(this.getFuncArray(route, after, true));
 
                 // Multiple method verbs can be registered for a given route endpoint.
@@ -261,7 +261,7 @@ export class RouteUtils {
                     for (let basePath of routePaths) {
                         let subpath: string = entry[1].startsWith("/") ? entry[1].substr(1) : entry[1];
                         let path: string =
-                            subpath.length == 0 || basePath.endsWith("/")
+                            subpath.length === 0 || basePath.endsWith("/")
                                 ? basePath + subpath
                                 : basePath + "/" + subpath;
 
@@ -418,12 +418,21 @@ export class RouteUtils {
                     return result.send();
                 } else {
                     if (send) {
+                        let returnJson: boolean = true;
+                        if (routeMetadata && routeMetadata.contentType && typeof routeMetadata.contentType === "string" && routeMetadata.contentType.trim().length !== 0) {
+                            res.setHeader('content-type', routeMetadata.contentType.trim());
+                            returnJson = routeMetadata.contentType.trim().includes("application/json");
+                        }
                         // If a result was returned set it as the response body, otherwise set the status to NO_CONTENT
                         if (result !== undefined) {
                             if (!res.headersSent) {
                                 res.status(200);
                             }
-                            res.json(result);
+                            if (returnJson) {
+                                res.json(result);
+                            } else {
+                                res.send(result);
+                            }
                         } else {
                             if (!res.headersSent) {
                                 res.status(204);

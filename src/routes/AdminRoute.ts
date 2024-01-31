@@ -86,7 +86,7 @@ export class AdminRoute {
         if (this.cacheConnConfig) {
             const adminChannel: string = this.serviceName || "service_admin";
             this.redisClient = new Redis(this.cacheConnConfig.url, this.cacheConnConfig.options);
-            this.redisClient.subscribe(adminChannel);
+            void this.redisClient.subscribe(adminChannel);
             this.redisClient.on("message", (channel: string, message: string) => {
                 if (channel === adminChannel) {
                     if (message === "RESTART") {
@@ -128,7 +128,7 @@ export class AdminRoute {
                         keys = keys.concat(k);
                     });
                     stream.on("end", () => {
-                        this.cacheClient?.unlink(keys);
+                        void this.cacheClient?.unlink(keys);
                     });
                 }
             });
@@ -264,6 +264,6 @@ export class AdminRoute {
 
         // Send the restart signal to all services.
         const channelName: string = this.serviceName || "service_admin";
-        this.redisClient?.publish(channelName, "RESTART");
+        void this.redisClient?.publish(channelName, "RESTART");
     }
 }

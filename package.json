@@ -110,6 +110,7 @@
         "@types/nodemailer": "^6",
         "@types/passport": "^1.0.11",
         "@types/passport-strategy": "^0.2.35",
+        "@types/response-time": "^2",
         "@types/rimraf": "^3.0.2",
         "@types/serve-favicon": "^2.5.3",
         "@types/sqlite3": "^3.1.8",
@@ -162,7 +163,7 @@
         "passport-strategy": "^1.0.0",
         "pg": "^8.8.0",
         "prettier": "^2.8.1",
-        "prom-client": "^14.1.0",
+        "prom-client": "^15.1.0",
         "reflect-metadata": "^0.1.13",
         "rimraf": "^3.0.2",
         "semantic-release": "^19.0.5",
@@ -222,8 +223,11 @@
         "winston": "^3.8.2",
         "ws": "^8.11.0"
     },
-    "packageManager": "yarn@4.0.1",
+    "packageManager": "yarn@4.0.2",
     "engines": {
         "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "response-time": "^2.3.2"
     }
 }

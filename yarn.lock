@@ -1304,6 +1304,7 @@ __metadata:
     "@types/nodemailer": "npm:^6"
     "@types/passport": "npm:^1.0.11"
     "@types/passport-strategy": "npm:^0.2.35"
+    "@types/response-time": "npm:^2"
     "@types/rimraf": "npm:^3.0.2"
     "@types/serve-favicon": "npm:^2.5.3"
     "@types/sqlite3": "npm:^3.1.8"
@@ -1356,8 +1357,9 @@ __metadata:
     passport-strategy: "npm:^1.0.0"
     pg: "npm:^8.8.0"
     prettier: "npm:^2.8.1"
-    prom-client: "npm:^14.1.0"
+    prom-client: "npm:^15.1.0"
     reflect-metadata: "npm:^0.1.13"
+    response-time: "npm:^2.3.2"
     rimraf: "npm:^3.0.2"
     semantic-release: "npm:^19.0.5"
     sqlite3: "npm:^5.1.4"
@@ -2344,6 +2346,13 @@ __metadata:
   dependencies:
     "@octokit/openapi-types": "npm:^18.0.0"
   checksum: 2925479aa378a4491762b4fcf381bdc7daca39b4e0b2dd7062bce5d74a32ed7d79d20d3c65ceaca6d105cf4b1f7417fea634219bf90f79a57d03e2dac629ec45
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/api@npm:^1.4.0":
+  version: 1.7.0
+  resolution: "@opentelemetry/api@npm:1.7.0"
+  checksum: b5468115d1cec45dd2b86b39210fdc03620a93b9f07c3d20b14081f75e2f7c9b37ceceeb60d5f35c6d4f9819ae07eee0b4874e53e7362376db21db1e00f483f8
   languageName: node
   linkType: hard
 
@@ -3506,6 +3515,16 @@ __metadata:
   version: 1.2.7
   resolution: "@types/range-parser@npm:1.2.7"
   checksum: 361bb3e964ec5133fa40644a0b942279ed5df1949f21321d77de79f48b728d39253e5ce0408c9c17e4e0fd95ca7899da36841686393b9f7a1e209916e9381a3c
+  languageName: node
+  linkType: hard
+
+"@types/response-time@npm:^2":
+  version: 2.3.8
+  resolution: "@types/response-time@npm:2.3.8"
+  dependencies:
+    "@types/express": "npm:*"
+    "@types/node": "npm:*"
+  checksum: b603c63897dbd232d15f06b4b3d8e3fc7e8d448f687e4ebb17c40a2bbb654ac04b24c0b39933844e29a59e1ae3046fd4d7e609e3d8671b4706e1b26b10eb1164
   languageName: node
   linkType: hard
 
@@ -5971,6 +5990,13 @@ __metadata:
   version: 2.0.0
   resolution: "depd@npm:2.0.0"
   checksum: 58bd06ec20e19529b06f7ad07ddab60e504d9e0faca4bd23079fac2d279c3594334d736508dc350e06e510aba5e22e4594483b3a6562ce7c17dd797f4cc4ad2c
+  languageName: node
+  linkType: hard
+
+"depd@npm:~1.1.0":
+  version: 1.1.2
+  resolution: "depd@npm:1.1.2"
+  checksum: acb24aaf936ef9a227b6be6d495f0d2eb20108a9a6ad40585c5bda1a897031512fef6484e4fdbb80bd249fdaa82841fa1039f416ece03188e677ba11bcfda249
   languageName: node
   linkType: hard
 
@@ -11313,7 +11339,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"on-headers@npm:~1.0.2":
+"on-headers@npm:~1.0.1, on-headers@npm:~1.0.2":
   version: 1.0.2
   resolution: "on-headers@npm:1.0.2"
   checksum: f649e65c197bf31505a4c0444875db0258e198292f34b884d73c2f751e91792ef96bb5cf89aa0f4fecc2e4dc662461dda606b1274b0e564f539cae5d2f5fc32f
@@ -12063,12 +12089,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prom-client@npm:^14.1.0":
-  version: 14.2.0
-  resolution: "prom-client@npm:14.2.0"
+"prom-client@npm:^15.1.0":
+  version: 15.1.0
+  resolution: "prom-client@npm:15.1.0"
   dependencies:
+    "@opentelemetry/api": "npm:^1.4.0"
     tdigest: "npm:^0.1.1"
-  checksum: 6d14b8700fd6e5bde0ad3b3fbc77ad8bb7031948e5990b60a7ca85ec268bc6448a4e4cda9c2669576d3ba43d58bf09ee08134f2a3d22df07e277377fbb14faeb
+  checksum: c10781adbf49225298e44da5396a51a0bd4d0cddc3c7e237ba50e888e12ead26a8f98261f362a442f1bbcdaddd6e7302d5675b37beac67ea9b6f82e4d39fb3cc
   languageName: node
   linkType: hard
 
@@ -12657,6 +12684,16 @@ __metadata:
   bin:
     resolve: bin/resolve
   checksum: 0446f024439cd2e50c6c8fa8ba77eaa8370b4180f401a96abf3d1ebc770ac51c1955e12764cde449fde3fff480a61f84388e3505ecdbab778f4bef5f8212c729
+  languageName: node
+  linkType: hard
+
+"response-time@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "response-time@npm:2.3.2"
+  dependencies:
+    depd: "npm:~1.1.0"
+    on-headers: "npm:~1.0.1"
+  checksum: 9213579b1472f1dcb64cf58ee736d00230d090b2347ac0da6df363dc825a4de08879d3cbc6fdbe5526c785a188c87dbfbbee99f676a55d2ea07ee2f53d6d828d
   languageName: node
   linkType: hard
 

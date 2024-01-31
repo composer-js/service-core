@@ -79,15 +79,15 @@ export class JWTStrategy extends Strategy {
         if (!user && this.options.headerKey && this.options.headerKey in req.headers) {
             const value: string | string[] | undefined = req.headers[this.options.headerKey];
             const headers: string[] = Array.isArray(value)
-                ? (value as string[])
+                ? value
                 : typeof value === "string"
-                    ? [value as string]
+                    ? [value]
                     : [];
 
             // Loop throught th
             for (const header in headers) {
                 const parts: string[] = headers[header].split(" ");
-                if (parts.length != 2) {
+                if (parts.length !== 2) {
                     error = "Invalid or missing token.";
                     continue;
                 }

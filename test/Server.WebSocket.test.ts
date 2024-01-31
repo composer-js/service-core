@@ -33,8 +33,11 @@ describe("Server WebSocket Tests", () => {
     afterAll(async () => {
         await server.stop();
         await mongod.stop();
-        return new Promise<void>((resolve) => {
+        return await new Promise<void>((resolve) => {
             sqlite.close(err => {
+                if (err) {
+                    console.log(err);
+                }
                 resolve();
             });
         })

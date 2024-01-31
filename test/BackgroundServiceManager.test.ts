@@ -43,7 +43,7 @@ describe("BackgroundServiceManager Tests", () => {
         const service3: MyThirdService = manager.getService("jobs.MyThirdService") as MyThirdService;
         expect(service3).not.toBeDefined();
 
-        return new Promise<void>((resolve) => {
+        return await new Promise<void>((resolve) => {
             setTimeout(async () => {
                 const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
                 expect(service).toBeDefined();
@@ -80,7 +80,7 @@ describe("BackgroundServiceManager Tests", () => {
         expect(service3.started).toBe(true);
         expect(service3.stopped).toBe(true);
 
-        return new Promise<void>((resolve) => {
+        return await new Promise<void>((resolve) => {
             setTimeout(async () => {
                 const service: MyFirstService = manager.getService("jobs.MyFirstService") as MyFirstService;
                 const service2: MySecondService = manager.getService("jobs.MySecondService") as MySecondService;

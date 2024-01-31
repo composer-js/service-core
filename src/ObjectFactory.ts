@@ -287,9 +287,8 @@ export class ObjectFactory {
      * using the provided arguments.
      *
      * @param type The fully qualified name or type of the class to instantiate. If a type is given it's class name will be inferred
-     *              via the constructor name.
-     * @param name The unique name to give the class instance. Set to `undefined` if you wish to force a new object
-     *              is created.
+     * via the constructor name.
+     * @param name The unique name to give the class instance. Set to `undefined` if you wish to force a new object is created.
      * @param args The set of constructor arguments to use during construction
      */
     public async newInstance<T>(type: any, name?: string, ...args: any): Promise<T> {

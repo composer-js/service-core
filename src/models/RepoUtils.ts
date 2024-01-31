@@ -82,7 +82,7 @@ export class RepoUtils {
 
         // Enforce optimistic locking when applicable
         if (old instanceof BaseEntity) {
-            if (old.version != (obj as any).version) {
+            if (old.version !== (obj as any).version) {
                 const error: any = new Error("Invalid object version. Do you have the latest version?");
                 error.status = 409;
                 throw error;
@@ -90,7 +90,7 @@ export class RepoUtils {
         }
 
         // Make sure the object provided actually matches the id given
-        if (old.uid != obj.uid) {
+        if (old.uid !== obj.uid) {
             const error: any = new Error("The object provided does not match the identifier given.");
             error.status = 400;
             throw error;

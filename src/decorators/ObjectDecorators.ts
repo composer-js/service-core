@@ -47,7 +47,7 @@ export function Init(target: any, propertyKey: string, descriptor: PropertyDescr
  *
  * @param path The path to the configuration variable to inject.
  * @param defaultValue Set to the desired default value. If `undefined` is specified then an error is thrown if
- *                      no config variable is found at the given path.
+ * no config variable is found at the given path.
  */
 export function Config(path?: string, defaultValue: any = undefined) {
     return function (target: any, propertyKey: string | symbol) {

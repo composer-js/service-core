@@ -27,7 +27,7 @@ export function After(func: Function | string | (Function | string)[]) {
  *
  * @param strategies The PassportJS strategies that will be applied when incoming requests are processed.
  * @param require Set to `true` to indicate that at least one of the specified authentication strategies must pass to
- *                proceed, otherwise set to `false`. Default is `true`.
+ * proceed, otherwise set to `false`. Default is `true`.
  */
 export function Auth(strategies: string | string[], require: boolean = true) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
