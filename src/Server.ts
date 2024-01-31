@@ -4,6 +4,7 @@
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const express = require("express");
+const expressResponseTime = require("response-time");
 import * as http from "http";
 const passport = require("passport");
 import * as path from "path";
@@ -57,84 +58,84 @@ interface Model {
  *
  * The following is an example of a simple route class.
  *
-```javascript
-import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
-import { Get, Route } = RouteDecorators;
-
-@Route("/hello")
-class TestRoute extends ModelRoute {
-    constructor(model: any) {
-        super(model);
-    }
-
-    @Get()
-    count(req: any, res: any, next: Function): any {
-        return res.send("Hello World!");
-    }
-}
-
-export default TestRoute;
+ * ```javascript
+ * import { DefaultBehaviors, RouteDecorators } from "@acceleratxr/service_core";
+ * import { Get, Route } = RouteDecorators;
+ *
+ * @Route("/hello")
+ * class TestRoute extends ModelRoute {
+ *    constructor(model: any) {
+ *        super(model);
+ *    }
+ *
+ *    @Get()
+ *    count(req: any, res: any, next: Function): any {
+ *        return res.send("Hello World!");
+ *    }
+ * }
+ *
+ * export default TestRoute;
  * ```
  *
  * The following is an example of a route class that is bound to a data model providing basic CRUDS operations.
  *
  * ```javascript
-import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
-import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
-import { Model } = ModelDecorators;
-import { marshall } = DefaultBehaviors;
-
-@Model("Item")
-@Route("/items")
-class ItemRoute extends ModelRoute {
-    constructor(model: any) {
-      super(model);
-  }
-
-  @Get()
-  @Before(super.count)
-  @After(marshall)
-  count(req: any, res: any, next: Function): any {
-      return next();
-  }
-
-  @Post()
-  @Before([super.create])
-  @After([this.prepare, marshall])
-  create(req: any, res: any, next: Function): any {
-      return next();
-  }
-
-  @Delete(":id")
-  @Before([super.delete])
-  delete(req: any, res: any, next: Function): any {
-      return next();
-  }
-
-  @Get()
-  @Before([super.findAll])
-  @After(this.prepareAndSend)
-  findAll(req: any, res: any, next: Function): any {
-      return next();
-  }
-
-  @Get(":id")
-  @Before([super.findById])
-  @After([this.prepare, marshall])
-  findById(req: any, res: any, next: Function): any {
-      return next();
-  }
-
-  @Put(":id")
-  @Before([super.update])
-  @After([this.prepare, marshall])
-  update(req: any, res: any, next: Function): any {
-      return next();
-  }
-}
-
-export default ItemRoute;
-```
+ * import { DefaultBehaviors, ModelDecorators, ModelRoute, RouteDecorators } from "@acceleratxr/service_core";
+ * import { After, Before, Delete, Get, Post, Put, Route, Validate } = RouteDecorators;
+ * import { Model } = ModelDecorators;
+ * import { marshall } = DefaultBehaviors;
+ *
+ * @Model("Item")
+ * @Route("/items")
+ * class ItemRoute extends ModelRoute {
+ *     constructor(model: any) {
+ *       super(model);
+ *   }
+ *
+ *   @Get()
+ *   @Before(super.count)
+ *   @After(marshall)
+ *   count(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ *
+ *   @Post()
+ *   @Before([super.create])
+ *   @After([this.prepare, marshall])
+ *   create(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ *
+ *   @Delete(":id")
+ *   @Before([super.delete])
+ *   delete(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ *
+ *   @Get()
+ *   @Before([super.findAll])
+ *   @After(this.prepareAndSend)
+ *   findAll(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ *
+ *   @Get(":id")
+ *   @Before([super.findById])
+ *   @After([this.prepare, marshall])
+ *   findById(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ *
+ *   @Put(":id")
+ *   @Before([super.update])
+ *   @After([this.prepare, marshall])
+ *   update(req: any, res: any, next: Function): any {
+ *       return next();
+ *   }
+ * }
+ *
+ * export default ItemRoute;
+ * ```
  *
  * @author Jean-Philippe Steinmetz
  */
@@ -165,20 +166,21 @@ export class Server {
     ///////////////////////////////////////////////////////////////////////////
     // METRICS VARIABLES
     ///////////////////////////////////////////////////////////////////////////
-    protected metricRequestPath: prom.Histogram<string> = new prom.Histogram({
+    protected metricRequestPath: prom.Counter<string> = new prom.Counter({
         name: "request_path",
-        help: "A histogram of the number of handled requests by the requested path.",
+        help: "A acount of the number of handled requests by the requested path.",
         labelNames: ["path"],
     });
-    protected metricRequestStatus: prom.Histogram<string> = new prom.Histogram({
+    protected metricRequestStatus: prom.Counter<string> = new prom.Counter({
         name: "request_status",
-        help: "A histogram of the resulting status code of handled requests by the requested path.",
-        labelNames: ["path", "code"],
+        help: "A count of the resulting status code of handled requests by the requested method and path.",
+        labelNames: ["method", "path", "statusCode"],
     });
-    protected metricRequestTime: prom.Summary<string> = new prom.Summary({
-        name: "request_time",
-        help: "A histogram of the response time of handled requests by the requested path.",
-        labelNames: ["path"],
+    protected metricRequestTime: prom.Histogram<string> = new prom.Histogram({
+        name: "request_time_milliseconds",
+        help: "A histogram of the response time of handled requests by the requested method, path and code.",
+        labelNames: ["method", "path", "statusCode"],
+        buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 5000]
     });
     protected metricCompletedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_completed_requests",
@@ -255,9 +257,11 @@ export class Server {
                 });
                 this.app = addWebSocket(this.app, this.wss);
                 this.app.use(express.static(path.join(__dirname, "public")));
-                this.app.use(express.json({ verify: (req: any, res: any, buf: any) => {
-                    req.rawBody = buf;
-                }}));
+                this.app.use(express.json({
+                    verify: (req: any, res: any, buf: any) => {
+                        req.rawBody = buf;
+                    }
+                }));
                 this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
                 this.app.use(cookieParser(this.config.get("cookie_secret")));
                 this.app.use(session({
@@ -316,7 +320,10 @@ export class Server {
                     res.setHeader("x-powered-by", "ComposerJS");
                     return next();
                 });
-
+                // Request response time
+                this.app.use(expressResponseTime((req: Request, res: Response, time) => {
+                    this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
+                }));
                 this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
                 const datastores: any = this.config.get("datastores");
                 const models: Map<string, any> = new Map();
@@ -455,7 +462,7 @@ export class Server {
                             const formattedError = {
                                 ...err,
                                 // https://stackoverflow.com/a/25245824
-                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, '') : undefined,
+                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, '') : undefined, // eslint-disable-line no-control-regex
                                 message: err.message
                             }
                             res.json(err.stack ? { ...formattedError, stack: err.stack } : formattedError);
@@ -468,8 +475,10 @@ export class Server {
                 });
 
                 this.app.use((req: Request, res: Response) => {
-                    this.metricRequestPath.labels(req.path).observe(1);
-                    this.metricRequestStatus.labels(req.path, String(res.statusCode)).observe(1);
+                    this.metricRequestPath.labels(req.path).inc();
+                    this.metricRequestStatus.labels(req.method, req.path, String(res.statusCode)).inc();
+                    this.metricTotalRequests.inc(1);
+                    this.metricCompletedRequests.inc(1);
                     return !res.writableEnded ? res.send() : res;
                 });
 
@@ -529,6 +538,6 @@ export class Server {
      */
     public async restart(): Promise<void> {
         await this.stop();
-        return this.start();
+        return await this.start();
     }
 }

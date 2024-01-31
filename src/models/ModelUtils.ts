@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Logger } from "@composer-js/core";
 import {
     Repository,
     ILike,
@@ -15,7 +14,7 @@ import {
     Between,
     MongoRepository,
 } from "typeorm";
-import { ClassLoader } from "@composer-js/core";
+import { ClassLoader, Logger } from "@composer-js/core";
 import "reflect-metadata";
 import { isEmpty } from "lodash";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
@@ -166,8 +165,8 @@ export class ModelUtils {
     /**
      * Given a string containing a parameter value and/or a comparison operation return a TypeORM compatible find value.
      * e.g.
-     *  Given the string "myvalue" will return an Eq("myvalue") object.
-     *  Given the string "Like(myvalue)" will return an Like("myvalue") object.
+     * Given the string "myvalue" will return an Eq("myvalue") object.
+     * Given the string "Like(myvalue)" will return an Like("myvalue") object.
      *
      * @param param
      */
@@ -213,7 +212,7 @@ export class ModelUtils {
                         return Not(value);
                     case "range": {
                         const args: string[] = value.split(",");
-                        if (args.length != 2) {
+                        if (args.length !== 2) {
                             throw new Error(
                                 "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
                             );
@@ -246,8 +245,8 @@ export class ModelUtils {
     /**
      * Given a string containing a parameter value and/or a comparison operation return a MongoDB compatible find value.
      * e.g.
-     *  Given the string "myvalue" will return an `"myvalue"` object.
-     *  Given the string "not(myvalue)" will return an `{ $not: "myvalue" }` object.
+     * Given the string "myvalue" will return an `"myvalue"` object.
+     * Given the string "not(myvalue)" will return an `{ $not: "myvalue" }` object.
      *
      * @param param
      */
@@ -297,7 +296,7 @@ export class ModelUtils {
                         return { $not: value };
                     case "range": {
                         const args: string[] = value.split(",");
-                        if (args.length != 2) {
+                        if (args.length !== 2) {
                             throw new Error(
                                 "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
                             );
@@ -349,8 +348,7 @@ export class ModelUtils {
      * @param repo The repository to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
-     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to
-     *                          false to use a 'contains' search.
+     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to false to use a 'contains' search.
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
@@ -396,8 +394,7 @@ export class ModelUtils {
      * @param modelClass The class definition of the data model to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
-     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to
-     *                          false to use a 'contains' search.
+     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to false to use a 'contains' search.
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
@@ -502,7 +499,7 @@ export class ModelUtils {
             }
         }
 
-        if (query.where.length == 0) {
+        if (query.where.length === 0) {
             delete query.where;
         }
 
@@ -537,8 +534,7 @@ export class ModelUtils {
      * @param modelClass The class definition of the data model to build a search query for.
      * @param {any} params The URI parameters for the endpoint that was requested.
      * @param {any} queryParams The URI query parameters that were included in the request.
-     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to
-     *                          false to use a 'contains' search.
+     * @param {bool} exactMatch Set to true to create a query where parameters are to be matched exactly, otherwise set to false to use a 'contains' search.
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
@@ -677,7 +673,7 @@ export class ModelUtils {
      * @returns A map containing of all loaded model names to their class definitions.
      */
     public static async loadModels(src: string, result: Map<string, any> = new Map): Promise<Map<string, any>> {
-        return new Promise(async (resolve, reject) => {
+        return await new Promise(async (resolve, reject) => {
             try {
                 const classLoader: ClassLoader = new ClassLoader(src);
                 await classLoader.load();

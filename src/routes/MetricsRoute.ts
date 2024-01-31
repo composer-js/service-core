@@ -28,14 +28,14 @@ export class MetricsRoute {
     @ContentType(prom.register.contentType)
     @Returns([String])
     private async getMetrics(): Promise<string> {
-        return this.registry.metrics();
+        return await this.registry.metrics();
     }
 
     @Description("Returns the Prometheus metric emitted by this service with the given name.")
     @Get("/:metric")
     @ContentType(prom.register.contentType)
     @Returns([String])
-    private getSingleMetric(@Param("metric") metric: any): Promise<string> {
-        return this.registry.getSingleMetricAsString(metric);
+    private async getSingleMetric(@Param("metric") metric: any): Promise<string> {
+        return await this.registry.getSingleMetricAsString(metric);
     }
 }

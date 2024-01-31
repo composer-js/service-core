@@ -11,6 +11,7 @@ import { CircularClassB } from "./factory/CircularClassB";
 class TestClassA {
     @Destroy
     public destroy(): void {
+        // no-op
     }
 }
 
@@ -35,6 +36,7 @@ class TestClassC {
     public dep?: TestClassA;
 
     constructor() {
+        // no-op
     }
 
     @Destroy

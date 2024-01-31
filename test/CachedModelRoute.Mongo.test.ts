@@ -6,7 +6,6 @@ import * as crypto from "crypto";
 import * as request from "supertest";
 import { Server, ConnectionManager, ModelUtils, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import User from "./server/models/CacheUser";
 import { MongoRepository, DataSource } from "typeorm";
 import CacheUser from "./server/models/CacheUser";
 import { Logger } from "@composer-js/core";
@@ -22,10 +21,10 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
     },
 });
 const redis: any = new Redis();
-let repo: MongoRepository<User>;
+let repo: MongoRepository<CacheUser>;
 
-const createUser = async (firstName: string, lastName: string, age: number = 100): Promise<User> => {
-    const user: User = new User({
+const createUser = async (firstName: string, lastName: string, age: number = 100): Promise<CacheUser> => {
+    const user: CacheUser = new CacheUser({
         firstName,
         lastName,
         age,
@@ -34,8 +33,8 @@ const createUser = async (firstName: string, lastName: string, age: number = 100
     return await repo.save(user);
 };
 
-const createUsers = async (num: number): Promise<User[]> => {
-    const results: User[] = [];
+const createUsers = async (num: number): Promise<CacheUser[]> => {
+    const results: CacheUser[] = [];
 
     for (let i = 1; i <= num; i++) {
         results.push(await createUser(String(i), "Doctor", 100 * i));
@@ -72,7 +71,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         await server.start();
         const conn: any = connMgr.connections.get("mongodb");
         if (conn instanceof DataSource) {
-            repo = conn.getMongoRepository(User.name);
+            repo = conn.getMongoRepository(CacheUser.name);
         }
     });
 
@@ -88,7 +87,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             await repo.clear();
         } catch (err) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
-            if (err.message != "ns not found") {
+            if (err.message !== "ns not found") {
                 throw err;
             }
         }
@@ -96,7 +95,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
 
     describe("Single Cached Document Tests [MongoDB]", () => {
         it("Can create cached document.", async () => {
-            const user: User = new User({
+            const user: CacheUser = new CacheUser({
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
@@ -111,7 +110,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toEqual(user.lastName);
             expect(result.body.age).toEqual(user.age);
 
-            const stored: User | null = await repo.findOne({ uid: result.body.uid } as any);
+            const stored: CacheUser | null = await repo.findOne({ uid: result.body.uid } as any);
             expect(stored).toBeDefined();
             if (stored) {
                 expect(stored.uid).toEqual(user.uid);
@@ -124,7 +123,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 const cacheKey: string = getCacheKey(query);
                 const json: string = await redis.get(cacheKey);
                 expect(json).toBeDefined();
-                const parsed: User = JSON.parse(json);
+                const parsed: CacheUser = JSON.parse(json);
                 expect(parsed).toBeDefined();
                 expect(parsed.uid).toEqual(stored.uid);
                 expect(parsed.version).toEqual(stored.version);
@@ -134,11 +133,11 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             }
         });
         it("Can delete cached document.", async () => {
-            const user: User = await createUser("David", "Tennant", 47);
+            const user: CacheUser = await createUser("David", "Tennant", 47);
             const result = await request(server.getApplication()).delete("/cachedusers/" + user.uid);
             expect(result.status).toBe(204);
 
-            const existing: User | null = await repo.findOne({ uid: user.uid } as any);
+            const existing: CacheUser | null = await repo.findOne({ uid: user.uid } as any);
             expect(existing).toBeNull();
 
             const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, user.uid);
@@ -148,7 +147,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         });
 
         it("Can find cached document by id.", async () => {
-            const user: User = await createUser("David", "Tennant", 47);
+            const user: CacheUser = await createUser("David", "Tennant", 47);
             const result = await request(server.getApplication())
                 .get("/cachedusers/" + user.uid)
                 .send();
@@ -170,7 +169,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
 
         // The following test catches potential lookup errors from previously cached records
         it("Can find cached document by id (again).", async () => {
-            const user: User = await createUser("David", "Tennant", 47);
+            const user: CacheUser = await createUser("David", "Tennant", 47);
             const result = await request(server.getApplication())
                 .get("/cachedusers/" + user.uid)
                 .send();
@@ -191,7 +190,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         });
 
         it("Can update cached document.", async () => {
-            const user: User = await createUser("David", "Tennant", 47);
+            const user: CacheUser = await createUser("David", "Tennant", 47);
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -206,7 +205,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result.body.lastName).toBe(user.lastName);
             expect(result.body.age).toBe(user.age);
 
-            const existing: User | null = await repo.findOne({ uid: user.uid } as any);
+            const existing: CacheUser | null = await repo.findOne({ uid: user.uid } as any);
             expect(existing).toBeDefined();
             if (existing) {
                 expect(existing.uid).toBe(result.body.uid);
@@ -220,7 +219,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const cacheKey: string = getCacheKey(query);
             const json: string = await redis.get(cacheKey);
             expect(json).toBeDefined();
-            const cachedObj: User = new User(JSON.parse(json));
+            const cachedObj: CacheUser = new CacheUser(JSON.parse(json));
             expect(cachedObj).toBeDefined();
             expect(cachedObj).toEqual(existing);
         });
@@ -228,7 +227,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
 
     describe("Multiple Cached Document Tests [MongoDB]", () => {
         it("Can find all cached documents.", async () => {
-            const users: User[] = await createUsers(25);
+            const users: CacheUser[] = await createUsers(25);
 
             const result = await request(server.getApplication()).get("/cachedusers");
             expect(result).toHaveProperty("body");
@@ -241,7 +240,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         });
 
         it("Can find cached documents with criteria (eq).", async () => {
-            const users: User[] = await createUsers(13);
+            const users: CacheUser[] = await createUsers(13);
             await createUser("David", "Tennant", 47);
             await createUser("Matt", "Smith", 36);
             const result = await request(server.getApplication()).get("/cachedusers?lastName=Doctor");

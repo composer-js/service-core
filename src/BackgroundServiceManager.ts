@@ -75,8 +75,7 @@ export class BackgroundServiceManager {
      * Starts the background service with the given name.
      *
      * @param serviceName The name of the background service to start.
-     * @param clazz The class type of the service to start. If not specified the name is used to lookup the
-     *                      class type.
+     * @param clazz The class type of the service to start. If not specified the name is used to lookup the class type.
      * @param args The list of arguments to pass into the service constructor
      */
     public async start(serviceName: string, clazz?: any, ...args: any): Promise<void> {
@@ -93,7 +92,7 @@ export class BackgroundServiceManager {
                 this.logger.info("Starting service " + serviceName + "...");
 
                 // Instantiate the service class
-                const service: BackgroundService = await this.objectFactory.newInstance(clazz, serviceName, this.config, this.logger, ...args) as BackgroundService;
+                const service: BackgroundService = await this.objectFactory.newInstance(clazz, serviceName, this.config, this.logger, ...args);
                 this.services[serviceName] = service;
 
                 // Initialize the service

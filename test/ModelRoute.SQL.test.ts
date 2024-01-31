@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-//// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+//   Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 /////////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
@@ -61,8 +61,11 @@ describe("ModelRoute Tests [SQL]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        return new Promise<void>((resolve) => {
+        return await new Promise<void>((resolve) => {
             sqlite.close(err => {
+                if (err) {
+                    console.log(err);
+                }
                 rimraf.sync("tmp-*");
                 resolve();
             });

@@ -120,7 +120,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Initializes a new instance using any defaults.
      */
-    protected constructor() { }
+    protected constructor() { 
+        // no-op 
+    }
 
     /**
      * The base key used to get or set data in the cache.
@@ -252,7 +254,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         if (existing && this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
-            this.cacheClient.setex(
+            void this.cacheClient.setex(
                 `${this.baseCacheKey}.${this.hashQuery(query)}`,
                 this.cacheTTL,
                 JSON.stringify(existing)
@@ -269,7 +271,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * The result of this function is compatible with all `Repository.find()` functions.
      */
     private searchIdQuery(id: string, version?: number | string, productUid?: string): any {
-        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version) : version, productUid);
+        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version, 10) : version, productUid);
     }
 
     /**
@@ -290,7 +292,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
-            const result: AggregationCursorResult = await (this.repo as MongoRepository<T>).aggregate(searchQuery).next();
+            const result: AggregationCursorResult = await (this.repo).aggregate(searchQuery).next();
             options.res.setHeader('content-length', result ? result.count : 0);
         } else {
             const result: number = await this.repo.count(searchQuery);
@@ -331,7 +333,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             // Cache the object for faster retrieval
             const query: any = this.searchIdQuery(obj.uid);
             const cacheKey: string = `${this.baseCacheKey}.${this.hashQuery(query)}`;
-            this.cacheClient.setex(cacheKey, this.cacheTTL, JSON.stringify(result));
+            void this.cacheClient.setex(cacheKey, this.cacheTTL, JSON.stringify(result));
         }
 
         return result;
@@ -377,9 +379,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doCreate(obj: T | T[], options: CreateRequestOptions): Promise<T | T[]> {
         if (Array.isArray(obj)) {
-            return this.doBulkCreate(obj, options);
+            return await this.doBulkCreate(obj, options);
         } else {
-            return this.doCreateObject(obj, options);
+            return await this.doCreateObject(obj, options);
         }
     }
 
@@ -433,8 +435,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
             if (this.cacheClient && this.cacheTTL) {
                 // Delete the object from cache
-                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
-                this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
+                void this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
+                void this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
             }
         }
     }
@@ -538,7 +540,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                     uids.push(result.uid);
                 }
 
-                this.cacheClient.setex(
+                void this.cacheClient.setex(
                     `${this.baseCacheKey}.${searchQueryHash}`,
                     this.cacheTTL,
                     JSON.stringify(uids)
@@ -611,7 +613,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         } catch (err: any) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
-            if (err.message != "ns not found") {
+            if (err.message !== "ns not found") {
                 throw err;
             }
         }
@@ -671,7 +673,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const existing: T | null = await this.repo.findOne(query);
         obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj, existing);
 
-        const keepPrevious: boolean = this.trackChanges != 0;
+        const keepPrevious: boolean = this.trackChanges !== 0;
         const testObj: T = new this.modelClass();
 
         if (this.repo instanceof MongoRepository) {
@@ -757,8 +759,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         if (obj && this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
-            this.cacheClient.setex(`${this.baseCacheKey}.${this.hashQuery(query)}`, this.cacheTTL, JSON.stringify(obj));
-            this.cacheClient.setex(
+            void this.cacheClient.setex(`${this.baseCacheKey}.${this.hashQuery(query)}`, this.cacheTTL, JSON.stringify(obj));
+            void this.cacheClient.setex(
                 `${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(obj.uid))}`,
                 this.cacheTTL,
                 JSON.stringify(obj)
@@ -786,7 +788,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw error;
         }
 
-        return this.doUpdate(id, {
+        return await this.doUpdate(id, {
             uid: existing.uid,
             productUid: options.productUid || existing.productUid,
             version: options.version || existing.version,

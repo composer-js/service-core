@@ -65,7 +65,7 @@ export class ConnectionManager {
                 this.logger.info(`Connecting to database ${name} [${url.replace(datastore.username, "****").replace(datastore.password, "****")}]...`);
 
                 if (datastore.type === "redis") {
-                    connection = await new Redis(url);
+                    connection = new Redis(url);
                 } else {
                     // Make an array of all entities associated with this connection
                     const entities: any[] = [];

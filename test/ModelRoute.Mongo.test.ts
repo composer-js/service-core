@@ -68,7 +68,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await repo.clear();
         } catch (err) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
-            if (err.message != "ns not found") {
+            if (err.message !== "ns not found") {
                 throw err;
             }
         }
