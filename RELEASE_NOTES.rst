@@ -2,6 +2,12 @@
 Release Notes
 =============
 
+v3.13.0
+======
+
+- Fix support for `@ContentType` decorators
+- Hooked in remaining standard metrics, and added support for response time capturing
+
 v3.6.0
 ======
 
