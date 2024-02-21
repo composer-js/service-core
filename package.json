@@ -21,14 +21,13 @@
 		"postversion": "git push && git push --tags"
 	},
 	"dependencies": {
-		"@composer-js/core": "file:C:/Users/thoma/Desktop/template_workspace/composer-core",
+		"@composer-js/core": "^2.4.7",
 		"@google-cloud/storage": "^5.19.4",
 		"response-time": "^2.3.2"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^17.3.0",
 		"@commitlint/config-conventional": "^17.3.0",
-		"@composer-js/core": "file:C:/Users/thoma/Desktop/template_workspace/composer-core",
 		"@google-cloud/storage": "^5.19.4",
 		"@slack/bolt": "^3.14.0",
 		"@slack/web-api": "^6.9.1",
