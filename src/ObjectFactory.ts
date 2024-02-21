@@ -6,7 +6,7 @@ import { Logger } from "@composer-js/core";
 import { ConnectionManager } from "./database/ConnectionManager";
 import { DataSource } from "typeorm";
 import * as Redis from "ioredis";
-const uuid = require("uuid");
+import * as uuid from "uuid";
 
 interface Entity {
     datastore?: any;

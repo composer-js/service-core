@@ -10,7 +10,7 @@ import * as sqlite3 from "sqlite3";
 import { Repository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";
-const uuid = require("uuid");
+import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {

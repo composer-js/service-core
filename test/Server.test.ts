@@ -13,6 +13,10 @@ import * as rimraf from "rimraf";
 
 import { JWTUtils, Logger, sleep } from "@composer-js/core";
 
+const unixLineEndings = (input: string): string => {
+    return input.replace(/\r\n/g, '\n');
+}
+
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
@@ -87,15 +91,15 @@ describe("Server Tests", () => {
         expect(result.type).toBe("application/json");
         expect(result.status).toBe(200);
         expect(result).toHaveProperty("body");
-        
+
         const result2 = await request(server.getApplication()).get("/openapi.yaml");
         expect(result2).toHaveProperty("status");
         expect(result2.status).toBe(200);
         expect(result2).toHaveProperty("text");
         expect(result2.type).toBe("text/yaml");
-        // fs.writeFileSync("./test/openapi.yaml", result2.body);
+
         const testFile: string = fs.readFileSync("./test/openapi.yaml").toString("utf-8");
-        expect(result2.text).toEqual(testFile);
+        expect(unixLineEndings(result2.text)).toEqual(unixLineEndings(testFile));
 
         const result3 = await request(server.getApplication()).get("/api-docs");
         expect(result3).toHaveProperty("status");

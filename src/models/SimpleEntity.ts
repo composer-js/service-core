@@ -4,7 +4,7 @@
 import { Default, Description } from "../decorators/DocDecorators";
 import { Identifier } from "../decorators/ModelDecorators";
 import { Index, PrimaryColumn } from "typeorm";
-const uuid = require("uuid");
+import * as uuid from "uuid";
 
 /**
  * Provides a simple base class for all entity's that will be persisted with TypeORM. Unlike `BaseEntity` this class

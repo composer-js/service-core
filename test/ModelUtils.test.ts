@@ -20,7 +20,7 @@ import {
     PrimaryColumn,
     Column,
 } from "typeorm";
-const uuid = require("uuid");
+import * as uuid from "uuid";
 
 @Entity()
 class SingleIdentifierClass {

@@ -3,6 +3,7 @@
 .gitlab-ci.yml
 .npmrc
 .yarnrc
+.yarnrc.yml
 rollup.config.ts
 tsconfig.json
 tslint.json
