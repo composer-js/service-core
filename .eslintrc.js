@@ -6,63 +6,50 @@ It represents the closest reasonable ESLint configuration to this
 project's original TSLint configuration.
 
 We recommend eventually switching this configuration to extend from
-the recommended rulesets in typescript-eslint. 
+the recommended rulesets in typescript-eslint.
 https://github.com/typescript-eslint/tslint-to-eslint-config/blob/master/docs/FAQs.md
 
 Happy linting! 💖
 */
 module.exports = {
-    "env": {
-        "browser": true,
-        "es6": true,
-        "node": true
+    env: {
+        browser: true,
+        es6: true,
+        node: true,
     },
-    "extends": [
-        "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "project": [
-            "tsconfig.json",
-            './tsconfig.eslint.json'
-        ],
-        "sourceType": "module"
+    extends: ["prettier"],
+    parser: "@typescript-eslint/parser",
+    parserOptions: {
+        project: ["tsconfig.json", "./tsconfig.eslint.json"],
+        sourceType: "module",
     },
-    "plugins": [
-        "eslint-plugin-import",
-        "eslint-plugin-jsdoc",
-        "@typescript-eslint"
-    ],
-    "root": true,
-    "ignorePatterns": ["nodejs_server_petstore"],
-    "rules": {
+    plugins: ["eslint-plugin-import", "eslint-plugin-jsdoc", "@typescript-eslint"],
+    root: true,
+    ignorePatterns: ["nodejs_server_petstore"],
+    rules: {
         "@typescript-eslint/await-thenable": "error",
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/member-delimiter-style": [
             "off",
             {
-                "multiline": {
-                    "delimiter": "none",
-                    "requireLast": true
+                multiline: {
+                    delimiter: "none",
+                    requireLast: true,
                 },
-                "singleline": {
-                    "delimiter": "semi",
-                    "requireLast": false
-                }
-            }
+                singleline: {
+                    delimiter: "semi",
+                    requireLast: false,
+                },
+            },
         ],
         "@typescript-eslint/naming-convention": [
             "error",
             {
-                "selector": "variable",
-                "format": [
-                    "camelCase",
-                    "UPPER_CASE",
-                    "PascalCase"
-                ],
-                "leadingUnderscore": "allow",
-                "trailingUnderscore": "forbid"
-            }
+                selector: "variable",
+                format: ["camelCase", "UPPER_CASE", "PascalCase"],
+                leadingUnderscore: "allow",
+                trailingUnderscore: "forbid",
+            },
         ],
         "@typescript-eslint/no-empty-function": "error",
         "@typescript-eslint/no-floating-promises": "error",
@@ -72,45 +59,26 @@ module.exports = {
         "@typescript-eslint/no-unused-expressions": [
             "error",
             {
-                "allowTaggedTemplates": true,
-                "allowShortCircuit": true
-            }
+                allowTaggedTemplates: true,
+                allowShortCircuit: true,
+            },
         ],
         "@typescript-eslint/prefer-namespace-keyword": "error",
-        "no-return-await": "off",
-        "@typescript-eslint/return-await": [
-            "error",
-            "always"
-        ],
-        "@typescript-eslint/semi": [
-            "off",
-            null
-        ],
+        "@typescript-eslint/return-await": ["off", "always"],
+        "@typescript-eslint/semi": ["off", null],
         "@typescript-eslint/triple-slash-reference": [
             "error",
             {
-                "path": "always",
-                "types": "prefer-import",
-                "lib": "always"
-            }
+                path: "always",
+                types: "prefer-import",
+                lib: "always",
+            },
         ],
         "@typescript-eslint/unified-signatures": "error",
-        "arrow-parens": [
-            "off",
-            "always"
-        ],
-        "brace-style": [
-            "off",
-            "off"
-        ],
-        "curly": [
-            "error",
-            "multi-line"
-        ],
-        "eqeqeq": [
-            "error",
-            "smart"
-        ],
+        "arrow-parens": ["off", "always"],
+        "brace-style": ["off", "off"],
+        curly: ["error", "multi-line"],
+        eqeqeq: ["error", "smart"],
         "id-denylist": [
             "error",
             "any",
@@ -121,7 +89,7 @@ module.exports = {
             "Boolean",
             "boolean",
             "Undefined",
-            "undefined"
+            "undefined",
         ],
         "id-match": "error",
         "import/no-deprecated": "error",
@@ -146,35 +114,25 @@ module.exports = {
         "no-unused-expressions": "off",
         "no-unused-labels": "error",
         "no-var": "error",
-        "one-var": [
-            "error",
-            "never"
-        ],
+        "one-var": ["error", "never"],
         "padded-blocks": [
             "off",
             {
-                "blocks": "never"
+                blocks: "never",
             },
             {
-                "allowSingleLineBlocks": true
-            }
+                allowSingleLineBlocks: true,
+            },
         ],
-        "radix": "error",
-        "space-in-parens": [
-            "off",
-            "never"
-        ],
+        radix: "error",
+        "space-in-parens": ["off", "never"],
         "spaced-comment": [
             "error",
             "always",
             {
-                "markers": [
-                    "/"
-                ],
-                "exceptions": [
-                    "/"
-                ]
-            }
+                markers: ["/"],
+                exceptions: ["/"],
+            },
         ],
         "use-isnan": "error",
         "no-sparse-arrays": "error",
@@ -185,6 +143,8 @@ module.exports = {
         "no-extra-boolean-cast": "error",
         "no-inner-declarations": "error",
         "no-unexpected-multiline": "error",
-        "valid-typeof": ["error", { "requireStringLiterals": true }]
-    }
+        "valid-typeof": ["error", { requireStringLiterals: true }],
+    },
 };
+
+
