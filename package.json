@@ -10,7 +10,7 @@
         "precommit": "lint-staged",
         "commit": "git-cz",
         "deploy-docs": "ts-node tools/gh-pages-publish",
-        "docs": "typedoc --plugin typedoc-plugin-markdown --out docs/reference --target esnext --mode file src",
+        "docs": "typedoc --plugin typedoc-plugin-markdown --out docs/reference src",
         "lint": "eslint -c .eslintrc.js --ext .ts ./src ./test",
         "report-coverage": "cat ./coverage/lcov.info | coveralls",
         "semantic-release": "semantic-release",
