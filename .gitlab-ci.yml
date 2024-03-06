@@ -24,7 +24,7 @@ test:
     script:
         - yarn test --ci --forceExit --detectOpenHandles
 
-validate: 
+validate:
     stage: test
     <<: *job_configuration
     allow_failure:
