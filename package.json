@@ -177,7 +177,7 @@
             "path": "node_modules/cz-conventional-changelog"
         }
     },
-    "packageManager": "yarn@4.0.1",
+    "packageManager": "yarn@4.1.1",
     "engines": {
         "node": ">=20.0.0"
     },
