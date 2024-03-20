@@ -17,7 +17,8 @@ import {
     Model,
     Request,
     Response,
-    After
+    After,
+    ContentType
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";

@@ -262,6 +262,7 @@ export class ObjectFactory {
      * @param nameOrType The unique name or class type of the object to retrieve.
      * @returns The object instance associated with the given name if found, otherwise `undefined`.
      */
+    // TODO: Investigate name vs fqn
     public getInstance<T>(nameOrType: any): T | undefined {
         if (typeof nameOrType === "string") {
             // Add `:default` to the name if no explicit name was provided

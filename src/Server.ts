@@ -10,7 +10,7 @@ const passport = require("passport");
 import * as path from "path";
 import * as prom from "prom-client";
 import "reflect-metadata";
-
+const bodyParser = require('body-parser') 
 import { Application, Response, Request, NextFunction } from "express";
 import { ConnectionManager } from "./database/ConnectionManager";
 import { CorsOptions } from "cors";

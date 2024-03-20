@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ObjectID, ObjectIdColumn } from "typeorm";
+import { ObjectId, ObjectIdColumn } from "typeorm";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
 
 /**
@@ -25,7 +25,7 @@ export abstract class RecoverableBaseMongoEntity extends RecoverableBaseEntity {
          if (other) {
              this._id = other._id
                  ? (typeof other._id === "string" || typeof other._id === "number"
-                     ? new ObjectID(other._id)
+                     ? new ObjectId(other._id)
                      : other._id
                  )
                  : this._id;
