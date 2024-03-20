@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository, AggregationCursorResult, EntityMetadata } from "typeorm";
+import { Repository, MongoRepository, AggregationCursor, EntityMetadata } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
@@ -292,7 +292,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
-            const result: AggregationCursorResult = await (this.repo).aggregate(searchQuery).next();
+            const result: any = await (this.repo).aggregate(searchQuery).next();
             options.res.setHeader('content-length', result ? result.count : 0);
         } else {
             const result: number = await this.repo.count(searchQuery);
