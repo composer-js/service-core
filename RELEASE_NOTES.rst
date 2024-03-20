@@ -2,6 +2,12 @@
 Release Notes
 =============
 
+v4.0.0
+======
+
+- Upgraded dependencies and removed unneeded
+- General project cleanup
+
 v3.13.0
 ======
 
