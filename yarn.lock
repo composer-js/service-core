@@ -1074,14 +1074,14 @@ __metadata:
     winston-transport: "npm:^4.7.0"
     ws: "npm:^8.16.0"
   peerDependencies:
-    cors: ^2.8.5
-    express: ^4.18.2
-    express-session: ^1.17.3
+    cors: 2.x
+    express: 4.x
+    express-session: 1.x
     ioredis: 5.x
     mongodb: 4.x
-    openapi3-ts: ^4.1.2
-    passport: 1.x
-    passport-strategy: ^1.0.0
+    openapi3-ts: 4.x
+    passport: 0.7.x
+    passport-strategy: 1.x
     prom-client: 15.x
     reflect-metadata: 0.2.x
     winston: 3.x
