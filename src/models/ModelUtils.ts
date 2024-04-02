@@ -14,13 +14,10 @@ import {
     Between,
     MongoRepository,
 } from "typeorm";
-import { ClassLoader, Logger } from "@composer-js/core";
+import { ClassLoader } from "@composer-js/core";
 import "reflect-metadata";
 import { isEmpty } from "lodash";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
-const _ = require('lodash');
-
-const logger = Logger();
 
 // Apparently calling JSON.stringify on RegExp returns an empty set. So the recommended way to
 // overcome this is by adding a `toJSON` method that uses the `toString` instead which will
