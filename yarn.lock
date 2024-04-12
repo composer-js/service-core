@@ -1249,31 +1249,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@file:../cjs-core::locator=%40composer-js%2Fservice-core%40workspace%3A.":
-  version: 2.4.10
-  resolution: "@composer-js/core@file:../cjs-core#../cjs-core::hash=45ae37&locator=%40composer-js%2Fservice-core%40workspace%3A."
+"@composer-js/core@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@composer-js/core@npm:3.1.0"
   dependencies:
-    "@slack/bolt": "npm:^3.16.0"
-    "@slack/web-api": "npm:^6.10.0"
+    "@slack/bolt": "npm:^3.17.1"
+    "@slack/web-api": "npm:^7.0.2"
     "@socket.io/redis-emitter": "npm:^5.1.0"
-    axios: "npm:^1.6.2"
+    axios: "npm:^1.6.7"
     form-data: "npm:^4.0.0"
     handlebars: "npm:^4.7.8"
     js-yaml: "npm:^4.1.0"
     jsonwebtoken: "npm:^9.0.2"
     jszip: "npm:^3.10.1"
-    lodash.camelcase: "npm:^4.3.0"
-    mkdirp: "npm:^3.0.0"
-    nodemailer: "npm:^6.9.7"
-    prompt: "npm:^1.3.0"
+    mkdirp: "npm:^3.0.1"
+    nodemailer: "npm:^6.9.12"
     readline: "npm:^1.3.0"
-    replace-in-file: "npm:^7.0.2"
     triple-beam: "npm:^1.4.1"
-    twilio: "npm:^4.20.0"
+    twilio: "npm:^5.0.1"
     uuid: "npm:^9.0.1"
-    winston: "npm:^3.8.2"
-    winston-transport: "npm:^4.6.0"
-  checksum: e02e85218afe07b58ae15a7c689185667f24d0c9822ca7b8cf974cd0520162b18b559f48242cd915629a5ff9d0bb9980daa6997fbec2c6790513279b59fd3d71
+    winston: "npm:^3.12.0"
+    winston-transport: "npm:^4.7.0"
+  checksum: 266fac1926b5768405ca61da5c819e0d3089baecbff84ee9878aeea8d7ed010ab521c6db42999bf941b79e9b7f2b3ca2aebe6d9b2edd33fa6ebf5f4d7ac568f5
   languageName: node
   linkType: hard
 
@@ -1283,7 +1280,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^17.3.0"
     "@commitlint/config-conventional": "npm:^17.3.0"
-    "@composer-js/core": ../cjs-core
+    "@composer-js/core": "npm:^3.1.0"
     "@google-cloud/storage": "npm:^5.19.4"
     "@slack/bolt": "npm:^3.14.0"
     "@slack/web-api": "npm:^6.9.1"
@@ -2477,7 +2474,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@slack/bolt@npm:^3.14.0, @slack/bolt@npm:^3.16.0":
+"@slack/bolt@npm:^3.14.0, @slack/bolt@npm:^3.17.1":
   version: 3.17.1
   resolution: "@slack/bolt@npm:3.17.1"
   dependencies:
@@ -2550,14 +2547,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@slack/types@npm:^2.11.0":
+"@slack/types@npm:^2.11.0, @slack/types@npm:^2.9.0":
   version: 2.11.0
   resolution: "@slack/types@npm:2.11.0"
   checksum: b93b36b17b40d737f0c1c7da504dd5bab8ef84ff1b59378a72bcfc0d58ccf1f0f82ea22a3c3850cbbe1d8572e0724aa96282a390b794834d7a65d763ae13e5e1
   languageName: node
   linkType: hard
 
-"@slack/web-api@npm:^6.10.0, @slack/web-api@npm:^6.11.2, @slack/web-api@npm:^6.9.1":
+"@slack/web-api@npm:^6.11.2, @slack/web-api@npm:^6.9.1":
   version: 6.12.0
   resolution: "@slack/web-api@npm:6.12.0"
   dependencies:
@@ -2573,6 +2570,25 @@ __metadata:
     p-queue: "npm:^6.6.1"
     p-retry: "npm:^4.0.0"
   checksum: 609f57c5f5a75edb9377c47b0887d34cd68ea5164e0bcc4dd1a4e8785d48a788840c71bee6333dd224c3ff044c9f6e334e40a21c3f81aed719ecc3c02003639c
+  languageName: node
+  linkType: hard
+
+"@slack/web-api@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "@slack/web-api@npm:7.0.2"
+  dependencies:
+    "@slack/logger": "npm:^4.0.0"
+    "@slack/types": "npm:^2.9.0"
+    "@types/node": "npm:>=18.0.0"
+    axios: "npm:^1.6.5"
+    eventemitter3: "npm:^5.0.1"
+    form-data: "npm:^4.0.0"
+    is-electron: "npm:2.2.2"
+    is-stream: "npm:^2"
+    p-queue: "npm:^6"
+    p-retry: "npm:^4"
+    retry: "npm:^0.13.1"
+  checksum: 56c6dcc0748a4bcaeb5dfbd4ef8c0a0b170d71e87a051af3795926fc8010e6dce32859485cb8a1526a61fd437058afe4a46740709ab986bcb916001592e33fa6
   languageName: node
   linkType: hard
 
@@ -4429,7 +4445,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.6.0, axios@npm:^1.6.2, axios@npm:^1.6.5":
+"axios@npm:^1.6.0, axios@npm:^1.6.5":
   version: 1.6.7
   resolution: "axios@npm:1.6.7"
   dependencies:
@@ -4437,6 +4453,17 @@ __metadata:
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
   checksum: 131bf8e62eee48ca4bd84e6101f211961bf6a21a33b95e5dfb3983d5a2fe50d9fffde0b57668d7ce6f65063d3dc10f2212cbcb554f75cfca99da1c73b210358d
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.6.7":
+  version: 1.6.8
+  resolution: "axios@npm:1.6.8"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 0f22da6f490335479a89878bc7d5a1419484fbb437b564a80c34888fc36759ae4f56ea28d55a191695e5ed327f0bad56e7ff60fb6770c14d1be6501505d47ab9
   languageName: node
   linkType: hard
 
@@ -7209,6 +7236,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.6
+  resolution: "follow-redirects@npm:1.15.6"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 9ff767f0d7be6aa6870c82ac79cf0368cd73e01bbc00e9eb1c2a16fbb198ec105e3c9b6628bb98e9f3ac66fe29a957b9645bcb9a490bb7aa0d35f908b6b85071
+  languageName: node
+  linkType: hard
+
 "for-each@npm:^0.3.3":
   version: 0.3.3
   resolution: "for-each@npm:0.3.3"
@@ -7622,7 +7659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^8.0.1, glob@npm:^8.1.0":
+"glob@npm:^8.0.1":
   version: 8.1.0
   resolution: "glob@npm:8.1.0"
   dependencies:
@@ -8593,7 +8630,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-stream@npm:^2.0.0":
+"is-stream@npm:^2, is-stream@npm:^2.0.0":
   version: 2.0.1
   resolution: "is-stream@npm:2.0.1"
   checksum: 7c284241313fc6efc329b8d7f08e16c0efeb6baab1b4cd0ba579eb78e5af1aa5da11e68559896a2067cd6c526bd29241dda4eb1225e627d5aa1a89a76d4635a5
@@ -10682,7 +10719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:^3.0.0":
+"mkdirp@npm:^3.0.1":
   version: 3.0.1
   resolution: "mkdirp@npm:3.0.1"
   bin:
@@ -11048,6 +11085,13 @@ __metadata:
     long-timeout: "npm:0.1.1"
     sorted-array-functions: "npm:^1.3.0"
   checksum: 6ec51b34b9e676740ac25298e4ced5ee46053379f0d3aad533e51d7e083bc24ced045df1772a95bf9d9cfdb81299340bbf551549a7c5eb6e4d2dc6468c85c70e
+  languageName: node
+  linkType: hard
+
+"nodemailer@npm:^6.9.12":
+  version: 6.9.13
+  resolution: "nodemailer@npm:6.9.13"
+  checksum: 4d6899f45abb7760a7d3b4d1046de7e08e80a471b84d1f09065a25941ded482e7f9877be248550e681e0270383cb9299f6caded507cbc0e917341bb137cc94a4
   languageName: node
   linkType: hard
 
@@ -11700,7 +11744,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^6.6.1":
+"p-queue@npm:^6, p-queue@npm:^6.6.1":
   version: 6.6.2
   resolution: "p-queue@npm:6.6.2"
   dependencies:
@@ -11717,7 +11761,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^4.0.0":
+"p-retry@npm:^4, p-retry@npm:^4.0.0":
   version: 4.6.2
   resolution: "p-retry@npm:4.6.2"
   dependencies:
@@ -12743,19 +12787,6 @@ __metadata:
   dependencies:
     "@pnpm/npm-conf": "npm:^2.1.0"
   checksum: 20fc2225681cc54ae7304b31ebad5a708063b1949593f02dfe5fb402bc1fc28890cecec6497ea396ba86d6cca8a8480715926dfef8cf1f2f11e6f6cc0a1b4bde
-  languageName: node
-  linkType: hard
-
-"replace-in-file@npm:^7.0.2":
-  version: 7.1.0
-  resolution: "replace-in-file@npm:7.1.0"
-  dependencies:
-    chalk: "npm:^4.1.2"
-    glob: "npm:^8.1.0"
-    yargs: "npm:^17.7.2"
-  bin:
-    replace-in-file: bin/cli.js
-  checksum: 2ea9959eaa895d59ccf0c29f7015d71af25e1aa0d8bff5602b3b4e70af6816833190fe015189130a0b753458f083b2cd548cd77912d94a21a500c629855a0eb1
   languageName: node
   linkType: hard
 
@@ -14471,7 +14502,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"twilio@npm:^4.19.0, twilio@npm:^4.20.0":
+"twilio@npm:^4.19.0":
   version: 4.22.0
   resolution: "twilio@npm:4.22.0"
   dependencies:
@@ -14484,6 +14515,22 @@ __metadata:
     url-parse: "npm:^1.5.9"
     xmlbuilder: "npm:^13.0.2"
   checksum: 4d585e058f7f515243390e0ff031998050c077db2f2825acebfbf12c78487f3e433ddaebb239f53b8ec9197b84c0c2004a306c574cfa74404a09d4ee67daf259
+  languageName: node
+  linkType: hard
+
+"twilio@npm:^5.0.1":
+  version: 5.0.3
+  resolution: "twilio@npm:5.0.3"
+  dependencies:
+    axios: "npm:^1.6.0"
+    dayjs: "npm:^1.11.9"
+    https-proxy-agent: "npm:^5.0.0"
+    jsonwebtoken: "npm:^9.0.0"
+    qs: "npm:^6.9.4"
+    scmp: "npm:^2.1.0"
+    url-parse: "npm:^1.5.9"
+    xmlbuilder: "npm:^13.0.2"
+  checksum: 6504304b3a542e501e2928406fc18d7161e1fedd5cdd9f6b375cac2738758eaf5e7a9769eb755844879546a00a9fd4320eac89b90241c038c876ac65e9e254fd
   languageName: node
   linkType: hard
 
@@ -15211,7 +15258,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"winston-transport@npm:^4.5.0, winston-transport@npm:^4.6.0":
+"winston-transport@npm:^4.5.0, winston-transport@npm:^4.7.0":
   version: 4.7.0
   resolution: "winston-transport@npm:4.7.0"
   dependencies:
@@ -15222,7 +15269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"winston@npm:*, winston@npm:^3.11.0, winston@npm:^3.8.2":
+"winston@npm:*, winston@npm:^3.11.0":
   version: 3.11.0
   resolution: "winston@npm:3.11.0"
   dependencies:
@@ -15252,6 +15299,25 @@ __metadata:
     isstream: "npm:0.1.x"
     stack-trace: "npm:0.0.x"
   checksum: 8c6f7365955d93a78f3345db9259052fd68c64096898c5787cdd766a26555d869e56c6607db29c85733d342fe86b8e8b65862843cb751391e594752b1565a89b
+  languageName: node
+  linkType: hard
+
+"winston@npm:^3.12.0":
+  version: 3.13.0
+  resolution: "winston@npm:3.13.0"
+  dependencies:
+    "@colors/colors": "npm:^1.6.0"
+    "@dabh/diagnostics": "npm:^2.0.2"
+    async: "npm:^3.2.3"
+    is-stream: "npm:^2.0.0"
+    logform: "npm:^2.4.0"
+    one-time: "npm:^1.0.0"
+    readable-stream: "npm:^3.4.0"
+    safe-stable-stringify: "npm:^2.3.1"
+    stack-trace: "npm:0.0.x"
+    triple-beam: "npm:^1.3.0"
+    winston-transport: "npm:^4.7.0"
+  checksum: 2c3cc7389a691e1638edcb0d4bfea72caa82d87d5681ec6131ac9bae780d94d06fb7b112edcd4ec37c8b947a1b64943941b761e34d67c6b0dac6e9c31ae4b25b
   languageName: node
   linkType: hard
 
@@ -15475,7 +15541,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:^17.0.0, yargs@npm:^17.3.1, yargs@npm:^17.6.2, yargs@npm:^17.7.2":
+"yargs@npm:^17.0.0, yargs@npm:^17.3.1, yargs@npm:^17.6.2":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
   dependencies:
