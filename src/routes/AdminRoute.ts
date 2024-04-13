@@ -114,7 +114,7 @@ export class AdminRoute {
     @Returns([null])
     private async clearCache(@User user?: JWTUser): Promise<void> {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
-            const error: any = new Error("User does not have permission to perform this action.");
+            const error: ApiError = new ApiError("User does not have permission to perform this action.");
             error.status = 403;
             throw error;
         }
@@ -245,7 +245,7 @@ export class AdminRoute {
         if (user && user.uid && UserUtils.hasRoles(user, this.trustedRoles)) {
             return this.releaseNotes;
         } else {
-            const error: any = new Error("User does not have permission to perform this action.");
+            const error: ApiError = new ApiError("User does not have permission to perform this action.");
             error.status = 403;
             throw error;
         }
@@ -257,7 +257,7 @@ export class AdminRoute {
     @Returns([null])
     private restart(@User user?: JWTUser): void {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
-            const error: any = new Error("User does not have permission to perform this action.");
+            const error: ApiError = new ApiError("User does not have permission to perform this action.");
             error.status = 403;
             throw error;
         }

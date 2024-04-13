@@ -40,7 +40,7 @@ export class RepoUtils {
         const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, undefined, (obj as any).productUid);
         const count: number = await repo.count(query);
         if (!tracked && count > 0) {
-            const error: any = new Error("An existing object with this identifier already exists.");
+            const error: ApiError = new ApiError("An existing object with this identifier already exists.");
             error.status = 400;
             throw error;
         }
@@ -75,7 +75,7 @@ export class RepoUtils {
             old = await repo.findOne(query);
         }
         if (!old) {
-            const error: any = new Error("No object with that id could be found.");
+            const error: ApiError = new ApiError("No object with that id could be found.");
             error.status = 404;
             throw error;
         }
@@ -83,7 +83,7 @@ export class RepoUtils {
         // Enforce optimistic locking when applicable
         if (old instanceof BaseEntity) {
             if (old.version !== (obj as any).version) {
-                const error: any = new Error("Invalid object version. Do you have the latest version?");
+                const error: ApiError = new ApiError("Invalid object version. Do you have the latest version?");
                 error.status = 409;
                 throw error;
             }
@@ -91,7 +91,7 @@ export class RepoUtils {
 
         // Make sure the object provided actually matches the id given
         if (old.uid !== obj.uid) {
-            const error: any = new Error("The object provided does not match the identifier given.");
+            const error: ApiError = new ApiError("The object provided does not match the identifier given.");
             error.status = 400;
             throw error;
         }

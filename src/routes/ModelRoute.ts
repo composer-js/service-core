@@ -402,7 +402,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
                 throw error;
             }
@@ -460,7 +460,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
                 throw error;
             }
@@ -566,7 +566,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
                 throw error;
             }
@@ -574,7 +574,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         const result: T | null = await this.getObj(id, options.query.version, options.query.productUid);
         if (!result) {
-            const error: any = new Error("No object with that id could be found.");
+            const error: ApiError = new ApiError("No object with that id could be found.");
             error.status = 404;
             throw error;
         }
@@ -663,7 +663,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: any = new Error("Cannot use `me` reference for an unauthorized user.");
+                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
                 error.status = 403;
                 throw error;
             }
@@ -783,7 +783,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     protected async doUpdateProperty(id: string, propertyName: string, value: any, options: UpdateRequestOptions): Promise<T> {
         const existing: any = await this.getObj(id);
         if (!existing) {
-            const error: any = new Error("No object with that id could be found.");
+            const error: ApiError = new ApiError("No object with that id could be found.");
             error.status = 404;
             throw error;
         }

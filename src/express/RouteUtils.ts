@@ -1,12 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
+import { ApiError, JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ServerResponse } from "http";
 import { Config, Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 import { OpenApiSpec } from "../OpenApiSpec";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 const passport = require("passport");
 const _ = require("lodash");
 
@@ -52,7 +53,7 @@ export class RouteUtils {
                 // blocking up the handler.
                 let timer: NodeJS.Timeout = setTimeout(() => {
                     if (required) {
-                        const error: any = new Error("Failed to authenticate.");
+                        const error: ApiError = new ApiError(ApiErrors.AUTH_WEBSOCKET_FAILED, 401, ApiErrorMessages.AUTH_WEBSOCKET_FAILED);
                         error.status = 401;
                         sock.close(1002, error.message);
                         next(error);
@@ -80,7 +81,7 @@ export class RouteUtils {
                                     req.user = user;
                                     next();
                                 } else if (required) {
-                                    const error: any = new Error("Invalid authentication token.");
+                                    const error: ApiError = new ApiError("Invalid authentication token.");
                                     error.status = 401;
                                     sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: error.message }));
                                     sock.close(1002, error.message);
@@ -92,7 +93,7 @@ export class RouteUtils {
                                     next();
                                 }
                             } else if (required) {
-                                const error: any = new Error("Invalid message or request.");
+                                const error: ApiError = new ApiError("Invalid message or request.");
                                 error.status = 400;
                                 sock.close(1002, error.message);
                                 next(error);
@@ -102,7 +103,7 @@ export class RouteUtils {
                             }
                         } catch (err: any) {
                             if (required) {
-                                const error: any = new Error("Invalid message or request.");
+                                const error: ApiError = new ApiError("Invalid message or request.");
                                 error.status = 400;
                                 sock.close(1002, error.message);
                                 next(error);
@@ -112,7 +113,7 @@ export class RouteUtils {
                             }
                         }
                     } else if (required) {
-                        const error: any = new Error("Invalid message or request.");
+                        const error: ApiError = new ApiError("Invalid message or request.");
                         error.status = 400;
                         sock.close(1002, error.message);
                         next(error);
@@ -138,7 +139,7 @@ export class RouteUtils {
             if (foundRole) {
                 return next();
             } else {
-                const err: any = new Error("You do not have permission to perform this action.");
+                const err: ApiError = new ApiError("You do not have permission to perform this action.");
                 err.status = 403;
                 return next(err);
             }

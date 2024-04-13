@@ -66,7 +66,7 @@ class DefaultRoute {
             });
             ws.send(`hello ${user.uid}`);
         } else {
-            const error: any = new Error("No user authenticated.");
+            const error: ApiError = new ApiError("No user authenticated.");
             error.status = 401;
             throw error;
         }
