@@ -6,6 +6,8 @@ import { ModelUtils } from "../models/ModelUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BaseMongoEntity } from "../models/BaseMongoEntity";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+import { ApiError } from "@composer-js/core";
 
 /**
  * @author Jean-Philippe Steinmetz
@@ -40,9 +42,7 @@ export class RepoUtils {
         const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, undefined, (obj as any).productUid);
         const count: number = await repo.count(query);
         if (!tracked && count > 0) {
-            const error: ApiError = new ApiError("An existing object with this identifier already exists.");
-            error.status = 400;
-            throw error;
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
         // Override the date and version fields with their defaults
@@ -75,25 +75,19 @@ export class RepoUtils {
             old = await repo.findOne(query);
         }
         if (!old) {
-            const error: ApiError = new ApiError("No object with that id could be found.");
-            error.status = 404;
-            throw error;
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
         // Enforce optimistic locking when applicable
         if (old instanceof BaseEntity) {
             if (old.version !== (obj as any).version) {
-                const error: ApiError = new ApiError("Invalid object version. Do you have the latest version?");
-                error.status = 409;
-                throw error;
+                throw new ApiError(ApiErrors.INVALID_OBJECT_VERSION, 409, ApiErrorMessages.INVALID_OBJECT_VERSION);
             }
         }
 
         // Make sure the object provided actually matches the id given
         if (old.uid !== obj.uid) {
-            const error: ApiError = new ApiError("The object provided does not match the identifier given.");
-            error.status = 400;
-            throw error;
+            throw new ApiError(ApiErrors.OBJECT_ID_MISMATCH, 400, ApiErrorMessages.OBJECT_ID_MISMATCH);
         }
 
         // When using MongoDB we need to copy the _id property in order to prevent duplicate entries

@@ -1249,9 +1249,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@composer-js/core@npm:3.1.0"
+"@composer-js/core@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@composer-js/core@npm:3.2.0"
   dependencies:
     "@slack/bolt": "npm:^3.17.1"
     "@slack/web-api": "npm:^7.0.2"
@@ -1270,7 +1270,7 @@ __metadata:
     uuid: "npm:^9.0.1"
     winston: "npm:^3.12.0"
     winston-transport: "npm:^4.7.0"
-  checksum: 266fac1926b5768405ca61da5c819e0d3089baecbff84ee9878aeea8d7ed010ab521c6db42999bf941b79e9b7f2b3ca2aebe6d9b2edd33fa6ebf5f4d7ac568f5
+  checksum: 886de1c5b13cf21f0c07086c944124525990262fe986947f69bc99540218b8d2b5455e0e039ad913a58db7d1c2fbe79b16bdc91990b8580b1404b55f26e202cb
   languageName: node
   linkType: hard
 
@@ -1280,7 +1280,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^17.3.0"
     "@commitlint/config-conventional": "npm:^17.3.0"
-    "@composer-js/core": "npm:^3.1.0"
+    "@composer-js/core": "npm:^3.2.0"
     "@google-cloud/storage": "npm:^5.19.4"
     "@slack/bolt": "npm:^3.14.0"
     "@slack/web-api": "npm:^6.9.1"

@@ -14,10 +14,12 @@ import {
     Between,
     MongoRepository,
 } from "typeorm";
-import { ClassLoader, Logger } from "@composer-js/core";
+import { ApiError, ClassLoader, Logger } from "@composer-js/core";
 import "reflect-metadata";
 import { isEmpty } from "lodash";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+import StringUtils from "@composer-js/core/dist/types/StringUtils";
 const _ = require('lodash');
 
 const logger = Logger();
@@ -213,9 +215,8 @@ export class ModelUtils {
                     case "range": {
                         const args: string[] = value.split(",");
                         if (args.length !== 2) {
-                            throw new Error(
-                                "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
-                            );
+                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, { value, length: args.length });
+                            throw new ApiError(ApiErrors.SEARCH_INVALID_RANGE, 400, msg);
                         }
                         try {
                             // Attempt to parse the range values to native types
@@ -297,9 +298,8 @@ export class ModelUtils {
                     case "range": {
                         const args: string[] = value.split(",");
                         if (args.length !== 2) {
-                            throw new Error(
-                                "Invalid range value: '" + value + "'. Expected 2 arguments, got " + args.length
-                            );
+                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, { value, length: args.length });
+                            throw new ApiError(ApiErrors.SEARCH_INVALID_RANGE, 400, msg);
                         }
                         try {
                             // Attempt to parse the range values to native types
@@ -413,7 +413,7 @@ export class ModelUtils {
             // If the value is 'me' that's a special keyword to reference the user ID.
             if (params[key] === "me") {
                 if (!user) {
-                    throw new Error("An anonymous user cannot make a request with a `me` reference.");
+                    throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
                 }
                 query.where[key] = user.uid;
             } else {
@@ -553,7 +553,7 @@ export class ModelUtils {
             // If the value is 'me' that's a special keyword to reference the user ID.
             if (params[key] === "me") {
                 if (!user) {
-                    throw new Error("An anonymous user cannot make a request with a `me` reference.");
+                    throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
                 }
                 queries[0][key] = user.uid;
             } else {

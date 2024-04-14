@@ -53,7 +53,7 @@ export class RouteUtils {
                 // blocking up the handler.
                 let timer: NodeJS.Timeout = setTimeout(() => {
                     if (required) {
-                        const error: ApiError = new ApiError(ApiErrors.AUTH_WEBSOCKET_FAILED, 401, ApiErrorMessages.AUTH_WEBSOCKET_FAILED);
+                        const error: ApiError = new ApiError(ApiErrors.AUTH_FAILED, 401, ApiErrorMessages.AUTH_FAILED);
                         error.status = 401;
                         sock.close(1002, error.message);
                         next(error);
@@ -81,8 +81,7 @@ export class RouteUtils {
                                     req.user = user;
                                     next();
                                 } else if (required) {
-                                    const error: ApiError = new ApiError("Invalid authentication token.");
-                                    error.status = 401;
+                                    const error: ApiError = new ApiError(ApiErrors.AUTH_FAILED, 401, ApiErrorMessages.AUTH_FAILED);
                                     sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: error.message }));
                                     sock.close(1002, error.message);
                                     next(error);
@@ -93,9 +92,8 @@ export class RouteUtils {
                                     next();
                                 }
                             } else if (required) {
-                                const error: ApiError = new ApiError("Invalid message or request.");
-                                error.status = 400;
-                                sock.close(1002, error.message);
+                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                sock.close(1002, error.code);
                                 next(error);
                             } else {
                                 // Auth isn't required so just move along
@@ -103,9 +101,8 @@ export class RouteUtils {
                             }
                         } catch (err: any) {
                             if (required) {
-                                const error: ApiError = new ApiError("Invalid message or request.");
-                                error.status = 400;
-                                sock.close(1002, error.message);
+                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                sock.close(1002, error.code);
                                 next(error);
                             } else {
                                 // Auth isn't required so just move along
@@ -113,9 +110,8 @@ export class RouteUtils {
                             }
                         }
                     } else if (required) {
-                        const error: ApiError = new ApiError("Invalid message or request.");
-                        error.status = 400;
-                        sock.close(1002, error.message);
+                        const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                        sock.close(1002, error.code);
                         next(error);
                     } else {
                         // Auth isn't required so just move along
@@ -139,8 +135,7 @@ export class RouteUtils {
             if (foundRole) {
                 return next();
             } else {
-                const err: ApiError = new ApiError("You do not have permission to perform this action.");
-                err.status = 403;
+                const err: ApiError = new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
                 return next(err);
             }
         };

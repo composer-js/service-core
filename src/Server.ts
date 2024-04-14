@@ -16,7 +16,7 @@ import { ConnectionManager } from "./database/ConnectionManager";
 import { CorsOptions } from "cors";
 import { StatusRoute } from "./routes/StatusRoute";
 import { JWTStrategy, JWTStrategyOptions } from "./passportjs/JWTStrategy";
-import { ClassLoader, Logger } from "@composer-js/core";
+import { ApiError, ClassLoader, Logger } from "@composer-js/core";
 import { OpenAPIRoute } from "./routes/OpenAPIRoute";
 import { MetricsRoute } from "./routes/MetricsRoute";
 import { ObjectFactory } from "./ObjectFactory";
@@ -29,6 +29,7 @@ import { BulkError } from "./BulkError";
 import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
+import { ApiErrors } from "./ApiErrors";
 
 interface Entity {
     storeName?: any;
@@ -421,7 +422,7 @@ export class Server {
                     if (err) {
                         // Only log 500-level errors. 400-level errors are the client's fault and
                         // we don't need to spam the logs because of that.
-                        if (err.status >= 500) {
+                        if (!(err instanceof ApiError) || err.status >= 500) {
                             this.logger.error(err);
                         } else {
                             this.logger.debug(err);
@@ -448,8 +449,10 @@ export class Server {
 
                             res.json(errs);
                         } else {
-                            if (!err.status && !err.status) {
-                                err.status = 500;
+                            if (!(err instanceof ApiError)) {
+                                const tmp: ApiError = new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrors.INTERNAL_ERROR);
+                                tmp.stack = err.stack;
+                                err = tmp;
                             }
                             // leverage NODE_ENV or another config?
                             if (err.stack && process.env.NODE_ENV === "production") {
@@ -463,9 +466,8 @@ export class Server {
                                 ...err,
                                 // https://stackoverflow.com/a/25245824
                                 level: err.level ? err.level.replace(/\u001b\[.*?m/g, '') : undefined, // eslint-disable-line no-control-regex
-                                message: err.message
                             }
-                            res.json(err.stack ? { ...formattedError, stack: err.stack } : formattedError);
+                            res.json(formattedError);
                         }
 
                         this.metricFailedRequests.inc(1);

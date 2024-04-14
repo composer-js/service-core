@@ -14,6 +14,8 @@ import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
 import { RecoverableBaseEntity } from "../models";
 import { Admin } from "mongodb";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+import { ApiError } from "@composer-js/core";
 
 /**
  * The set of options required by all request handlers.
@@ -217,7 +219,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async getObj(id: string, version?: number | string, productUid?: string): Promise<T | null> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         const query: any = this.searchIdQuery(id, version, productUid);
@@ -282,11 +284,11 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doCount(options: FindRequestOptions): Promise<XResponse> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         if (!options.res) {
-            throw new Error("Response must be provided.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
@@ -312,7 +314,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doCreateObject(obj: T, options: CreateRequestOptions): Promise<T> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // Make sure the provided object has the correct typing
@@ -363,7 +365,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         if (thrownError) {
-            throw new BulkError(errors, "Failed to create one or more objects.");
+            throw new BulkError(errors, ApiErrors.BULK_UPDATE_FAILURE, (errors[0] as any)?.status || 400, ApiErrorMessages.BULK_UPDATE_FAILURE);
         }
 
         return results;
@@ -394,7 +396,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doDelete(id: string, options: DeleteRequestOptions): Promise<void> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
@@ -402,9 +404,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
+                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
             }
         }
 
@@ -449,10 +449,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doExists(id: string, options: FindRequestOptions): Promise<any> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
         if (!options.res) {
-            throw new Error("Response must be provided.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
@@ -460,9 +460,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
+                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
             }
         }
 
@@ -486,7 +484,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         let results: T[] = [];
 
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
@@ -558,7 +556,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doFindById(id: string, options: FindRequestOptions): Promise<T | null> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
@@ -566,17 +564,13 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
+                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
             }
         }
 
         const result: T | null = await this.getObj(id, options.query.version, options.query.productUid);
         if (!result) {
-            const error: ApiError = new ApiError("No object with that id could be found.");
-            error.status = 404;
-            throw error;
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
         return result;
@@ -590,7 +584,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doTruncate(options: TruncateRequestOptions): Promise<void> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         try {
@@ -641,7 +635,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         if (thrownError) {
-            throw new BulkError(errors, "Failed to update one or more objects.");
+            throw new BulkError(errors, ApiErrors.BULK_UPDATE_FAILURE, (errors[0] as any)?.status || 400, ApiErrorMessages.BULK_UPDATE_FAILURE);
         }
 
         return result;
@@ -655,7 +649,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected async doUpdate(id: string, obj: T, options: UpdateRequestOptions): Promise<T> {
         if (!this.repo) {
-            throw new Error("Repository not set or could not be found.");
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // When id === `me` this is a special keyword meaning the authenticated user
@@ -663,9 +657,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                const error: ApiError = new ApiError("Cannot use `me` reference for an unauthorized user.");
-                error.status = 403;
-                throw error;
+                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
             }
         }
 
@@ -783,9 +775,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     protected async doUpdateProperty(id: string, propertyName: string, value: any, options: UpdateRequestOptions): Promise<T> {
         const existing: any = await this.getObj(id);
         if (!existing) {
-            const error: ApiError = new ApiError("No object with that id could be found.");
-            error.status = 404;
-            throw error;
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
         return await this.doUpdate(id, {
