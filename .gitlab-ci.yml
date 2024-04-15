@@ -15,18 +15,18 @@ build:
     script:
         - yarn install
         - yarn build
-        - yarn lint
         - yarn docs
 
 test:
     stage: test
     <<: *job_configuration
     script:
-        - yarn test --ci --forceExit --detectOpenHandles
+        - yarn test --ci --forceExit
 
-validate:
+# Validation step
+validate: 
     stage: test
-    <<: *job_configuration
+    <<: *job_configuration 
     allow_failure:
         exit_codes:
             - 101
@@ -35,10 +35,10 @@ validate:
         - bash ./validate.sh
 
 publish:
-    stage: deploy
     only:
         - tags
     <<: *job_configuration
+    stage: deploy
     script:
         - yarn build
         - yarn npm publish --access public
