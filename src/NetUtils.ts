@@ -83,8 +83,8 @@ export class NetUtils {
             else if (urlOrRequest.headers["x-real-ip"]) {
                 result = urlOrRequest.headers["x-real-ip"] as string;
             }
-            else if (urlOrRequest.connection) {
-                result = urlOrRequest.connection.remoteAddress;
+            else if (urlOrRequest.socket) {
+                result = urlOrRequest.socket.remoteAddress;
             }
         }
 

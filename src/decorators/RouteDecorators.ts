@@ -128,6 +128,7 @@ export function Header(name: string) {
 
 /**
  * Indicates that the decorated function should be called during the initialization phase of server startup.
+ * @deprecated use {@link ObjectDecorators.Init}
  */
 export function Init(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     Reflect.defineMetadata("cjs:initialize", true, target, propertyKey);
