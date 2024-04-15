@@ -986,9 +986,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "@composer-js/core@npm:3.2.0"
+"@composer-js/core@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@composer-js/core@npm:4.0.0"
   dependencies:
     "@slack/bolt": "npm:^3.17.1"
     "@slack/web-api": "npm:^7.0.2"
@@ -1007,7 +1007,7 @@ __metadata:
     uuid: "npm:^9.0.1"
     winston: "npm:^3.12.0"
     winston-transport: "npm:^4.7.0"
-  checksum: 10c0/886de1c5b13cf21f0c07086c944124525990262fe986947f69bc99540218b8d2b5455e0e039ad913a58db7d1c2fbe79b16bdc91990b8580b1404b55f26e202cb
+  checksum: 10c0/b6fb2cb6567c1aeee3211fd4676e13316f5a21060ca61f6a653f8fb5ad81282ebfe8cd7d45c0a314d234a17238a24d4c1494c2a89003bce6d13152bf171bedc0
   languageName: node
   linkType: hard
 
@@ -1015,7 +1015,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@composer-js/service-core@workspace:."
   dependencies:
-    "@composer-js/core": "npm:^3.2.0"
+    "@composer-js/core": "npm:^4.0.0"
     "@types/cookie-parser": "npm:^1.4.7"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"

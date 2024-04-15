@@ -20,7 +20,7 @@
         "postversion": "git push && git push --tags"
     },
     "dependencies": {
-        "@composer-js/core": "^3.2.0",
+        "@composer-js/core": "^4.0.0",
         "dayjs": "^1.11.10",
         "node-schedule": "^2.1.1",
         "response-time": "^2.3.2",

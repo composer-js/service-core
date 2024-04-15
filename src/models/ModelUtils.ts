@@ -14,12 +14,11 @@ import {
     Between,
     MongoRepository,
 } from "typeorm";
-import { ApiError, ClassLoader, Logger } from "@composer-js/core";
+import { ApiError, ClassLoader, Logger, StringUtils } from "@composer-js/core";
 import "reflect-metadata";
 import { isEmpty } from "lodash";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-import StringUtils from "@composer-js/core/dist/types/StringUtils";
 const _ = require('lodash');
 
 const logger = Logger();
