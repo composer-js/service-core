@@ -4,8 +4,8 @@
 import { ApiError, JWTUser, UserUtils } from "@composer-js/core";
 import Redis, { ScanStream } from "ioredis";
 import * as Transport from "winston-transport";
-import { Config, Logger } from "../decorators/ObjectDecorators"
-import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
+import { Config, Init, Logger } from "../decorators/ObjectDecorators"
+import { Auth, ContentType, Get, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
 import { Description, Returns } from "../decorators/DocDecorators";
@@ -48,7 +48,7 @@ export class RedisTransport extends Transport {
 @Route("/admin")
 export class AdminRoute {
     /** A map of user uid's to active sockets. */
-    private activeSockets: Map<string,any[]> = new Map();
+    private activeSockets: Map<string, any[]> = new Map();
 
     @RedisConnection("cache")
     protected cacheClient?: Redis;
@@ -76,7 +76,7 @@ export class AdminRoute {
     /**
      * Constructs a new `ReleaseNotesRoute` object with the specified defaults.
      *
-     * @param apiSpec The ReleaseNotes specification object to serve.
+     * @param releaseNotes The ReleaseNotes specification object to serve.
      */
     constructor(releaseNotes: string) {
         this.releaseNotes = releaseNotes;
@@ -210,13 +210,13 @@ export class AdminRoute {
                 await redis.unsubscribe(channelName);
                 // Disconnect the redis client
                 redis.disconnect();
-    
+
                 // Remove the socket from our tracked list
                 const socks: any[] = this.activeSockets.get(user.uid) || [];
                 socks.splice(socks.indexOf(socket), 1);
                 this.activeSockets.set(user.uid, socks);
             });
-    
+
             // Add the socket to our tracked list
             const socks: any[] = this.activeSockets.get(user.uid) || [];
             socks.push(socket);

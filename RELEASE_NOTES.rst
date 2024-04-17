@@ -2,6 +2,14 @@
 Release Notes
 =============
 
+v4.1.0
+======
+
+- Upgraded dependencies
+- Updated repo documents
+- Removed deprecated RouteDecorator Init
+- Updated to allow WebSocket Request to pass query arguments
+
 v4.0.0
 ======
 

@@ -12,7 +12,6 @@ import {
     Param,
     User,
     Query,
-    Init,
     Before,
     Model,
     Request,
@@ -25,6 +24,7 @@ import { Logger } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
+import { Init } from "../../../src/decorators/ObjectDecorators";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 

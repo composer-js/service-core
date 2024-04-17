@@ -13,9 +13,9 @@ import {
     User,
     Query,
     Response,
-    Init,
     Model,
 } from "../../../src/decorators/RouteDecorators";
+import { Init } from "../../../src/decorators/ObjectDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/CacheUser";

@@ -32,7 +32,21 @@ export function addWebSocket(app: Application, wss: WebSocketServer): any {
         request.websocket = socket;
         // We add `.websocket` to the url to let Express know this is a websocket specific request. Any handlers
         // marked with the @WebSocket decorator will have registered their paths this way too.
-        request.url += ".websocket";
+        try {
+            let queryIndex = request.url?.indexOf("?");
+            if (queryIndex > 0 && /[\w/]+?[\w]+=.+/.test(request.url)) {
+                // Handle / before ?
+                let pathLength = queryIndex;
+                if (request.url[queryIndex - 1] == "/") {
+                    pathLength = queryIndex - 1;
+                }
+                request.url = `${request.url.slice(0, pathLength)}.websocket${request.url.slice(queryIndex)}`;
+            } else {
+                request.url += ".websocket";
+            }
+        } catch (err) {
+            request.url += ".websocket";
+        }
 
         const response: ServerResponse = new ServerResponse(request);
         // Shouldn't need to cast `response` as any here but for some reason compiler isn't liking it
