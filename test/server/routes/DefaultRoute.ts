@@ -2,9 +2,10 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Route, Get, User, Init, Auth, WebSocket, Socket } from "../../../src/decorators/RouteDecorators";
-import { Logger } from "@composer-js/core";
+import { ApiError, Logger } from "@composer-js/core";
 import * as ws from "ws";
 import { Description, Returns } from "../../../src/decorators/DocDecorators";
+import { ApiErrors, ApiErrorMessages } from "../../../src/ApiErrors";
 
 const logger = Logger();
 
@@ -42,9 +43,7 @@ class DefaultRoute {
     @Description("Throws a 400-level error and returns the error as the response body.")
     @Returns([null])
     protected async throwError(): Promise<any> {
-        let err: any = new Error("This is a test.");
-        err.status = 400;
-        throw err;
+        throw new ApiError(ApiErrors.INVALID_REQUEST, 400, "This is a test.");
     }
 
     @WebSocket("connect")
@@ -66,9 +65,7 @@ class DefaultRoute {
             });
             ws.send(`hello ${user.uid}`);
         } else {
-            const error: ApiError = new ApiError("No user authenticated.");
-            error.status = 401;
-            throw error;
+            throw new ApiError(ApiErrors.AUTH_REQUIRED, 401, ApiErrorMessages.AUTH_REQUIRED);
         }
     }
 }
