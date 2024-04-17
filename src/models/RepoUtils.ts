@@ -42,7 +42,7 @@ export class RepoUtils {
         const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, undefined, (obj as any).productUid);
         const count: number = await repo.count(query);
         if (!tracked && count > 0) {
-            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
+            throw new ApiError(ApiErrors.IDENTIFIER_EXISTS, 400, ApiErrorMessages.IDENTIFIER_EXISTS);
         }
 
         // Override the date and version fields with their defaults
