@@ -1,12 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
+import { ApiError, JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ServerResponse } from "http";
 import { Config, Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 import { OpenApiSpec } from "../OpenApiSpec";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 const passport = require("passport");
 const _ = require("lodash");
 
@@ -52,7 +53,7 @@ export class RouteUtils {
                 // blocking up the handler.
                 let timer: NodeJS.Timeout = setTimeout(() => {
                     if (required) {
-                        const error: any = new Error("Failed to authenticate.");
+                        const error: ApiError = new ApiError(ApiErrors.AUTH_FAILED, 401, ApiErrorMessages.AUTH_FAILED);
                         error.status = 401;
                         sock.close(1002, error.message);
                         next(error);
@@ -80,8 +81,7 @@ export class RouteUtils {
                                     req.user = user;
                                     next();
                                 } else if (required) {
-                                    const error: any = new Error("Invalid authentication token.");
-                                    error.status = 401;
+                                    const error: ApiError = new ApiError(ApiErrors.AUTH_FAILED, 401, ApiErrorMessages.AUTH_FAILED);
                                     sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: error.message }));
                                     sock.close(1002, error.message);
                                     next(error);
@@ -92,9 +92,8 @@ export class RouteUtils {
                                     next();
                                 }
                             } else if (required) {
-                                const error: any = new Error("Invalid message or request.");
-                                error.status = 400;
-                                sock.close(1002, error.message);
+                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                sock.close(1002, error.code);
                                 next(error);
                             } else {
                                 // Auth isn't required so just move along
@@ -102,9 +101,8 @@ export class RouteUtils {
                             }
                         } catch (err: any) {
                             if (required) {
-                                const error: any = new Error("Invalid message or request.");
-                                error.status = 400;
-                                sock.close(1002, error.message);
+                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                sock.close(1002, error.code);
                                 next(error);
                             } else {
                                 // Auth isn't required so just move along
@@ -112,9 +110,8 @@ export class RouteUtils {
                             }
                         }
                     } else if (required) {
-                        const error: any = new Error("Invalid message or request.");
-                        error.status = 400;
-                        sock.close(1002, error.message);
+                        const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                        sock.close(1002, error.code);
                         next(error);
                     } else {
                         // Auth isn't required so just move along
@@ -138,8 +135,7 @@ export class RouteUtils {
             if (foundRole) {
                 return next();
             } else {
-                const err: any = new Error("You do not have permission to perform this action.");
-                err.status = 403;
+                const err: ApiError = new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
                 return next(err);
             }
         };
@@ -306,7 +302,7 @@ export class RouteUtils {
      * Wraps the provided function with Express handling based on the function's defined decorators.
      *
      * @param obj The bound object whose middleware function will be wrapped.
-     * @param handler The decorated function to wrap for registration with Express.
+     * @param func The decorated function to wrap for registration with Express.
      * @param send Set to true to have `func`'s result sent to the client.
      */
     public wrapMiddleware(obj: any, func: Function, send: boolean = false): RequestHandler {

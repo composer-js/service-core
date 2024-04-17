@@ -1,3 +1,4 @@
+export * from "./ApiErrors";
 export * from "./BackgroundService";
 export * from "./BackgroundServiceManager";
 export * from "./BulkError";

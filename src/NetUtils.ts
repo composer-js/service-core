@@ -13,7 +13,8 @@ export class NetUtils {
     /**
      * Performs DNS lookup of the IP address from a given url.
      *
-     * @param req The url to lookup the IP from.
+     * @param url The url to lookup the IP from.
+     * @param family ip family used for dns lookup
      * @returns A `string` containing the IP address if found, otherwise `undefined`.
      */
     public static async lookupIPAddress(url: string, family: number = 4): Promise<string | undefined> {

@@ -1,14 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { JWTUser, UserUtils } from "@composer-js/core";
+import { ApiError, JWTUser, UserUtils } from "@composer-js/core";
 import Redis, { ScanStream } from "ioredis";
 import * as Transport from "winston-transport";
-import { Config, Logger } from "../decorators/ObjectDecorators"
-import { Auth, ContentType, Get, Init, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
+import { Config, Init, Logger } from "../decorators/ObjectDecorators"
+import { Auth, ContentType, Get, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
 import { Description, Returns } from "../decorators/DocDecorators";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 
 /**
  * Implements a Winston transport that pipes incoming log messages to a configured redis pubsub channel.
@@ -47,7 +48,7 @@ export class RedisTransport extends Transport {
 @Route("/admin")
 export class AdminRoute {
     /** A map of user uid's to active sockets. */
-    private activeSockets: Map<string,any[]> = new Map();
+    private activeSockets: Map<string, any[]> = new Map();
 
     @RedisConnection("cache")
     protected cacheClient?: Redis;
@@ -75,7 +76,7 @@ export class AdminRoute {
     /**
      * Constructs a new `ReleaseNotesRoute` object with the specified defaults.
      *
-     * @param apiSpec The ReleaseNotes specification object to serve.
+     * @param releaseNotes The ReleaseNotes specification object to serve.
      */
     constructor(releaseNotes: string) {
         this.releaseNotes = releaseNotes;
@@ -114,9 +115,7 @@ export class AdminRoute {
     @Returns([null])
     private async clearCache(@User user?: JWTUser): Promise<void> {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
+            throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
         }
 
         if (this.cacheClient) {
@@ -141,7 +140,7 @@ export class AdminRoute {
     @WebSocket("/inspect")
     private async inspect(@Socket socket: ws, @User user: JWTUser): Promise<void> {
         if (!UserUtils.hasRoles(user, this.trustedRoles)) {
-            socket.close(1002, "User does not have permission to perform this action.");
+            socket.close(1002, ApiErrors.AUTH_PERMISSION_FAILURE);
             return;
         }
 
@@ -174,15 +173,17 @@ export class AdminRoute {
     @WebSocket("/logs")
     private async logs(@Socket socket: ws, @User user: JWTUser): Promise<void> {
         if (!UserUtils.hasRoles(user, this.trustedRoles)) {
-            socket.close(1002, "User does not have permission to perform this action.");
+            socket.close(1002, ApiErrors.AUTH_PERMISSION_FAILURE);
             return;
         }
         if (!this.logsConnConfig) {
-            socket.close(1002, "Logs connection config is not set.");
+            this.logger.error("Failed to establish logs connection. `logs` connection config is not set.");
+            socket.close(1002, ApiErrors.INTERNAL_ERROR);
             return;
         }
         if (!this.serviceName) {
-            socket.close(1002, "serviceName is not set.");
+            this.logger.error("Failed to establish logs connection. serviceName is not set.");
+            socket.close(1002, ApiErrors.INTERNAL_ERROR);
             return;
         }
 
@@ -209,13 +210,13 @@ export class AdminRoute {
                 await redis.unsubscribe(channelName);
                 // Disconnect the redis client
                 redis.disconnect();
-    
+
                 // Remove the socket from our tracked list
                 const socks: any[] = this.activeSockets.get(user.uid) || [];
                 socks.splice(socks.indexOf(socket), 1);
                 this.activeSockets.set(user.uid, socks);
             });
-    
+
             // Add the socket to our tracked list
             const socks: any[] = this.activeSockets.get(user.uid) || [];
             socks.push(socket);
@@ -238,16 +239,10 @@ export class AdminRoute {
     @ContentType("text/x-rst")
     @Returns([String])
     private get(@User user?: JWTUser): string {
-        if (!this.trustedRoles) {
-            throw new Error("trustedRoles is not set.");
-        }
-
         if (user && user.uid && UserUtils.hasRoles(user, this.trustedRoles)) {
             return this.releaseNotes;
         } else {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
+            throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
         }
     }
 
@@ -257,9 +252,7 @@ export class AdminRoute {
     @Returns([null])
     private restart(@User user?: JWTUser): void {
         if (!user || !UserUtils.hasRoles(user, this.trustedRoles)) {
-            const error: any = new Error("User does not have permission to perform this action.");
-            error.status = 403;
-            throw error;
+            throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
         }
 
         // Send the restart signal to all services.
