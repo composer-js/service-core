@@ -347,6 +347,24 @@ paths:
       security:
         - jwt: []
       x-name: wsConnectSecure
+  /connect-query.websocket:
+    x-name: routes.DefaultRoute
+    x-upgrade: true
+    get:
+      description: Establishes a socket connection that responds to all messages with
+        the query message and message `echo ${message} ${msg}` or `echo ${msg}`.
+      parameters:
+        - name: wsConnectQuery
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+      x-name: wsConnectQuery
   /items:
     x-schema: models.Item
     x-name: routes.ItemRoute

@@ -3,7 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
-import type {Config} from 'jest';
+import type { Config } from 'jest';
 
 const config: Config = {
     collectCoverageFrom: [
@@ -145,7 +145,7 @@ const config: Config = {
     // projects: undefined,
 
     // Use this configuration option to add custom reporters to Jest
-    // reporters: undefined,
+    reporters: [['default', { summaryThreshold: 10 }]],
 
     // Automatically reset mock state before every test
     // resetMocks: false,

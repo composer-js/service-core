@@ -81,7 +81,7 @@ describe("Server WebSocket Tests", () => {
                 .close()
                 .expectClosed();
             // Message parameter with /
-            await requestws(httpServer).ws('/connect-query/?message=test3%3F')
+            await requestws(httpServer).ws('/connect-query/?message=test3')
                 .expectText('hello guest')
                 .sendText('ping')
                 .expectText('echo test3 ping')
@@ -96,6 +96,15 @@ describe("Server WebSocket Tests", () => {
                 .expectText('echo ping')
                 .sendText('pong')
                 .expectText('echo pong')
+                .close()
+                .expectClosed();
+            // Message parameter with url encoded ?(%3F)
+            await requestws(httpServer).ws('/connect-query/?message=test5%3F')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo test5? ping')
+                .sendText('pong')
+                .expectText('echo test5? pong')
                 .close()
                 .expectClosed();
         }

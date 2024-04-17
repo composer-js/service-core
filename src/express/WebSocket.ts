@@ -33,6 +33,7 @@ export function addWebSocket(app: Application, wss: WebSocketServer): any {
         // We add `.websocket` to the url to let Express know this is a websocket specific request. Any handlers
         // marked with the @WebSocket decorator will have registered their paths this way too.
         try {
+            // Support websocket passing query params
             let queryIndex = request.url?.indexOf("?");
             if (queryIndex > 0 && /[\w/]+?[\w]+=.+/.test(request.url)) {
                 // Handle / before ?

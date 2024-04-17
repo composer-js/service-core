@@ -9,13 +9,17 @@ export class BulkError extends ApiError {
      */
     public readonly errors: (Error | null)[] = [];
 
-    /**
-     * The response status of the error.
-     */
-    public readonly status: number = 0;
-
-    constructor(errs: (Error | null)[], code: string, status: number, message?: string) {
-        super(code, status, message);
+    constructor(errs: (Error | null)[], code: string, defaultStatus: number, message?: string) {
+        super(code, defaultStatus, message);
+        // Per: https://github.com/microsoft/TypeScript-wiki/blob/81fe7b91664de43c02ea209492ec1cea7f3661d0/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
+        Object.setPrototypeOf(this, BulkError.prototype);
         this.errors = errs;
+        // Override default from the first valid status code
+        for (const err of errs) {
+            if (err && "status" in err) {
+                this.status = (err as any).status;
+                break;
+            }
+        }
     }
 }

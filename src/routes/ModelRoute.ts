@@ -60,7 +60,7 @@ export interface FindRequestOptions extends RequestOptions {
 /**
  * The set of options required by truncate request handlers.
  */
- export interface TruncateRequestOptions extends DeleteRequestOptions {
+export interface TruncateRequestOptions extends DeleteRequestOptions {
     /** The list of URL parameters to use in the search. */
     params: any;
     /** The list of query parameters to use in the search. */
@@ -70,7 +70,7 @@ export interface FindRequestOptions extends RequestOptions {
 /**
  * The set of options required by update request handlers.
  */
- export interface UpdateRequestOptions extends RequestOptions {
+export interface UpdateRequestOptions extends RequestOptions {
     /** The desired product uid of the resource to update. */
     productUid?: string;
     /** The desired version number of the resource to update. */
@@ -122,7 +122,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Initializes a new instance using any defaults.
      */
-    protected constructor() { 
+    protected constructor() {
         // no-op 
     }
 
@@ -365,7 +365,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         if (thrownError) {
-            throw new BulkError(errors, ApiErrors.BULK_UPDATE_FAILURE, (errors[0] as any)?.status || 400, ApiErrorMessages.BULK_UPDATE_FAILURE);
+            throw new BulkError(errors, ApiErrors.BULK_CREATE_FAILURE, 400, ApiErrorMessages.BULK_CREATE_FAILURE);
         }
 
         return results;
@@ -635,7 +635,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         if (thrownError) {
-            throw new BulkError(errors, ApiErrors.BULK_UPDATE_FAILURE, (errors[0] as any)?.status || 400, ApiErrorMessages.BULK_UPDATE_FAILURE);
+            throw new BulkError(errors, ApiErrors.BULK_UPDATE_FAILURE, 400, ApiErrorMessages.BULK_UPDATE_FAILURE);
         }
 
         return result;
