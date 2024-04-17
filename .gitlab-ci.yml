@@ -15,6 +15,7 @@ build:
     script:
         - yarn install
         - yarn build
+        - yarn docs
 
 test:
     stage: test

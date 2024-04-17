@@ -1,6 +1,4 @@
-[@acceleratxr/service-core](README.md) › [Globals](globals.md)
-
-# @acceleratxr/service-core
+@composer-js/service-core / [Exports](modules.md)
 
 # Composer: service_core
 

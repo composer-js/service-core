@@ -89,7 +89,7 @@ describe("AdminRoute Tests", () => {
     it.skip("Cannot connect to inspector with auth header using untrusted user.", async () => {
         const httpServer: any = server.getServer();
         await requestws(httpServer).ws(basePath + "/inspect", { headers: { Authorization: `jwt ${authToken}` } })
-            .expectClosed(1002, "User does not have permission to perform this action.");
+            .expectClosed(1002, "api-102");
     });
 
     it.skip("Can connect to inspector with LOGIN message.", async () => {
@@ -107,7 +107,7 @@ describe("AdminRoute Tests", () => {
         await requestws(httpServer).ws(basePath + "/inspect")
             .sendJson({ id: 0, type: "LOGIN", data: adminToken })
             .expectJson({ id: 0, type: "LOGIN_RESPONSE", success: true })
-            .expectClosed(1002, "User does not have permission to perform this action.");
+            .expectClosed(1002, "api-102");
     });
 
     it("Can connect to logs with auth header.", async () => {
@@ -121,7 +121,7 @@ describe("AdminRoute Tests", () => {
     it("Cannot connect to logs with auth header using untrusted user.", async () => {
         const httpServer: any = server.getServer();
         await requestws(httpServer).ws(basePath + "/logs", { headers: { Authorization: `jwt ${authToken}` } })
-            .expectClosed(1002, "User does not have permission to perform this action.");
+            .expectClosed(1002, "api-102");
     });
 
     it("Can connect to logs with LOGIN message.", async () => {
@@ -139,6 +139,6 @@ describe("AdminRoute Tests", () => {
         await requestws(httpServer).ws(basePath + "/logs")
             .sendJson({ id: 0, type: "LOGIN", data: authToken })
             .expectJson({ id: 0, type: "LOGIN_RESPONSE", success: true })
-            .expectClosed(1002, "User does not have permission to perform this action.");
+            .expectClosed(1002, "api-102");
     });
 });

@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { Request } from "express";
 import { Strategy } from "passport-strategy";
-import { JWTUtils, JWTUtilsConfig, JWTUser, JWTPayload } from "@composer-js/core";
+import { JWTUtils, JWTUtilsConfig, JWTUser, JWTPayload, ApiError } from "@composer-js/core";
+import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 const dayjs = require("dayjs");
 const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
@@ -88,12 +89,12 @@ export class JWTStrategy extends Strategy {
             for (const header in headers) {
                 const parts: string[] = headers[header].split(" ");
                 if (parts.length !== 2) {
-                    error = "Invalid or missing token.";
+                    error = ApiErrorMessages.AUTH_FAILED;
                     continue;
                 }
 
                 if (!parts[0].match(new RegExp("^" + this.options.headerScheme + "$", "i"))) {
-                    error = "Missing or invalid token";
+                    error = ApiErrorMessages.AUTH_FAILED;
                     continue;
                 }
 
@@ -147,7 +148,7 @@ export class JWTStrategy extends Strategy {
 
         // Record any final error that occurred.
         if (error.length > 0) {
-            this.error(new Error(error));
+            this.error(new ApiError(ApiErrors.AUTH_FAILED, 401, error));
         }
 
         // Did we succeed at decoding a JWT payload?

@@ -127,17 +127,9 @@ export function Header(name: string) {
 }
 
 /**
- * Indicates that the decorated function should be called during the initialization phase of server startup.
- * @deprecated use {@link ObjectDecorators.Init}
- */
-export function Init(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    Reflect.defineMetadata("cjs:initialize", true, target, propertyKey);
-}
-
-/**
  * Indicates that the decorated function handles incoming HTTP requests for the specified HTTP method(s) at the given sub-path.
  *
- * @param methods The HTTP method(s) to handle requests for.
+ * @param method The HTTP method(s) to handle requests for.
  * @param path The sub-path that the route handles requests for.
  */
 export function Method(method: string | string[], path?: string) {
@@ -161,7 +153,7 @@ export function Method(method: string | string[], path?: string) {
 /**
  * Indicates that the class utilizes is a manager for the specified class type.
  *
- * @param name The data model class type to associate the class with.
+ * @param type The data model class type to associate the class with.
  */
 export function Model(type: any) {
     return function <T extends { new(...args: any[]): {} }>(constructor: T) {
@@ -271,7 +263,7 @@ export function RequiresRole(roles: string | string[]) {
 /**
  * Indicates that the decorated class contains Express route definitions.
  *
- * @param path The base path(s) that all route definitions will use.
+ * @param paths The base path(s) that all route definitions will use.
  */
 export function Route(paths: string | string[]) {
     return function (target: Function) {

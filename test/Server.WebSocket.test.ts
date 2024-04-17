@@ -58,6 +58,58 @@ describe("Server WebSocket Tests", () => {
         }
     });
 
+    it("Can connect via unsecured WebSocket [anonymous] with query parameters", async () => {
+        expect(server.isRunning()).toBe(true);
+        const httpServer: http.Server | undefined = server.getServer();
+        if (httpServer) {
+            // No parameters
+            await requestws(httpServer).ws('/connect-query')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo ping')
+                .sendText('pong')
+                .expectText('echo pong')
+                .close()
+                .expectClosed();
+            // Message parameter no /
+            await requestws(httpServer).ws('/connect-query?message=test2')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo test2 ping')
+                .sendText('pong')
+                .expectText('echo test2 pong')
+                .close()
+                .expectClosed();
+            // Message parameter with /
+            await requestws(httpServer).ws('/connect-query/?message=test3')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo test3 ping')
+                .sendText('pong')
+                .expectText('echo test3 pong')
+                .close()
+                .expectClosed();
+            // Other parameter not captured
+            await requestws(httpServer).ws('/connect-query?other=test4')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo ping')
+                .sendText('pong')
+                .expectText('echo pong')
+                .close()
+                .expectClosed();
+            // Message parameter with url encoded ?(%3F)
+            await requestws(httpServer).ws('/connect-query/?message=test5%3F')
+                .expectText('hello guest')
+                .sendText('ping')
+                .expectText('echo test5? ping')
+                .sendText('pong')
+                .expectText('echo test5? pong')
+                .close()
+                .expectClosed();
+        }
+    });
+
     it("Can connect via unsecured WebSocket [user via header]", async () => {
         const user = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);

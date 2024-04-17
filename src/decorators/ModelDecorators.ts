@@ -6,7 +6,7 @@ import "reflect-metadata";
 /**
  * Indicates that the class is cacheable with the specified TTL.
  *
- * @param name The time, in seconds, that an object will be cached before being invalidated.
+ * @param ttl The time, in seconds, that an object will be cached before being invalidated.
  */
 export function Cache(ttl: number = 30) {
     return function (target: any) {

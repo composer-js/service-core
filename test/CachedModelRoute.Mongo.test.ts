@@ -11,7 +11,6 @@ import CacheUser from "./server/models/CacheUser";
 import { Logger } from "@composer-js/core";
 import * as rimraf from "rimraf";
 const Redis = require("ioredis-mock");
-import * as uuid from "uuid";
 
 const baseCacheKey: string = "db.cache.CacheUser";
 const mongod: MongoMemoryServer = new MongoMemoryServer({
