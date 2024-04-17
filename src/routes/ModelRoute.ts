@@ -309,7 +309,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * object(s) to the `result` property of the `options.res` argument, otherwise sends a `400 BAD REQUEST` response to the
      * client.
      *
-     * @param objs The object to store in the database.
+     * @param obj The object to store in the database.
      * @param options The options to process the request using.
      */
     protected async doCreateObject(obj: T, options: CreateRequestOptions): Promise<T> {
@@ -376,7 +376,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * object(s) to the `result` property of the `options.res` argument, otherwise sends a `400 BAD REQUEST` response to the
      * client.
      *
-     * @param objs The object(s) to store in the database.
+     * @param obj The object(s) to store in the database.
      * @param options The options to process the request using.
      */
     protected async doCreate(obj: T | T[], options: CreateRequestOptions): Promise<T | T[]> {
@@ -616,7 +616,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Attempts to modify a collection of existing data model objects.
      *
-     * @param recordEvent Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`.
+     * @param objs The object(s) to bulk update in the database.
      * @param options The options to process the request using.
      */
     protected async doBulkUpdate(objs: T[], options: UpdateRequestOptions): Promise<T[]> {
@@ -644,7 +644,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Attempts to modify an existing data model object as identified by the `id` parameter in the URI.
      *
-     * @param recordEvent Set to `true` to record a telemetry event for this operation, otherwise set to `false`. Default is `true`.
+     * @param obj The object to update in the database
      * @param options The options to process the request using.
      */
     protected async doUpdate(id: string, obj: T, options: UpdateRequestOptions): Promise<T> {

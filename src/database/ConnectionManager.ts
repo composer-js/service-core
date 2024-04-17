@@ -33,7 +33,7 @@ export class ConnectionManager {
     /**
      * Attempts to initiate all database connections as defined in the config.
      *
-     * @param datastore A map of configured datastores to be passed to the underlying engine.
+     * @param datastores A map of configured datastores to be passed to the underlying engine.
      * @param models A map of model names and associated class definitions to establish database connections for.
      */
     public async connect(datastores: any, models: Map<string, any>): Promise<void> {

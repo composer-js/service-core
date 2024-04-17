@@ -302,7 +302,7 @@ export class RouteUtils {
      * Wraps the provided function with Express handling based on the function's defined decorators.
      *
      * @param obj The bound object whose middleware function will be wrapped.
-     * @param handler The decorated function to wrap for registration with Express.
+     * @param func The decorated function to wrap for registration with Express.
      * @param send Set to true to have `func`'s result sent to the client.
      */
     public wrapMiddleware(obj: any, func: Function, send: boolean = false): RequestHandler {
