@@ -2,7 +2,7 @@
 Release Notes
 =============
 
-v4.1.0
+v5.0.0
 ======
 
 - Upgraded dependencies
