@@ -1075,6 +1075,7 @@ __metadata:
     winston-transport: "npm:^4.7.0"
     ws: "npm:^8.16.0"
   peerDependencies:
+    "@composer-js/core": 4.x
     cors: 2.x
     express: 4.x
     express-session: 1.x
