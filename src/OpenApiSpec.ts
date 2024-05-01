@@ -3,8 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 import * as oa from "openapi3-ts/oas31";
 import { Config, Init } from "./decorators/ObjectDecorators";
-import { BaseMongoEntity } from "./models";
 import { DocumentsData } from "./decorators/DocDecorators";
+import * as merge from "deepmerge";
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
@@ -15,49 +15,57 @@ import { DocumentsData } from "./decorators/DocDecorators";
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class OpenApiSpec {
-    private builder: oa.OpenApiBuilder;
+    private _builder: oa.OpenApiBuilder;
 
     @Config()
     private config?: any;
 
     constructor(spec?: oa.OpenAPIObject) {
-        this.builder = oa.OpenApiBuilder.create(spec);
+        this._builder = oa.OpenApiBuilder.create(spec);
+    }
+
+    public get builder(): oa.OpenApiBuilder {
+        return this._builder;
+    }
+
+    public set builder(value: oa.OpenApiBuilder) {
+        this._builder = value;
     }
 
     public get openapi(): string {
-        return this.builder.getSpec().openapi;
+        return this._builder.getSpec().openapi;
     }
 
     public get info(): oa.InfoObject {
-        return this.builder.getSpec().info;
+        return this._builder.getSpec().info;
     }
 
     public get servers(): oa.ServerObject[] | undefined {
-        return this.builder.getSpec().servers;
+        return this._builder.getSpec().servers;
     }
 
     public get paths(): oa.PathsObject | undefined {
-        return this.builder.getSpec().paths;
+        return this._builder.getSpec().paths;
     }
 
     public get components(): oa.ComponentsObject | undefined {
-        return this.builder.getSpec().components;
+        return this._builder.getSpec().components;
     }
 
     public get security(): oa.SecurityRequirementObject[] | undefined {
-        return this.builder.getSpec().security;
+        return this._builder.getSpec().security;
     }
 
     public get tags(): oa.TagObject[] | undefined {
-        return this.builder.getSpec().tags;
+        return this._builder.getSpec().tags;
     }
 
     public get externalDocs(): oa.ExternalDocumentationObject | undefined {
-        return this.builder.getSpec().externalDocs;
+        return this._builder.getSpec().externalDocs;
     }
 
     public get webhooks(): oa.PathsObject | undefined {
-        return this.builder.getSpec().webhooks;
+        return this._builder.getSpec().webhooks;
     }
 
     @Init
@@ -155,124 +163,124 @@ export class OpenApiSpec {
     }
 
     public getSpec(): oa.OpenAPIObject {
-        return this.builder.getSpec();
+        return this._builder.getSpec();
     }
 
     public getSpecAsJson(replacer?: (key: string, value: unknown) => unknown, space?: string | number): string {
-        return this.builder.getSpecAsJson(replacer, space);
+        return this._builder.getSpecAsJson(replacer, space);
     }
 
     public getSpecAsYaml(): string {
-        return this.builder.getSpecAsYaml();
+        return this._builder.getSpecAsYaml();
     }
 
     public addOpenApiVersion(openApiVersion: string): OpenApiSpec {
-        this.builder.addOpenApiVersion(openApiVersion);
+        this._builder.addOpenApiVersion(openApiVersion);
         return this;
     }
 
     public addInfo(info: oa.InfoObject): OpenApiSpec {
-        this.builder.addInfo(info);
+        this._builder.addInfo(info);
         return this;
     }
 
     public addContact(contact: oa.ContactObject): OpenApiSpec {
-        this.builder.addContact(contact);
+        this._builder.addContact(contact);
         return this;
     }
 
     public addLicense(license: oa.LicenseObject): OpenApiSpec {
-        this.builder.addLicense(license);
+        this._builder.addLicense(license);
         return this;
     }
 
     public addTitle(title: string): OpenApiSpec {
-        this.builder.addTitle(title);
+        this._builder.addTitle(title);
         return this;
     }
 
     public addDescription(description: string): OpenApiSpec {
-        this.builder.addDescription(description);
+        this._builder.addDescription(description);
         return this;
     }
 
     public addTermsOfService(termsOfService: string): OpenApiSpec {
-        this.builder.addTermsOfService(termsOfService);
+        this._builder.addTermsOfService(termsOfService);
         return this;
     }
 
     public addVersion(version: string): OpenApiSpec {
-        this.builder.addVersion(version);
+        this._builder.addVersion(version);
         return this;
     }
 
     public addPath(path: string, pathItem: oa.PathItemObject): OpenApiSpec {
-        this.builder.addPath(path, pathItem);
+        this._builder.addPath(path, pathItem);
         return this;
     }
 
     public addSchema(name: string, schema: oa.SchemaObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addSchema(name, schema);
+        this._builder.addSchema(name, schema);
         return this;
     }
 
     public addResponse(name: string, response: oa.ResponseObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addResponse(name, response);
+        this._builder.addResponse(name, response);
         return this;
     }
 
     public addParameter(name: string, parameter: oa.ParameterObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addParameter(name, parameter);
+        this._builder.addParameter(name, parameter);
         return this;
     }
 
     public addExample(name: string, example: oa.ExampleObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addExample(name, example);
+        this._builder.addExample(name, example);
         return this;
     }
 
     public addRequestBody(name: string, reqBody: oa.RequestBodyObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addRequestBody(name, reqBody);
+        this._builder.addRequestBody(name, reqBody);
         return this;
     }
 
     public addHeader(name: string, header: oa.HeaderObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addHeader(name, header);
+        this._builder.addHeader(name, header);
         return this;
     }
 
     public addSecurityScheme(name: string, secScheme: oa.SecuritySchemeObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addSecurityScheme(name, secScheme);
+        this._builder.addSecurityScheme(name, secScheme);
         return this;
     }
 
     public addLink(name: string, link: oa.LinkObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addLink(name, link);
+        this._builder.addLink(name, link);
         return this;
     }
 
     public addCallback(name: string, callback: oa.CallbackObject | oa.ReferenceObject): OpenApiSpec {
-        this.builder.addCallback(name, callback);
+        this._builder.addCallback(name, callback);
         return this;
     }
 
     public addServer(server: oa.ServerObject): OpenApiSpec {
-        this.builder.addServer(server);
+        this._builder.addServer(server);
         return this;
     }
 
     public addTag(tag: oa.TagObject): OpenApiSpec {
-        this.builder.addTag(tag);
+        this._builder.addTag(tag);
         return this;
     }
 
     public addExternalDocs(extDoc: oa.ExternalDocumentationObject): OpenApiSpec {
-        this.builder.addExternalDocs(extDoc);
+        this._builder.addExternalDocs(extDoc);
         return this;
     }
 
     public addWebhook(webhook: string, webhookItem: oa.PathItemObject): OpenApiSpec {
-        this.builder.addWebhook(webhook, webhookItem);
+        this._builder.addWebhook(webhook, webhookItem);
         return this;
     }
 
@@ -284,7 +292,7 @@ export class OpenApiSpec {
      */
     public addModel(name: string, clazz: any): OpenApiSpec {
         const schema: oa.SchemaObject = this.createSchemaClass(clazz);
-        this.builder.addSchema(name, schema);
+        this._builder.addSchema(name, schema);
         return this;
     }
 
@@ -514,7 +522,7 @@ export class OpenApiSpec {
 
         data[method] = opObject;
 
-        this.builder.addPath(path, data);
+        this._builder.addPath(path, data);
 
         return this;
     }
@@ -736,5 +744,19 @@ export class OpenApiSpec {
             };
         }
         return undefined;
+    }
+
+    /**
+     * Merges a provided OpenAPI specification with this specification.
+     * @param other The other OpenAPI spec object to merge.
+     */
+    public merge(other: any): void {
+        if (!other) {
+            return;
+        }
+
+        const otherSpec: oa.OpenApiBuilder = oa.OpenApiBuilder.create(other);
+        const merged: any = merge.all([this.getSpec(), otherSpec.getSpec()]);
+        this._builder = oa.OpenApiBuilder.create(merged);
     }
 }
