@@ -1,6 +1,6 @@
 {
     "name": "@composer-js/service-core",
-    "version": "4.0.1",
+    "version": "5.1.0",
     "description": "Provides all core functionality for ComposerJS based backend services.",
     "repository": "https://gitlab.com/AcceleratXR/composerjs/composer-service-core.git",
     "license": "MIT",
@@ -29,6 +29,7 @@
         "winston-transport": "^4.7.0"
     },
     "peerDependencies": {
+        "@composer-js/core": "4.x",
         "cors": "2.x",
         "express": "4.x",
         "express-session": "1.x",

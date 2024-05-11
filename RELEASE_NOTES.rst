@@ -2,6 +2,21 @@
 Release Notes
 =============
 
+v5.1.1
+======
+
+- Fix OpenAPI.json to return non-stringified JSON
+- Allow ignoring of script files for ClassLoader
+
+v5.0.0
+======
+
+- Upgraded dependencies
+- Updated repo documents
+- Removed deprecated RouteDecorator Init
+- Updated to allow WebSocket Request to pass query arguments
+- Leverage new ApiError class for error reporting
+
 v4.1.0
 ======
 

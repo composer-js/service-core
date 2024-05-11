@@ -91,6 +91,7 @@ describe("Server Tests", () => {
         expect(result.type).toBe("application/json");
         expect(result.status).toBe(200);
         expect(result).toHaveProperty("body");
+        expect(result.body.openapi).toBe("3.1.0");
 
         const result2 = await request(server.getApplication()).get("/openapi.yaml");
         expect(result2).toHaveProperty("status");
