@@ -329,7 +329,7 @@ export class Server {
                 const models: Map<string, any> = new Map();
 
                 this.logger.info("Loading all service classes...");
-                const classLoader: ClassLoader = new ClassLoader(this.basePath);
+                const classLoader: ClassLoader = new ClassLoader(this.basePath, true, true, this.config.get("scripts:ignore"));
                 try {
                     await classLoader.load();
                 }

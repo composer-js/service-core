@@ -30,8 +30,8 @@ export class OpenAPIRoute {
     @Description("Returns the OpenAPI specification for the service in JSON format.")
     @Get("openapi.json")
     @Returns([String])
-    public getJSON(): string {
-        return this.apiSpec.getSpecAsJson();
+    public getJSON(): any {
+        return this.apiSpec.getSpec();
     }
 
     @Description("Returns the OpenAPI specification for the service in YAML format.")
