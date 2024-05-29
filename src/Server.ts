@@ -29,6 +29,7 @@ import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
 import { ApiErrors } from "./ApiErrors";
+import RedisStore from "connect-redis";
 
 interface Entity {
     storeName?: any;
@@ -249,6 +250,38 @@ export class Server {
                 // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
                 this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, "default");
 
+                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
+                const datastores: any = this.config.get("datastores");
+                const models: Map<string, any> = new Map();
+
+                this.logger.info("Loading all service classes...");
+                const classLoader: ClassLoader = new ClassLoader(this.basePath, true, true, this.config.get("scripts:ignore"));
+                try {
+                    await classLoader.load();
+                }
+                catch (e) {
+                    reject(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
+                }
+
+                // Register all found classes with the object factory
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    this.objectFactory.register(clazz, name);
+                }
+
+                // Load all models
+                this.logger.info("Scanning for data models...");
+                for (const [name, clazz] of classLoader.getClasses().entries()) {
+                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", clazz) || undefined;
+                    if (datastore) {
+                        models.set(name, clazz);
+                        this.apiSpec.addModel(name, clazz);
+                    }
+                }
+
+                // Initiate all database connections
+                this.logger.info("Initializing database connection(s)...");
+                await this.connectionManager.connect(datastores, models);
+
                 // Express configuration
                 this.app = express();
                 this.server = http.createServer(this.app);
@@ -264,6 +297,8 @@ export class Server {
                 }));
                 this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
                 this.app.use(cookieParser(this.config.get("cookie_secret")));
+
+                const cacheClient: any = this.connectionManager.connections.get("cache");
                 this.app.use(session({
                     cookie: {
                         sameSite: 'none',
@@ -271,7 +306,10 @@ export class Server {
                     },
                     resave: false,
                     saveUninitialized: false,
-                    secret: this.config.get("session:secret")
+                    secret: this.config.get("session:secret"),
+                    store: cacheClient ? new RedisStore({
+                        client: cacheClient
+                    }) : undefined
                 }));
                 this.app.use(passport.initialize());
                 this.app.use(passport.session());
@@ -324,38 +362,6 @@ export class Server {
                 this.app.use(expressResponseTime((req: Request, res: Response, time) => {
                     this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
                 }));
-                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
-                const datastores: any = this.config.get("datastores");
-                const models: Map<string, any> = new Map();
-
-                this.logger.info("Loading all service classes...");
-                const classLoader: ClassLoader = new ClassLoader(this.basePath, true, true, this.config.get("scripts:ignore"));
-                try {
-                    await classLoader.load();
-                }
-                catch (e) {
-                    reject(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
-                }
-
-                // Register all found classes with the object factory
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    this.objectFactory.register(clazz, name);
-                }
-
-                // Load all models
-                this.logger.info("Scanning for data models...");
-                for (const [name, clazz] of classLoader.getClasses().entries()) {
-                    const datastore: string | undefined = Reflect.getMetadata("cjs:datastore", clazz) || undefined;
-                    if (datastore) {
-                        models.set(name, clazz);
-                        this.apiSpec.addModel(name, clazz);
-                    }
-                }
-
-                // Initiate all database connections
-                this.logger.info("Initializing database connection(s)...");
-
-                await this.connectionManager.connect(datastores, models);
 
                 const allRoutes: Array<any> = [];
 

@@ -111,7 +111,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     protected logger: any;
 
     /** The model class associated with the controller to perform operations against. */
-    protected abstract repo?: Repository<T> | MongoRepository<T>;
+    protected abstract repo?: Repository<T>;
 
     /**
      * The number of previous document versions to store in the database. A negative value indicates storing all

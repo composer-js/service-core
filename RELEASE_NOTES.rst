@@ -2,6 +2,15 @@
 Release Notes
 =============
 
+v6.0.0
+======
+
+- Upgrading `mongodb` to 6
+- Upgrade to latest `typescript`, 5.x
+- Add redis session cache store
+- Upgrade dependencies
+- Migrate lint to flat config
+
 v5.1.1
 ======
 
