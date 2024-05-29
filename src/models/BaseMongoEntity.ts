@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectIdColumn } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
-const { ObjectID } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 /**
  * Provides a common base class for all entity's that will be persisted with TypeORM in a MongoDB database.
@@ -23,7 +23,7 @@ export abstract class BaseMongoEntity extends BaseEntity {
         if (other) {
             this._id = other._id
                 ? (typeof other._id === "string" || typeof other._id === "number"
-                    ? new ObjectID(other._id)
+                    ? new ObjectId(other._id)
                     : other._id
                 )
                 : this._id;

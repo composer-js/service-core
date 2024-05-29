@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla USA, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import * as oa from "openapi3-ts/oas31";
+import { oas31 as oa } from 'openapi3-ts';
 import { Config, Init } from "./decorators/ObjectDecorators";
 import { DocumentsData } from "./decorators/DocDecorators";
 import * as merge from "deepmerge";

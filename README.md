@@ -1,7 +1,7 @@
 # Composer: service_core
 
-[![pipeline status](https://gitlab.com/AcceleratXR/Core/composerjs/service-core/badges/master/pipeline.svg)](https://gitlab.com/AcceleratXR/Core/composerjs/service-core/-/commits/master)
-[![coverage report](https://gitlab.com/AcceleratXR/Core/composerjs/service-core/badges/master/coverage.svg)](https://gitlab.com/AcceleratXR/Core/composerjs/service-core/-/commits/master)
+[![pipeline status](https://gitlab.acceleratxr.com/acceleratxr/composerjs/service-core/badges/master/pipeline.svg)](https://gitlab.acceleratxr.com/acceleratxr/composerjs/service-core/-/commits/master)
+[![coverage report](https://gitlab.acceleratxr.com/acceleratxr/composerjs/service-core/badges/master/coverage.svg)](https://gitlab.acceleratxr.com/acceleratxr/composerjs/service-core/-/commits/master)
 
 Provides common functionality and utilities for Composer based REST API service projects.
 
