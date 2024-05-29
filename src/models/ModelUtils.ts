@@ -72,7 +72,7 @@ export class ModelUtils {
      * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a TypeORM `find` function.
      */
-    public static buildIdSearchQuery<T>(
+    public static buildIdSearchQuery<T extends {}>(
         repo: Repository<T> | MongoRepository<T> | undefined,
         modelClass: any,
         id: any | any[],
@@ -351,7 +351,7 @@ export class ModelUtils {
      * @param {any} user The user that is performing the request.
      * @returns {object} The TypeORM compatible query object.
      */
-    public static buildSearchQuery<T>(
+    public static buildSearchQuery<T extends {}>(
         modelClass: any,
         repo: Repository<T> | MongoRepository<T> | undefined,
         params?: any,
