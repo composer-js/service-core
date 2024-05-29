@@ -38,7 +38,7 @@ export function addWebSocket(app: Application, wss: WebSocketServer): any {
             if (queryIndex > 0 && /[\w/]+?[\w]+=.+/.test(request.url)) {
                 // Handle / before ?
                 let pathLength = queryIndex;
-                if (request.url[queryIndex - 1] == "/") {
+                if (request.url[queryIndex - 1] === "/") {
                     pathLength = queryIndex - 1;
                 }
                 request.url = `${request.url.slice(0, pathLength)}.websocket${request.url.slice(queryIndex)}`;

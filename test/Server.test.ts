@@ -1,8 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-const fs = require("fs");
+const corsOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002"
+];
+process.env[`cors__origins`] = JSON.stringify(corsOrigins);
 
+import * as fs from "fs";
 import { default as config } from "./config";
 import { Server, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -60,6 +66,11 @@ describe("Server Tests", () => {
 
     it("Can start server.", async () => {
         expect(server.isRunning()).toBe(true);
+        // Cors Check
+        let result = (await request(server.getApplication()).options("/").set("Origin", corsOrigins[0]));
+        expect(result.headers["access-control-allow-origin"]).toEqual(corsOrigins[0]);
+        result = (await request(server.getApplication()).options("/").set("Origin", "http://localhost:3005"));
+        expect(result.headers["access-control-allow-origin"]).not.toBeDefined();
     });
 
     it("Can stop server.", async () => {
