@@ -1034,6 +1034,7 @@ __metadata:
     "@types/ws": "npm:^8.5.10"
     "@typescript-eslint/eslint-plugin": "npm:^7.7.0"
     "@typescript-eslint/parser": "npm:^7.7.0"
+    connect-redis: "npm:^7.1.1"
     cookie-parser: "npm:^1.4.6"
     cors: "npm:^2.8.5"
     coveralls: "npm:^3.1.1"
@@ -1077,6 +1078,7 @@ __metadata:
     ws: "npm:^8.16.0"
   peerDependencies:
     "@composer-js/core": 4.x
+    connect-redis: "*"
     cors: 2.x
     express: 4.x
     express-session: 1.x
@@ -3945,6 +3947,15 @@ __metadata:
   version: 0.0.1
   resolution: "concat-map@npm:0.0.1"
   checksum: 10c0/c996b1cfdf95b6c90fee4dae37e332c8b6eb7d106430c17d538034c0ad9a1630cb194d2ab37293b1bdd4d779494beee7786d586a50bd9376fd6f7bcc2bd4c98f
+  languageName: node
+  linkType: hard
+
+"connect-redis@npm:^7.1.1":
+  version: 7.1.1
+  resolution: "connect-redis@npm:7.1.1"
+  peerDependencies:
+    express-session: ">=1"
+  checksum: 10c0/eeb9e275176d1ef973c808df7c860c80300dfdecdee1a8ca20524fc4e37ccb2206923b07f17501fb7235cde73e9db9e06dff79ef17a54e5a57f35db247ec99fb
   languageName: node
   linkType: hard
 

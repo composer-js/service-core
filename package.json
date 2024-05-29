@@ -30,6 +30,7 @@
     },
     "peerDependencies": {
         "@composer-js/core": "4.x",
+        "connect-redis": "*",
         "cors": "2.x",
         "express": "4.x",
         "express-session": "1.x",
@@ -62,6 +63,7 @@
         "@types/ws": "^8.5.10",
         "@typescript-eslint/eslint-plugin": "^7.7.0",
         "@typescript-eslint/parser": "^7.7.0",
+        "connect-redis": "^7.1.1",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "coveralls": "^3.1.1",
