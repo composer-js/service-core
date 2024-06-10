@@ -508,7 +508,7 @@ __metadata:
     typedoc: "npm:^0.25.13"
     typedoc-plugin-markdown: "npm:^4.0.3"
     typeorm: "npm:^0.3.20"
-    typescript: "npm:5.4.5"
+    typescript: "npm:^5.4.5"
     uuid: "npm:^10.0.0"
     winston: "npm:^3.13.0"
     winston-transport: "npm:^4.7.0"
@@ -9276,7 +9276,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.4.5":
+"typescript@npm:^5.4.5":
   version: 5.4.5
   resolution: "typescript@npm:5.4.5"
   bin:
@@ -9286,7 +9286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.4.5#optional!builtin<compat/typescript>":
   version: 5.4.5
   resolution: "typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>::version=5.4.5&hash=5adc0c"
   bin:
