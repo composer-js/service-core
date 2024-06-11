@@ -42,15 +42,15 @@ describe("Server Tests", () => {
 
     afterAll(async () => {
         await mongod.stop();
-        return await new Promise<void>((resolve) => {
+        await new Promise<void>((resolve) => {
             sqlite.close(err => {
                 if (err) {
                     throw new Error(err.message);
                 }
-                rimraf.sync("tmp-*");
                 resolve();
             });
         });
+        rimraf.sync("tmp-*");
     });
 
     beforeEach(async () => {

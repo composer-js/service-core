@@ -366,6 +366,10 @@ export class ObjectFactory {
      */
     public register(clazz: any, fqn?: string): void {
         const name: string = fqn ? fqn : (clazz.fqn || clazz.name);
+        if (!name) {
+            this.logger.info(`Unable to register class ${name} for ${clazz}/${fqn}`);
+            return;
+        }
         if (!this.classes.has(name)) {
             this.logger.info(`Registering class ${name}`);
             this.classes.set(name, clazz);

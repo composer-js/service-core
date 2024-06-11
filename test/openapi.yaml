@@ -1040,4 +1040,4 @@ components:
   callbacks: {}
 tags: []
 servers:
-  - {}
+  - url: http://localhost

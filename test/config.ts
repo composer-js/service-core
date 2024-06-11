@@ -51,6 +51,7 @@ conf.defaults({
     session: {
         secret: "SessionsHaveSecrets",
     },
+    cluster_url: "http://localhost"
 });
 
 export default conf;
