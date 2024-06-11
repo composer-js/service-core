@@ -5,6 +5,7 @@ import { oas31 as oa } from 'openapi3-ts';
 import { Config, Init } from "./decorators/ObjectDecorators";
 import { DocumentsData } from "./decorators/DocDecorators";
 import * as merge from "deepmerge";
+import * as _ from "lodash";
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
@@ -313,7 +314,7 @@ export class OpenApiSpec {
         const contentType = metadata.contentType || "application/json";
         const data: oa.PathItemObject = {};
         const mParams: (oa.ParameterObject | oa.ReferenceObject)[] = [];
-        let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name); 
+        let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name);
         let returnTypes: any = Reflect.getMetadata("design:returntype", routeClass, name);
         let security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
         let requestSchemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
@@ -409,7 +410,7 @@ export class OpenApiSpec {
                 }
             }
         }
-        
+
         if (routeClass.modelClass) {
             // Look up reference to schema for route's associated data model (where applicable)
             const fqn: string = routeClass.modelClass.fqn || routeClass.modelClass.name;
@@ -468,7 +469,7 @@ export class OpenApiSpec {
             data["x-upgrade"] = true;
             responseSchemas.splice(0, responseSchemas.length);
         }
-        
+
         // Finally add the operation object for the given method
         const opObject: oa.OperationObject = {
             description,
@@ -692,7 +693,7 @@ export class OpenApiSpec {
                 if (typeInfo.name.toLowerCase() === "buffer") {
                     result.type = "string";
                     result.format = "byte";
-                // Date is a special case as it is represented as a string in OpenAPI with format "date"
+                    // Date is a special case as it is represented as a string in OpenAPI with format "date"
                 } else if (typeInfo.name.toLowerCase() === "date") {
                     result.type = "string";
                     result.format = "date";
@@ -754,9 +755,23 @@ export class OpenApiSpec {
         if (!other) {
             return;
         }
-
+        const options = {
+            arrayMerge: (target, source, options) => {
+                const destination = target.slice()
+                source.forEach((item, index) => {
+                    if (typeof destination[index] === 'undefined') {
+                        destination[index] = options.cloneUnlessOtherwiseSpecified(item, options)
+                    } else if (options.isMergeableObject(item)) {
+                        if (!_.find(destination, item)) {
+                            destination.push(item);
+                        }
+                    }
+                })
+                return destination
+            }
+        }
         const otherSpec: oa.OpenApiBuilder = oa.OpenApiBuilder.create(other);
-        const merged: any = merge.all([this.getSpec(), otherSpec.getSpec()]);
+        const merged: any = merge(this.getSpec(), otherSpec.getSpec(), options);
         this._builder = oa.OpenApiBuilder.create(merged);
     }
 }

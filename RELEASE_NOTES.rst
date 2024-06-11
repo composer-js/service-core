@@ -2,6 +2,11 @@
 Release Notes
 =============
 
+v6.0.1
+======
+
+- Fix merging of OpenApi objects
+
 v6.0.0
 ======
 
