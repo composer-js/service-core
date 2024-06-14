@@ -45,17 +45,24 @@ export class ObjectFactory {
     public async destroy(objs?: any | any[]): Promise<void> {
         // If no set of objects was provided we want to destroy everything
         if (!objs) {
-            objs = this.instances.values();
+            objs = []
+            this.instances.forEach((value, key) => {
+                if (!value.name) {
+                    value.name = key;
+                }
+                objs.push(value);
+            });
+        } else {
+            // If only a single object was passed in we need to convert this to an array
+            if (!Array.isArray(objs)) {
+                objs = [objs];
+            }
         }
 
-        // If only a single object was passed in we need to convert this to an array
-        if (!Array.isArray(objs)) {
-            objs = [objs];
-        }
 
         // Go through each object and call its destructor, if available
         for (const obj of objs) {
-            const name: string = obj.name;
+            const name: string = obj.name ?? obj._name;
 
             let destroyFunc: Function | undefined = undefined;
             let proto = Object.getPrototypeOf(obj);
