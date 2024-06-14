@@ -6,7 +6,7 @@ v7.0.0
 ======
 
 - Upgrading to latest `composer-js/core`
-- Fix underlying destory functionality
+- Fix underlying destroy functionality
 
 v6.0.1
 ======
