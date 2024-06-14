@@ -2,6 +2,12 @@
 Release Notes
 =============
 
+v7.0.0
+======
+
+- Upgrading to latest `composer-js/core`
+- Fix underlying destroy functionality
+
 v6.0.1
 ======
 
