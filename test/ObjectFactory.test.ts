@@ -58,6 +58,7 @@ describe("ObjectFactory Tests", () => {
 
     afterEach(async () => {
         await factory.destroy();
+        factory.clear();
     })
 
     it("Can create new class instances by name.", async () => {
@@ -172,5 +173,22 @@ describe("ObjectFactory Tests", () => {
         expect(instance3).toBeDefined();
         expect(instance3).toBeInstanceOf(TestClassA);
         expect(instance).toBe(instance3);
+    });
+
+    it("Can call destory on class instance and all instances.", async () => {
+        const testClassBInstance: TestClassB = await factory.newInstance(TestClassB, "default", "construct");
+        expect(testClassBInstance).toBeDefined();
+        expect(testClassBInstance).toBeInstanceOf(TestClassB);
+        expect(testClassBInstance.arg1).toBe("construct");
+        await factory.destroy(testClassBInstance);
+        expect(testClassBInstance.arg1).toBe("");
+        factory.clear();
+
+        const testClassBInstance2: TestClassB = await factory.newInstance(TestClassB, "default", "construct");
+        expect(testClassBInstance2).toBeDefined();
+        expect(testClassBInstance2).toBeInstanceOf(TestClassB);
+        expect(testClassBInstance2.arg1).toBe("construct");
+        await factory.destroy();
+        expect(testClassBInstance2.arg1).toBe("");
     });
 });

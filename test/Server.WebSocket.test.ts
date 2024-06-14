@@ -111,7 +111,7 @@ describe("Server WebSocket Tests", () => {
     });
 
     it("Can connect via unsecured WebSocket [user via header]", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         expect(server.isRunning()).toBe(true);
         const httpServer: http.Server | undefined = server.getServer();
@@ -128,7 +128,7 @@ describe("Server WebSocket Tests", () => {
     });
 
     it("Can connect via unsecured WebSocket [user via handshake]", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         expect(server.isRunning()).toBe(true);
         const httpServer: http.Server | undefined = server.getServer();
@@ -156,7 +156,7 @@ describe("Server WebSocket Tests", () => {
     });
 
     it("Can connect via secured WebSocket [user via header]", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         expect(server.isRunning()).toBe(true);
         const httpServer: http.Server | undefined = server.getServer();
@@ -173,7 +173,7 @@ describe("Server WebSocket Tests", () => {
     });
 
     it("Can connect via secured WebSocket [user via handshake]", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         expect(server.isRunning()).toBe(true);
         const httpServer: http.Server | undefined = server.getServer();

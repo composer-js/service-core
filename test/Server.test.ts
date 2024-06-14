@@ -146,7 +146,7 @@ describe("Server Tests", () => {
     });
 
     it("Can authorize user.", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         const result = await request(server.getApplication())
             .get("/token")
@@ -156,7 +156,7 @@ describe("Server Tests", () => {
     });
 
     it("Can authorize user with query param.", async () => {
-        const user = { uid: uuid.v4() };
+        const user: any = { uid: uuid.v4() };
         const token = JWTUtils.createToken(config.get("auth"), user);
         const result = await request(server.getApplication()).get("/token?jwt_token=" + token);
         expect(result.status).toBe(200);

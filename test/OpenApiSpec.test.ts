@@ -1,20 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import * as fs from "fs";
 import { default as config } from "./config";
-import { Server, ObjectFactory, OpenApiSpec, RouteUtils, AdminRoute } from "../src";
-import * as request from "supertest";
-import * as uuid from "uuid";
-import * as rimraf from "rimraf";
+import { ObjectFactory, OpenApiSpec, RouteUtils, AdminRoute } from "../src";
 const express = require("express");
 
-import { JWTUtils, Logger, sleep } from "@composer-js/core";
-import { hasUncaughtExceptionCaptureCallback } from "process";
+import { Logger } from "@composer-js/core";
 
-const unixLineEndings = (input: string): string => {
-    return input.replace(/\r\n/g, '\n');
-}
 jest.setTimeout(1200000);
 
 describe("OpenApiSpec Tests", () => {
