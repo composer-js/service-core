@@ -12,17 +12,8 @@ jest.setTimeout(1200000);
 describe("OpenApiSpec Tests", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
 
-    beforeAll(async () => {
-    });
-
     afterAll(async () => {
         await objectFactory.destroy();
-    });
-
-    beforeEach(async () => {
-    });
-
-    afterEach(async () => {
     });
 
     const createSpec = async (): Promise<OpenApiSpec | undefined> => {
