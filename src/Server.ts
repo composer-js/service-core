@@ -348,7 +348,7 @@ export class Server {
                 if (this.config.get("auth:strategy")) {
                     const jwtOptions: JWTStrategyOptions = new JWTStrategyOptions();
                     jwtOptions.config = this.config.get("auth");
-                    passport.use("jwt", await this.objectFactory.newInstance(this.config.get("auth:strategy"), "default", jwtOptions));
+                    passport.use("jwt", await this.objectFactory.newInstance(this.config.get("auth:strategy"), "default", true, jwtOptions));
                 } else {
                     this.logger.warn("No JWT authentication strategy has been set.");
                 }
@@ -383,7 +383,7 @@ export class Server {
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
-                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", this.apiSpec);
+                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", true, this.apiSpec);
                     await this.routeUtils.registerRoute(this.app, oasRoute);
                     allRoutes.push(oasRoute);
                 }
@@ -400,7 +400,7 @@ export class Server {
                         serviceClasses[name] = clazz;
                     }
                 }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, serviceClasses, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", true, this.objectFactory, serviceClasses, this.config, this.logger);
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }

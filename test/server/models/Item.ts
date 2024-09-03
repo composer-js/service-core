@@ -1,9 +1,9 @@
 import { BaseEntity } from "../../../src/models/BaseEntity";
 import { Entity, Column, Index } from "typeorm";
-import { Identifier, Model } from "../../../src/decorators/ModelDecorators";
+import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
 import { Description } from "../../../src/decorators/DocDecorators";
 
-@Model("sqlite")
+@DataStore("sqlite")
 @Entity()
 @Description("An Item describes a resource within the system that is used by a player.")
 export default class Item extends BaseEntity {

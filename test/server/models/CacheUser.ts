@@ -1,9 +1,9 @@
 import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
 import { Entity, Column } from "typeorm";
-import { Cache, Model } from "../../../src/decorators/ModelDecorators";
+import { Cache, DataStore } from "../../../src/decorators/ModelDecorators";
 import { Description } from "../../../src/decorators/DocDecorators";
 
-@Model("mongodb")
+@DataStore("mongodb")
 @Entity()
 @Cache()
 @Description("The CacheUser class describes a user within the system that utilizes the second-level caching system.")

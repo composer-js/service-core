@@ -1,9 +1,9 @@
 import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
 import { Index, Entity, Column } from "typeorm";
-import { Identifier, Model } from "../../../src/decorators/ModelDecorators";
+import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
 import { Description, TypeInfo } from "../../../src/decorators/DocDecorators";
 
-@Model("mongodb")
+@DataStore("mongodb")
 @Entity()
 @Description("The User class describes a user within the system.")
 export default class User extends BaseMongoEntity {

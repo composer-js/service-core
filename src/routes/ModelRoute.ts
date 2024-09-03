@@ -8,7 +8,7 @@ import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import * as crypto from "crypto";
-import { Logger, Config, Init } from "../decorators/ObjectDecorators";
+import { Logger, Config, Init, Inject } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
@@ -16,6 +16,7 @@ import { RecoverableBaseEntity } from "../models";
 import { Admin } from "mongodb";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 import { ApiError } from "@composer-js/core";
+import { ObjectFactory } from "../ObjectFactory";
 
 /**
  * The set of options required by all request handlers.
@@ -109,6 +110,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     @Logger
     protected logger: any;
+
+    @Inject(ObjectFactory)
+    private objectFactory?: ObjectFactory;
 
     /** The model class associated with the controller to perform operations against. */
     protected abstract repo?: Repository<T>;
@@ -210,6 +214,18 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
+     * Creates a new instance of obj scoped to the correct model class or sub-class.
+     */
+    protected instantiateObject(obj: any): T {
+        if (this.objectFactory && obj.className && typeof obj.className === "string") {
+            const fqn: string = obj.className.includes(".") ? obj.className : `models.${obj.className}`;
+            return this.objectFactory.newInstance(fqn, null, false, ...obj) as T;
+        } else {
+            return this.instantiateObject(obj);
+        }
+    }
+
+    /**
      * Retrieves the object with the given id from either the cache or the database. If retrieving from the database
      * the cache is populated to speed up subsequent requests.
      *
@@ -264,7 +280,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         // Make sure we return the correct data type
-        return existing ? new this.modelClass(existing) : null;
+        return existing ? this.instantiateObject(existing) : null;
     }
 
     /**
@@ -318,7 +334,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         // Make sure the provided object has the correct typing
-        obj = new this.modelClass(obj);
+        obj = this.instantiateObject(obj);
 
         obj = await RepoUtils.preprocessBeforeSave(this.repo, obj, this.trackChanges !== 0);
 
@@ -329,7 +345,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
         // extends BaseEntity.
-        const result: T = new this.modelClass(await this.repo.save(obj as any));
+        const result: T = this.instantiateObject(await this.repo.save(obj as any));
 
         if (this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
@@ -411,10 +427,11 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const query: any = this.searchIdQuery(id, options.version);
         const objs: T[] | undefined = await this.repo.find(query);
         const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
-        const isRecoverable: boolean = (new this.modelClass()) instanceof RecoverableBaseEntity;
-        const isPurge: boolean = isRecoverable ? (options.purge || false) : true;
 
         if (uid && objs) {
+            const isRecoverable: boolean = (this.instantiateObject(objs[0])) instanceof RecoverableBaseEntity;
+            const isPurge: boolean = isRecoverable ? (options.purge || false) : true;
+            
             // If the object(s) are being permenantly removed from the database do so and then clear the accompanying
             // ACL(s). If the class type is recoverable and purge isn't desired, simply mark the object(s) as deleted.
             if (isPurge) {
@@ -666,12 +683,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj, existing);
 
         const keepPrevious: boolean = this.trackChanges !== 0;
-        const testObj: T = new this.modelClass();
+        const testObj: T = this.instantiateObject(existing);
 
         if (this.repo instanceof MongoRepository) {
             if (testObj instanceof BaseEntity) {
                 if (keepPrevious) {
-                    obj = new this.modelClass(await this.repo.save({
+                    obj = this.instantiateObject(await this.repo.save({
                         ...obj,
                         _id: undefined, // Ensure we save a new document
                         dateModified: new Date(),
@@ -691,7 +708,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 }
             } else if (obj.uid) {
                 if (keepPrevious) {
-                    obj = new this.modelClass(await this.repo.save({
+                    obj = this.instantiateObject(await this.repo.save({
                         ...obj,
                         version: (obj as any).version + 1,
                     } as any));
@@ -713,7 +730,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
                 const result: T | undefined = await this.repo.save(toSave);
                 if (result) {
-                    obj = new this.modelClass(result);
+                    obj = this.instantiateObject(result);
                 }
             }
         } else {
@@ -746,7 +763,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
         const result: T | null = await this.repo.findOne(query);
         if (result) {
-            obj = new this.modelClass(result);
+            obj = this.instantiateObject(result);
         }
 
         if (obj && this.cacheClient && this.cacheTTL) {

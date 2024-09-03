@@ -7,6 +7,7 @@ import { Inject, Destroy } from "../src/decorators/ObjectDecorators";
 import { Logger } from "@composer-js/core";
 import { CircularClassA } from "./factory/CircularClassA";
 import { CircularClassB } from "./factory/CircularClassB";
+const uuid = require("uuid");
 
 class TestClassA {
     @Destroy
@@ -106,7 +107,7 @@ describe("ObjectFactory Tests", () => {
     });
 
     it("Can create new class instances with constructor arguments.", async () => {
-        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
+        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", true, "hello", 1);
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassB);
         expect(instance.arg1).toBe("hello");
@@ -114,13 +115,13 @@ describe("ObjectFactory Tests", () => {
     });
 
     it("Can force creation of new class instances.", async () => {
-        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", "hello", 1);
+        const instance: TestClassB = await factory.newInstance(TestClassB.name, "myInstance", true, "hello", 1);
         expect(instance).toBeDefined();
         expect(instance).toBeInstanceOf(TestClassB);
         expect(instance.arg1).toBe("hello");
         expect(instance.arg2).toBe(1);
 
-        const instance2: TestClassB = await factory.newInstance(TestClassB.name, undefined, "world", 100);
+        const instance2: TestClassB = await factory.newInstance(TestClassB.name, uuid.v4(), true, "world", 100);
         expect(instance2).toBeDefined();
         expect(instance2).toBeInstanceOf(TestClassB);
         expect(instance2.arg1).toBe("world");
@@ -176,7 +177,7 @@ describe("ObjectFactory Tests", () => {
     });
 
     it("Can call destory on class instance and all instances.", async () => {
-        const testClassBInstance: TestClassB = await factory.newInstance(TestClassB, "default", "construct");
+        const testClassBInstance: TestClassB = await factory.newInstance(TestClassB, "default", true, "construct");
         expect(testClassBInstance).toBeDefined();
         expect(testClassBInstance).toBeInstanceOf(TestClassB);
         expect(testClassBInstance.arg1).toBe("construct");
@@ -184,7 +185,7 @@ describe("ObjectFactory Tests", () => {
         expect(testClassBInstance.arg1).toBe("");
         factory.clear();
 
-        const testClassBInstance2: TestClassB = await factory.newInstance(TestClassB, "default", "construct");
+        const testClassBInstance2: TestClassB = await factory.newInstance(TestClassB, "default", true, "construct");
         expect(testClassBInstance2).toBeDefined();
         expect(testClassBInstance2).toBeInstanceOf(TestClassB);
         expect(testClassBInstance2.arg1).toBe("construct");

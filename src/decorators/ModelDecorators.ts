@@ -20,6 +20,22 @@ export function Cache(ttl: number = 30) {
 }
 
 /**
+ * Indicates that the class describes an entity that will be persisted in the datastore with the given name.
+ *
+ * @param datastore The name of the datastore to store records of the decorated class.
+ */
+export function DataStore(datastore: string) {
+    return function (target: any) {
+        Reflect.defineMetadata("cjs:datastore", datastore, target);
+        Object.defineProperty(target, "datastore", {
+            enumerable: true,
+            writable: true,
+            value: datastore,
+        });
+    };
+}
+
+/**
  * Apply this to a property that is considered a unique identifier.
  */
 export function Identifier(target: any, propertyKey: string | symbol) {
@@ -30,22 +46,6 @@ export function Identifier(target: any, propertyKey: string | symbol) {
         writable: true,
         value: undefined,
     });
-}
-
-/**
- * Indicates that the class describes an entity that will be persisted in the datastore with the given name.
- *
- * @param datastore The name of the datastore to store records of the decorated class.
- */
-export function Model(datastore: string) {
-    return function (target: any) {
-        Reflect.defineMetadata("cjs:datastore", datastore, target);
-        Object.defineProperty(target, "datastore", {
-            enumerable: true,
-            writable: true,
-            value: datastore,
-        });
-    };
 }
 
 /**

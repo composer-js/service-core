@@ -116,7 +116,7 @@ export class ObjectFactory {
      * Scans the given object for any properties with the @Inject decorator and assigns the correct values.
      * @param obj The object to initialize with injected defaults
      */
-    public async initialize(obj: any): Promise<void> {
+    public async initialize<T>(obj: any): Promise<T> {
         let proto = Object.getPrototypeOf(obj);
         while (proto) {
             // Search for each type of injectable property
@@ -227,6 +227,8 @@ export class ObjectFactory {
                 await result;
             }
         }
+
+        return obj;
     }
 
     /**
@@ -297,18 +299,14 @@ export class ObjectFactory {
      * @param type The fully qualified name or type of the class to instantiate. If a type is given it's class name will be inferred
      * via the constructor name.
      * @param name The unique name to give the class instance. Set to `undefined` if you wish to force a new object is created.
+     * @param initialize Set to `true` to initialize the object after creation, otherwise set to `false`. Default is `true`.
      * @param args The set of constructor arguments to use during construction
      */
-    public async newInstance<T>(type: any, name?: string, ...args: any): Promise<T> {
+    public newInstance<T>(type: any, name: string | null = uuid.v4(), initialize: boolean = true, ...args: any): T | Promise<T> {
         // If an class type was given extract it's fqn
         const className = typeof type === "string"
             ? type
             : (type.fqn || type.name || type.constructor.name);
-
-        // Generate a name if none was given
-        if (!name) {
-            name = uuid.v4();
-        }
 
         // Names are namespace specific by type. Prepend the type to the name if not already done.
         if (name && !name.includes(className)) {
@@ -340,13 +338,6 @@ export class ObjectFactory {
         this.logger.debug(`Creating new instance of class [${className}] with name [${name}]`);
         const instance: T = new clazz(...args);
 
-        // Save the name to the object
-        Object.defineProperty(instance as any, "_name", {
-            enumerable: false,
-            writable: false,
-            value: name,
-        })
-
         // Also store the fqn for reference
         Object.defineProperty(instance as any, "_fqn", {
             enumerable: false,
@@ -356,12 +347,21 @@ export class ObjectFactory {
 
         // Store the instance in our list of objects
         if (name) {
+            // Save the name to the object
+            Object.defineProperty(instance as any, "_name", {
+                enumerable: false,
+                writable: false,
+                value: name,
+            });
+
             this.instances.set(name, instance);
         }
 
         // Now initialize the object with any injectable defaults. This must happen after we add the instance
         // to our internal map so that circular dependencies due not cause endless cycles of creation/initialization.
-        await this.initialize(instance);
+        if (initialize) {
+            return this.initialize(instance);
+        }
 
         return instance;
     }
