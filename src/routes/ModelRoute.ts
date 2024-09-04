@@ -221,7 +221,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             const fqn: string = obj.className.includes(".") ? obj.className : `models.${obj.className}`;
             return this.objectFactory.newInstance(fqn, null, false, ...obj) as T;
         } else {
-            return this.instantiateObject(obj);
+            return new this.modelClass(obj);
         }
     }
 
