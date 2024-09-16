@@ -422,9 +422,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@composer-js/core@npm:5.0.0"
+"@composer-js/core@npm:^6.0.0-rc.8":
+  version: 6.0.0-rc.8
+  resolution: "@composer-js/core@npm:6.0.0-rc.8"
   dependencies:
     "@slack/bolt": "npm:^3.17.1"
     "@slack/web-api": "npm:^7.0.2"
@@ -438,12 +438,13 @@ __metadata:
     mkdirp: "npm:^3.0.1"
     nodemailer: "npm:^6.9.12"
     readline: "npm:^1.3.0"
+    reflect-metadata: "npm:^0.2.2"
     triple-beam: "npm:^1.4.1"
     twilio: "npm:^5.0.1"
     uuid: "npm:^9.0.1"
     winston: "npm:^3.12.0"
     winston-transport: "npm:^4.7.0"
-  checksum: 10c0/2b3f3a787afedd69e844d478e10c9c87b8c079ecbf5c1eb06a98a69ffb9725d98ea43ce2cebd7f4e0b37850a30db0581f62703db62c5458cb08e6b075fc481f9
+  checksum: 10c0/1174767485f7bf135711b7f85cfdd7f484eb62c3e69c998737ca4e45aa708ec730c216d2515ebc0792bf0d0caca679bea1422d9d4707486bddac5123a4a861b5
   languageName: node
   linkType: hard
 
@@ -451,7 +452,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@composer-js/service-core@workspace:."
   dependencies:
-    "@composer-js/core": "npm:^5.0.0"
+    "@composer-js/core": "npm:^6.0.0-rc.8"
     "@types/cookie-parser": "npm:^1.4.7"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"

@@ -372,24 +372,29 @@ export class Server {
                 }
 
                 // Register the index route
-                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute);
+                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute, "default");
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 
                 // Register the admin route
-                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute);
+                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute, "default");
                 allRoutes.push(admin);
                 await this.routeUtils.registerRoute(this.app, admin);
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
-                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", true, this.apiSpec);
+                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(
+                        OpenAPIRoute,
+                        "default",
+                        true,
+                        this.apiSpec
+                    );
                     await this.routeUtils.registerRoute(this.app, oasRoute);
                     allRoutes.push(oasRoute);
                 }
 
                 // Register the metrics route
-                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute);
+                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute, "default");
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
                 // Initialize the background service manager
@@ -400,7 +405,15 @@ export class Server {
                         serviceClasses[name] = clazz;
                     }
                 }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", true, this.objectFactory, serviceClasses, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(
+                    BackgroundServiceManager,
+                    "default",
+                    true,
+                    this.objectFactory,
+                    serviceClasses,
+                    this.config,
+                    this.logger
+                );
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }
@@ -409,10 +422,12 @@ export class Server {
                 this.logger.info("Scanning for routes...");
                 try {
                     for (const [fqn, clazz] of classLoader.getClasses().entries()) {
-                        const routePaths: string[] | undefined = clazz.prototype ? Reflect.getMetadata("cjs:routePaths", clazz.prototype) : Reflect.getMetadata("cjs:routePaths", clazz);
+                        const routePaths: string[] | undefined = clazz.prototype
+                            ? Reflect.getMetadata("cjs:routePaths", clazz.prototype)
+                            : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
                             this.objectFactory.register(clazz, fqn);
-                            const route: any = await this.objectFactory.newInstance(fqn);
+                            const route: any = await this.objectFactory.newInstance(fqn, "default");
                             await this.routeUtils.registerRoute(this.app, route);
                             allRoutes.push(route);
                         }
