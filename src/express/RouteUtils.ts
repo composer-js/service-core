@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ApiError, JWTPayload, JWTUser, JWTUtils, UserUtils } from "@composer-js/core";
+import { ApiError, JWTPayload, JWTUser, JWTUtils, ObjectDecorators, UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ServerResponse } from "http";
-import { Config, Inject, Logger } from "../decorators/ObjectDecorators";
 import { RequestWS } from "./WebSocket";
 import { OpenApiSpec } from "../OpenApiSpec";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+const { Config, Inject, Logger } = ObjectDecorators;
 const passport = require("passport");
 const _ = require("lodash");
 

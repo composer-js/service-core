@@ -1,15 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { ApiError, JWTUser, UserUtils } from "@composer-js/core";
+import { ApiError, JWTUser, ObjectDecorators, UserUtils } from "@composer-js/core";
 import Redis, { ScanStream } from "ioredis";
 import * as Transport from "winston-transport";
-import { Config, Init, Logger } from "../decorators/ObjectDecorators"
 import { Auth, ContentType, Get, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
 import { Description, Returns } from "../decorators/DocDecorators";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+const { Config, Init, Logger } = ObjectDecorators;
 
 /**
  * Implements a Winston transport that pipes incoming log messages to a configured redis pubsub channel.

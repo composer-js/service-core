@@ -3,10 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 import config from "./config";
 import { ObjectFactory } from "../src/ObjectFactory";
-import { Inject, Destroy } from "../src/decorators/ObjectDecorators";
-import { Logger } from "@composer-js/core";
+import { Logger, ObjectDecorators } from "@composer-js/core";
 import { CircularClassA } from "./factory/CircularClassA";
 import { CircularClassB } from "./factory/CircularClassB";
+const { Destroy, Inject } = ObjectDecorators;
 const uuid = require("uuid");
 
 class TestClassA {

@@ -2,31 +2,30 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import {
+    After,
+    Before,
     Route,
     Get,
+    Param,
     Post,
     Validate,
     Delete,
     Head,
     Put,
-    Param,
-    User,
     Query,
-    Before,
     Model,
     Request,
     Response,
-    After,
-    ContentType
+    User,
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
-import { Logger } from "@composer-js/core";
+import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
-import { Init } from "../../../src/decorators/ObjectDecorators";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+const { Init } = ObjectDecorators;
 
 const logger = Logger();
 

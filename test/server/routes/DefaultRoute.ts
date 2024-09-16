@@ -2,11 +2,11 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Route, Get, User, Auth, WebSocket, Socket, Query } from "../../../src/decorators/RouteDecorators";
-import { ApiError, Logger } from "@composer-js/core";
-import { Init } from "../../../src/decorators/ObjectDecorators";
+import { ApiError, Logger, ObjectDecorators } from "@composer-js/core";
 import * as ws from "ws";
 import { Description, Returns } from "../../../src/decorators/DocDecorators";
 import { ApiErrors, ApiErrorMessages } from "../../../src/ApiErrors";
+const { Init } = ObjectDecorators;
 
 const logger = Logger();
 

@@ -15,13 +15,13 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
-import * as rimraf from "rimraf";
+import { rimrafSync } from "rimraf";
 
 import { JWTUtils, Logger, sleep } from "@composer-js/core";
 
 const unixLineEndings = (input: string): string => {
-    return input.replace(/\r\n/g, '\n');
-}
+    return input.replace(/\r\n/g, "\n");
+};
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
@@ -43,14 +43,14 @@ describe("Server Tests", () => {
     afterAll(async () => {
         await mongod.stop();
         await new Promise<void>((resolve) => {
-            sqlite.close(err => {
+            sqlite.close((err) => {
                 if (err) {
                     throw new Error(err.message);
                 }
                 resolve();
             });
         });
-        rimraf.sync("tmp-*");
+        rimrafSync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -67,9 +67,9 @@ describe("Server Tests", () => {
     it("Can start server.", async () => {
         expect(server.isRunning()).toBe(true);
         // Cors Check
-        let result = (await request(server.getApplication()).options("/").set("Origin", corsOrigins[0]));
+        let result = await request(server.getApplication()).options("/").set("Origin", corsOrigins[0]);
         expect(result.headers["access-control-allow-origin"]).toEqual(corsOrigins[0]);
-        result = (await request(server.getApplication()).options("/").set("Origin", "http://localhost:3005"));
+        result = await request(server.getApplication()).options("/").set("Origin", "http://localhost:3005");
         expect(result.headers["access-control-allow-origin"]).not.toBeDefined();
     });
 

@@ -8,7 +8,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/User";
 import { MongoRepository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import * as rimraf from "rimraf";
+import { rimrafSync } from "rimraf";
 import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
@@ -18,13 +18,19 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 });
 let repo: MongoRepository<User>;
 
-const createUser = async (name: string, firstName: string, lastName: string, age: number = 100, productUid?: string): Promise<User> => {
+const createUser = async (
+    name: string,
+    firstName: string,
+    lastName: string,
+    age: number = 100,
+    productUid?: string
+): Promise<User> => {
     const user: User = new User({
         name,
         firstName,
         lastName,
         age,
-        productUid
+        productUid,
     });
 
     return await repo.save(user);
@@ -60,7 +66,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimraf.sync("tmp-*");
+        rimrafSync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -82,9 +88,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 lastName: "Tennant",
                 age: 47,
             });
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(user);
+            const result = await request(server.getApplication()).post("/users").send(user);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
             expect(result.body.version).toEqual(user.version);
@@ -110,11 +114,9 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
-                productUid: uuid.v4()
+                productUid: uuid.v4(),
             });
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(user);
+            const result = await request(server.getApplication()).post("/users").send(user);
             expect(result.status).toBe(200);
 
             const stored: User | null = await repo.findOne({ uid: user.uid } as any);
@@ -139,9 +141,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 lastName: "Tennant",
                 age: 47,
             });
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(user);
+            const result = await request(server.getApplication()).post("/users").send(user);
             expect(result.status).toBe(400);
 
             const stored: User | null = await repo.findOne({ uid: user.uid } as any);
@@ -158,11 +158,9 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
-                productUid
+                productUid,
             });
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(user);
+            const result = await request(server.getApplication()).post("/users").send(user);
             expect(result.status).toBe(400);
 
             const stored: User | null = await repo.findOne({ uid: user.uid } as any);
@@ -188,7 +186,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             expect(result.status).toBeGreaterThanOrEqual(200);
             expect(result.status).toBeLessThan(300);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((1).toString());
+            expect(result.headers["content-length"]).toBe((1).toString());
         });
 
         it("Can test if document doesn't exist. [MongoDB]", async () => {
@@ -285,7 +283,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             const diff: any = {
                 firstName: "Doctor",
                 lastName: "Who",
-                age: 900
+                age: 900,
             };
             let result = await request(server.getApplication())
                 .put("/users/" + user.uid.toUpperCase() + "/age")
@@ -350,9 +348,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 users.push(user);
                 uids.push(user.uid);
             }
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(users);
+            const result = await request(server.getApplication()).post("/users").send(users);
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveLength(users.length);
 
@@ -385,9 +381,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 users.push(user);
                 uids.push(user.uid);
             }
-            const result = await request(server.getApplication())
-                .post("/users")
-                .send(users);
+            const result = await request(server.getApplication()).post("/users").send(users);
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveLength(users.length);
             expect(result.body[0]).toBeNull();
@@ -413,7 +407,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             const users: User[] = await createUsers(20);
             const result = await request(server.getApplication()).head("/users");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with criteria (eq). [MongoDB]", async () => {
@@ -422,7 +416,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=Doctor");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toEqual(users.length.toString());
+            expect(result.headers["content-length"]).toEqual(users.length.toString());
         });
 
         it("Can count documents with criteria (like-regex). [MongoDB]", async () => {
@@ -431,7 +425,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=like(Doc.*)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with criteria (ne). [MongoDB]", async () => {
@@ -440,7 +434,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=ne(Doctor)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((2).toString());
+            expect(result.headers["content-length"]).toBe((2).toString());
         });
 
         it("Can count documents with criteria (like). [MongoDB]", async () => {
@@ -449,7 +443,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=like(Doc)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with criteria (in). [MongoDB]", async () => {
@@ -458,7 +452,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=in(Tennant,Smith)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((2).toString());
+            expect(result.headers["content-length"]).toBe((2).toString());
         });
 
         it("Can count documents with criteria (nin). [MongoDB]", async () => {
@@ -467,7 +461,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?lastName=nin(Tennant,Smith)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with criteria (gt). [MongoDB]", async () => {
@@ -476,7 +470,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?age=gt(100)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((users.length - 1).toString());
+            expect(result.headers["content-length"]).toBe((users.length - 1).toString());
         });
 
         it("Can count documents with criteria (gte). [MongoDB]", async () => {
@@ -485,7 +479,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?age=gte(100)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with criteria (lt). [MongoDB]", async () => {
@@ -494,7 +488,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?age=lt(100)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((2).toString());
+            expect(result.headers["content-length"]).toBe((2).toString());
         });
 
         it("Can count documents with criteria (lte). [MongoDB]", async () => {
@@ -503,7 +497,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?age=lte(100)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((3).toString());
+            expect(result.headers["content-length"]).toBe((3).toString());
         });
 
         it("Can count documents with criteria (range). [MongoDB]", async () => {
@@ -512,7 +506,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             await createUser("msmith", "Matt", "Smith", 36);
             const result = await request(server.getApplication()).head("/users?age=range(100,500)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((5).toString());
+            expect(result.headers["content-length"]).toBe((5).toString());
         });
 
         it("Can find all documents. [MongoDB]", async () => {
@@ -593,14 +587,12 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 updates.push({
                     uid: user.uid,
                     firstName: "Matt",
-                    version: user.version
+                    version: user.version,
                 });
                 uids.push(user.uid);
             }
 
-            const result = await request(server.getApplication())
-                .put("/users")
-                .send(updates);
+            const result = await request(server.getApplication()).put("/users").send(updates);
             expect(result.status).toBe(200);
 
             const existing: User[] = await repo.find({ uid: { $in: uids } } as any);
@@ -623,7 +615,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 updates.push({
                     uid: user.uid,
                     firstName: "Matt",
-                    version: user.version + 1
+                    version: user.version + 1,
                 });
                 uids.push(user.uid);
             }
@@ -631,9 +623,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
             // Lets make sure the first one goes through
             updates[0].version = users[0].version;
 
-            const result = await request(server.getApplication())
-                .put("/users")
-                .send(updates);
+            const result = await request(server.getApplication()).put("/users").send(updates);
             expect(result.status).toBe(409);
             expect(result.body).toHaveLength(users.length);
 

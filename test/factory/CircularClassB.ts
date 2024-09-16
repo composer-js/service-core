@@ -1,5 +1,6 @@
-import { Destroy, Inject } from "../../src/decorators/ObjectDecorators";
+import { ObjectDecorators } from "@composer-js/core";
 import { CircularClassA } from "./CircularClassA";
+const { Destroy, Inject } = ObjectDecorators;
 
 export class CircularClassB {
     @Inject("CircularClassA")

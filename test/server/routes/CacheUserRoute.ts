@@ -4,26 +4,27 @@
 import {
     Route,
     Get,
+    Param,
     Post,
     Validate,
     Delete,
     Head,
     Put,
-    Param,
-    User,
     Query,
-    Response,
     Model,
+    Request,
+    Response,
+    User,
 } from "../../../src/decorators/RouteDecorators";
-import { Init } from "../../../src/decorators/ObjectDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
-import { Logger } from "@composer-js/core";
+import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/CacheUser";
 import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { OneOrMany, OneOrNull } from "../../../src";
+const { Init } = ObjectDecorators;
 
 const logger = Logger();
 

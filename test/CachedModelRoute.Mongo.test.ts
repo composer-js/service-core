@@ -9,7 +9,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoRepository, DataSource } from "typeorm";
 import CacheUser from "./server/models/CacheUser";
 import { Logger } from "@composer-js/core";
-import * as rimraf from "rimraf";
+import { rimrafSync } from "rimraf";
 const Redis = require("ioredis-mock");
 
 const baseCacheKey: string = "db.cache.CacheUser";
@@ -47,14 +47,7 @@ const createUsers = async (num: number): Promise<CacheUser[]> => {
  * @param query The query object to hash.
  */
 const getCacheKey = function (query: any): string {
-    return (
-        baseCacheKey +
-        "." +
-        crypto
-            .createHash("sha512")
-            .update(JSON.stringify(query))
-            .digest("hex")
-    );
+    return baseCacheKey + "." + crypto.createHash("sha512").update(JSON.stringify(query)).digest("hex");
 };
 
 jest.setTimeout(120000);
@@ -78,7 +71,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimraf.sync("tmp-*");
+        rimrafSync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -99,9 +92,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 lastName: "Tennant",
                 age: 47,
             });
-            const result = await request(server.getApplication())
-                .post("/cachedusers")
-                .send(user);
+            const result = await request(server.getApplication()).post("/cachedusers").send(user);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
             expect(result.body.version).toEqual(user.version);

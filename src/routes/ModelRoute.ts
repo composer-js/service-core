@@ -8,15 +8,15 @@ import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import * as crypto from "crypto";
-import { Logger, Config, Init, Inject } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
 import { RecoverableBaseEntity } from "../models";
 import { Admin } from "mongodb";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-import { ApiError } from "@composer-js/core";
+import { ApiError, ObjectDecorators } from "@composer-js/core";
 import { ObjectFactory } from "../ObjectFactory";
+const { Config, Init, Inject, Logger } = ObjectDecorators;
 
 /**
  * The set of options required by all request handlers.

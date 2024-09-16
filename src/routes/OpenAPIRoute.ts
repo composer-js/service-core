@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { ObjectDecorators } from "@composer-js/core";
 import { OpenApiSpec } from "../OpenApiSpec";
 import { Description, Returns } from "../decorators/DocDecorators";
-import { Inject } from "../decorators/ObjectDecorators";
 import { Get, Route, ContentType } from "../decorators/RouteDecorators";
 const swagger = require("swagger-ui-express");
+const { Inject } = ObjectDecorators;
 
 /**
  * The `OpenAPIController` provides a default route to `/openapi.json` that exposes a provided OpenAPI

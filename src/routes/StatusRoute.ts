@@ -2,8 +2,9 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Get, Route } from "../decorators/RouteDecorators";
-import { Config } from "../decorators/ObjectDecorators";
 import { Description, Returns } from "../decorators/DocDecorators";
+import { ObjectDecorators } from "@composer-js/core";
+const { Config } = ObjectDecorators;
 
 /**
  * The `StatusRoute` provides a default `/status` endpoint the returns metadata information about the service such as

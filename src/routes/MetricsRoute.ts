@@ -2,9 +2,10 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import * as prom from "prom-client";
-import { Config } from "../decorators/ObjectDecorators";
 import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
 import { Description, Returns } from "../decorators/DocDecorators";
+import { ObjectDecorators } from "@composer-js/core";
+const { Config } = ObjectDecorators;
 
 /**
  * Handles all REST API requests for the endpoint `/metrics'. This route handler produces Prometheus compatible metrics

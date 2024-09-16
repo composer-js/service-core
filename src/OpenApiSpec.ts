@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla USA, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { oas31 as oa } from 'openapi3-ts';
-import { Config, Init } from "./decorators/ObjectDecorators";
+import { oas31 as oa } from "openapi3-ts";
 import { DocumentsData } from "./decorators/DocDecorators";
 import * as merge from "deepmerge";
 import * as _ from "lodash";
+import { ObjectDecorators } from "@composer-js/core";
+const { Config, Init } = ObjectDecorators;
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
