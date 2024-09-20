@@ -58,3 +58,5 @@ export abstract class BaseEntity {
         }
     }
 }
+
+export type PartialBaseEntity<T extends BaseEntity> = Partial<T> & Pick<T, "uid"> & Pick<T, "version">;

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository, AggregationCursor, EntityMetadata } from "typeorm";
+import { Repository, MongoRepository, EntityMetadata } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
@@ -33,8 +33,7 @@ export interface RequestOptions {
 /**
  * The set of options required by create request handlers.
  */
-export interface CreateRequestOptions extends RequestOptions {
-}
+export interface CreateRequestOptions extends RequestOptions {}
 
 /**
  * The set of options required by delete request handlers.
@@ -68,10 +67,15 @@ export interface TruncateRequestOptions extends DeleteRequestOptions {
     query: any;
 }
 
+/** A Partial type for a BaseEntity or SimpleEntity. */
+export type UpdateObject<T extends BaseEntity | SimpleEntity> = Partial<T> & Pick<T, "uid">;
+
 /**
  * The set of options required by update request handlers.
  */
-export interface UpdateRequestOptions extends RequestOptions {
+export interface UpdateRequestOptions<T extends BaseEntity | SimpleEntity> extends RequestOptions {
+    /** The existing object that has already been recently pulled from the datastore. */
+    existing?: T | null;
     /** The desired product uid of the resource to update. */
     productUid?: string;
     /** The desired version number of the resource to update. */
@@ -127,7 +131,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Initializes a new instance using any defaults.
      */
     protected constructor() {
-        // no-op 
+        // no-op
     }
 
     /**
@@ -152,10 +156,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected hashQuery(query: any): string {
         const queryStr: string = JSON.stringify(query);
-        return crypto
-            .createHash("sha512")
-            .update(queryStr)
-            .digest("hex");
+        return crypto.createHash("sha512").update(queryStr).digest("hex");
     }
 
     /**
@@ -163,7 +164,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     @Init
     private async superInitialize() {
-        // Pull the cache and version configuration from the model class where applicable 
+        // Pull the cache and version configuration from the model class where applicable
         if (this.modelClass) {
             this.cacheTTL = this.modelClass.cacheTTL || this.cacheTTL;
             this.trackChanges = this.modelClass.trackChanges || this.trackChanges;
@@ -189,17 +190,27 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                         if (metadata) {
                             try {
                                 // Configure the sharded collection with the MongoDB server.
-                                const dbName: string = this.config.get(`datastores:${this.modelClass.datastore}:database`);
-                                this.logger.info(`Configuring sharding for: collection=${dbName}.${metadata.tableName}, key=${JSON.stringify(shardConfig.key)}, unique=${shardConfig.unique}, options=${JSON.stringify(shardConfig.options)})`);
+                                const dbName: string = this.config.get(
+                                    `datastores:${this.modelClass.datastore}:database`
+                                );
+                                this.logger.info(
+                                    `Configuring sharding for: collection=${dbName}.${
+                                        metadata.tableName
+                                    }, key=${JSON.stringify(shardConfig.key)}, unique=${
+                                        shardConfig.unique
+                                    }, options=${JSON.stringify(shardConfig.options)})`
+                                );
                                 const result: any = await admin.command({
                                     shardCollection: `${dbName}.${metadata.tableName}`,
                                     key: shardConfig.key,
                                     unique: shardConfig.unique,
-                                    ...shardConfig.options
+                                    ...shardConfig.options,
                                 });
                                 this.logger.debug(`Result: ${JSON.stringify(result)}`);
                             } catch (e: any) {
-                                this.logger.warn(`There was a problem trying to configure MongoDB sharding for collection '${metadata.tableName}'. Error=${e.message}`);
+                                this.logger.warn(
+                                    `There was a problem trying to configure MongoDB sharding for collection '${metadata.tableName}'. Error=${e.message}`
+                                );
                             }
                         }
                     } else {
@@ -233,7 +244,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param version The desired version number of the object to retrieve. If `undefined` returns the latest.
      * @param productUid The optional productUid associated with the object.
      */
-    protected async getObj(id: string, version?: number | string, productUid?: string): Promise<T | null> {
+    protected async getObj(id: string, version?: number | string, productUid?: string): Promise<T | undefined> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -256,16 +267,17 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         let existing: T | null = null;
         if (this.repo instanceof MongoRepository) {
-            existing = await this.repo.aggregate(
-                [
+            existing = await this.repo
+                .aggregate([
                     {
                         $match: query,
                     },
                     {
-                        $sort: { version: -1 }
-                    }
-                ]
-            ).limit(1).next();
+                        $sort: { version: -1 },
+                    },
+                ])
+                .limit(1)
+                .next();
         } else {
             existing = await this.repo.findOne(query);
         }
@@ -280,22 +292,28 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         // Make sure we return the correct data type
-        return existing ? this.instantiateObject(existing) : null;
+        return existing ? this.instantiateObject(existing) : undefined;
     }
 
     /**
      * Search for existing object based on passed in id and version and product uid.
-     * 
+     *
      * The result of this function is compatible with all `Repository.find()` functions.
      */
     private searchIdQuery(id: string, version?: number | string, productUid?: string): any {
-        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version, 10) : version, productUid);
+        return ModelUtils.buildIdSearchQuery(
+            this.repo,
+            this.modelClass,
+            id,
+            typeof version === "string" ? parseInt(version, 10) : version,
+            productUid
+        );
     }
 
     /**
      * Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
      * request `query`. Any results that have been found are set to the `content-length` header of the `res` argument.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doCount(options: FindRequestOptions): Promise<XResponse> {
@@ -307,14 +325,21 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,
+            this.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
         if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
             searchQuery.push({ $count: "count" });
-            const result: any = await (this.repo).aggregate(searchQuery).next();
-            options.res.setHeader('content-length', result ? result.count : 0);
+            const result: any = await this.repo.aggregate(searchQuery).next();
+            options.res.setHeader("content-length", result ? result.count : 0);
         } else {
             const result: number = await this.repo.count(searchQuery);
-            options.res.setHeader('content-length', result);
+            options.res.setHeader("content-length", result);
         }
 
         return options.res.status(200);
@@ -328,28 +353,28 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doCreateObject(obj: T, options: CreateRequestOptions): Promise<T> {
+    protected async doCreateObject(obj: Partial<T>, options: CreateRequestOptions): Promise<T> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         // Make sure the provided object has the correct typing
-        obj = this.instantiateObject(obj);
+        let newObj: T = this.instantiateObject(obj);
 
-        obj = await RepoUtils.preprocessBeforeSave(this.repo, obj, this.trackChanges !== 0);
+        newObj = await RepoUtils.preprocessBeforeSave(this.repo, newObj, this.trackChanges !== 0);
 
         // Are we tracking multiple versions for this object?
-        if (obj instanceof BaseEntity && this.trackChanges === 0) {
-            (obj as any).version = 0;
+        if (newObj instanceof BaseEntity && this.trackChanges === 0) {
+            (newObj as any).version = 0;
         }
 
         // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
         // extends BaseEntity.
-        const result: T = this.instantiateObject(await this.repo.save(obj as any));
+        const result: T = this.instantiateObject(await this.repo.save(newObj));
 
         if (this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
-            const query: any = this.searchIdQuery(obj.uid);
+            const query: any = this.searchIdQuery(newObj.uid);
             const cacheKey: string = `${this.baseCacheKey}.${this.hashQuery(query)}`;
             void this.cacheClient.setex(cacheKey, this.cacheTTL, JSON.stringify(result));
         }
@@ -365,7 +390,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param objs The object(s) to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doBulkCreate(objs: T[], options: CreateRequestOptions): Promise<T[]> {
+    protected async doBulkCreate(objs: Partial<T>[], options: CreateRequestOptions): Promise<T[]> {
         let thrownError: boolean = false;
         const errors: (Error | null)[] = [];
         const results: T[] = [];
@@ -395,7 +420,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object(s) to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doCreate(obj: T | T[], options: CreateRequestOptions): Promise<T | T[]> {
+    protected async doCreate(obj: Partial<T> | Partial<T>[], options: CreateRequestOptions): Promise<T | T[]> {
         if (Array.isArray(obj)) {
             return await this.doBulkCreate(obj, options);
         } else {
@@ -420,7 +445,11 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
@@ -429,9 +458,9 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
 
         if (uid && objs) {
-            const isRecoverable: boolean = (this.instantiateObject(objs[0])) instanceof RecoverableBaseEntity;
-            const isPurge: boolean = isRecoverable ? (options.purge || false) : true;
-            
+            const isRecoverable: boolean = this.instantiateObject(objs[0]) instanceof RecoverableBaseEntity;
+            const isPurge: boolean = isRecoverable ? options.purge || false : true;
+
             // If the object(s) are being permenantly removed from the database do so and then clear the accompanying
             // ACL(s). If the class type is recoverable and purge isn't desired, simply mark the object(s) as deleted.
             if (isPurge) {
@@ -440,12 +469,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 if (this.repo instanceof MongoRepository) {
                     await this.repo.updateMany(query, {
                         $set: {
-                            deleted: true
-                        }
+                            deleted: true,
+                        },
                     });
                 } else {
                     await this.repo.update(query, {
-                        deleted: true
+                        deleted: true,
                     } as any);
                 }
             }
@@ -460,7 +489,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to determine if an existing object with the given unique identifier exists.
-     * 
+     *
      * @param id The unique identifier of the object to verify exists.
      * @param options The options to process the request using.
      */
@@ -477,14 +506,18 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
         const query: any = this.searchIdQuery(id, options.query.version);
         const result: number = await this.repo.count(query);
         if (result > 0) {
-            return options.res.status(200).setHeader('content-length', result);
+            return options.res.status(200).setHeader("content-length", result);
         } else {
             return options.res.status(404);
         }
@@ -494,7 +527,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
      * `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
      * never null.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doFindAll(options: FindRequestOptions): Promise<T[]> {
@@ -504,7 +537,14 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,
+            this.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
         const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
         const page: number = options.query.page ? Number(options.query.page) : 0;
 
@@ -513,20 +553,22 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         const searchQueryHash: string = this.hashQuery({
             ...searchQuery,
             limit,
-            page
+            page,
         });
 
         // Pull from the cache if available
         if (this.cacheClient && this.cacheTTL) {
-            const json: string | null = await this.cacheClient.get(
-                `${this.baseCacheKey}.${searchQueryHash}`
-            );
+            const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${searchQueryHash}`);
             if (json) {
                 try {
                     const uids: string[] = JSON.parse(json);
                     for (const uid of uids) {
                         // Retrieve the object from the cache or from database if not available
-                        const obj: T | null = await this.getObj(uid, options.query.version, options.query.productUid);
+                        const obj: T | undefined = await this.getObj(
+                            uid,
+                            options.query.version,
+                            options.query.productUid
+                        );
                         if (obj) {
                             results.push(obj);
                         }
@@ -542,8 +584,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
                 const skip: number = page * limit;
                 results = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            }
-            else {
+            } else {
                 results = await this.repo.find(searchQuery);
             }
 
@@ -568,7 +609,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
     /**
      * Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doFindById(id: string, options: FindRequestOptions): Promise<T | null> {
@@ -581,11 +622,15 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        const result: T | null = await this.getObj(id, options.query.version, options.query.productUid);
+        const result: T | undefined = await this.getObj(id, options.query.version, options.query.productUid);
         if (!result) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
@@ -605,15 +650,21 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         try {
-            const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
+            const searchQuery: any = ModelUtils.buildSearchQuery(
+                this.modelClass,
+                this.repo,
+                options.params,
+                options.query,
+                true,
+                options.user
+            );
             let objs: T[] | undefined = undefined;
             if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
                 const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
                 const page: number = options.query.page ? options.query.page : 0;
                 const skip: number = page * limit;
                 objs = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            }
-            else {
+            } else {
                 objs = await this.repo.find(searchQuery);
             }
 
@@ -636,7 +687,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param objs The object(s) to bulk update in the database.
      * @param options The options to process the request using.
      */
-    protected async doBulkUpdate(objs: T[], options: UpdateRequestOptions): Promise<T[]> {
+    protected async doBulkUpdate(objs: UpdateObject<T>[], options: UpdateRequestOptions<T>): Promise<T[]> {
         let thrownError: boolean = false;
         const errors: (Error | null)[] = [];
         const result: T[] = [];
@@ -664,7 +715,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to update in the database
      * @param options The options to process the request using.
      */
-    protected async doUpdate(id: string, obj: T, options: UpdateRequestOptions): Promise<T> {
+    protected async doUpdate(id: string, obj: UpdateObject<T>, options: UpdateRequestOptions<T>): Promise<T> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -674,12 +725,24 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        let query: any = this.searchIdQuery(id, options.version || (obj as any).version, options.productUid || (obj as any).productUid);
-        const existing: T | null = await this.repo.findOne(query);
+        let query: any = this.searchIdQuery(
+            id,
+            options.version || (obj as any).version,
+            options.productUid || (obj as any).productUid
+        );
+        const existing: T | null = options.existing || (await this.repo.findOne(query));
+        if (!existing) {
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
+        }
+
         obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj, existing);
 
         const keepPrevious: boolean = this.trackChanges !== 0;
@@ -688,30 +751,34 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (this.repo instanceof MongoRepository) {
             if (testObj instanceof BaseEntity) {
                 if (keepPrevious) {
-                    obj = this.instantiateObject(await this.repo.save({
-                        ...obj,
-                        _id: undefined, // Ensure we save a new document
-                        dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
-                    } as any));
+                    obj = this.instantiateObject(
+                        await this.repo.save({
+                            ...obj,
+                            _id: undefined, // Ensure we save a new document
+                            dateModified: new Date(),
+                            version: (obj as any).version + 1,
+                        } as any)
+                    );
                 } else {
                     await this.repo.updateOne(
-                        { uid: obj.uid, version: (obj as BaseEntity).version },
+                        { uid: obj.uid, version: (obj as any).version },
                         {
                             $set: {
                                 ...obj,
                                 dateModified: new Date(),
-                                version: (obj as BaseEntity).version + 1,
+                                version: (obj as any).version + 1,
                             },
                         }
                     );
                 }
             } else if (obj.uid) {
                 if (keepPrevious) {
-                    obj = this.instantiateObject(await this.repo.save({
-                        ...obj,
-                        version: (obj as any).version + 1,
-                    } as any));
+                    obj = this.instantiateObject(
+                        await this.repo.save({
+                            ...obj,
+                            version: (obj as any).version + 1,
+                        } as any)
+                    );
                 } else {
                     await this.repo.updateOne(
                         { uid: obj.uid },
@@ -739,13 +806,13 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                     await this.repo.insert({
                         ...obj,
                         dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
+                        version: (obj as any).version + 1,
                     } as any);
                 } else {
                     await this.repo.update(query.where, {
                         ...obj,
                         dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
+                        version: (obj as any).version + 1,
                     } as any);
                 }
             } else {
@@ -761,45 +828,63 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
-        const result: T | null = await this.repo.findOne(query);
-        if (result) {
-            obj = this.instantiateObject(result);
+        let result: T | null = await this.repo.findOne(query);
+        if (!result) {
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        if (obj && this.cacheClient && this.cacheTTL) {
+        result = this.instantiateObject(result);
+
+        if (result && this.cacheClient && this.cacheTTL) {
             // Cache the object for faster retrieval
-            void this.cacheClient.setex(`${this.baseCacheKey}.${this.hashQuery(query)}`, this.cacheTTL, JSON.stringify(obj));
             void this.cacheClient.setex(
-                `${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(obj.uid))}`,
+                `${this.baseCacheKey}.${this.hashQuery(query)}`,
                 this.cacheTTL,
-                JSON.stringify(obj)
+                JSON.stringify(result)
+            );
+            void this.cacheClient.setex(
+                `${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(result.uid))}`,
+                this.cacheTTL,
+                JSON.stringify(result)
             );
         }
 
-        return obj;
+        return result;
     }
 
     /**
      * Attempts to modify a single property of an existing data model object as identified by the `id` parameter in the URI.
      *
      * Note that this effectively bypasses optimistic locking and can cause unexpected data overwrites. Use with care.
-     * 
+     *
      * @param id The unique identifier of the object to update.
      * @param propertyName The name of the property to update.
      * @param value The value of the property to set.
      * @param options The options to process the request using.
      */
-    protected async doUpdateProperty(id: string, propertyName: string, value: any, options: UpdateRequestOptions): Promise<T> {
-        const existing: any = await this.getObj(id);
+    protected async doUpdateProperty(
+        id: string,
+        propertyName: string,
+        value: any,
+        options: UpdateRequestOptions<T>
+    ): Promise<T> {
+        const existing: T | null | undefined = options.existing || (await this.getObj(id));
         if (!existing) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
-        return await this.doUpdate(id, {
-            uid: existing.uid,
-            productUid: options.productUid || existing.productUid,
-            version: options.version || existing.version,
-            [propertyName]: value
-        } as any, options);
+        return await this.doUpdate(
+            id,
+            {
+                uid: existing.uid,
+                productUid: options.productUid || "productUid" in existing ? (existing as any).productUid : undefined,
+                version: options.version || "version" in existing ? (existing as any).version : undefined,
+                [propertyName]: value,
+            } as any,
+            {
+                ...options,
+                existing,
+            }
+        );
     }
 }

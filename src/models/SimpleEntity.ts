@@ -29,3 +29,5 @@ export abstract class SimpleEntity {
         }
     }
 }
+
+export type PartialSimpleEntity<T extends SimpleEntity> = Partial<T> & Pick<T, "uid">;

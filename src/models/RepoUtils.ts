@@ -8,6 +8,7 @@ import { SimpleEntity } from "../models/SimpleEntity";
 import { BaseMongoEntity } from "../models/BaseMongoEntity";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 import { ApiError } from "@composer-js/core";
+import { UpdateObject } from "../routes/ModelRoute";
 
 /**
  * @author Jean-Philippe Steinmetz
@@ -39,7 +40,13 @@ export class RepoUtils {
                 ids.push(val);
             }
         }
-        const query: any = ModelUtils.buildIdSearchQuery(repo, obj.constructor, ids, undefined, (obj as any).productUid);
+        const query: any = ModelUtils.buildIdSearchQuery(
+            repo,
+            obj.constructor,
+            ids,
+            undefined,
+            (obj as any).productUid
+        );
         const count: number = await repo.count(query);
         if (!tracked && count > 0) {
             throw new ApiError(ApiErrors.IDENTIFIER_EXISTS, 400, ApiErrorMessages.IDENTIFIER_EXISTS);
@@ -63,15 +70,21 @@ export class RepoUtils {
     public static async preprocessBeforeUpdate<T extends BaseEntity | SimpleEntity>(
         repo: Repository<T> | MongoRepository<T>,
         modelClass: any,
-        obj: T,
+        obj: UpdateObject<T>,
         old?: T | null
-    ): Promise<T> {
+    ): Promise<UpdateObject<T>> {
         if (!repo) {
             throw new Error("Repository not set or could not be found.");
         }
 
         if (!old) {
-            const query: any = ModelUtils.buildIdSearchQuery(repo, modelClass, obj.uid, obj instanceof BaseEntity ? obj.version : undefined, "productUid" in obj ? (obj as any).productUid : undefined);
+            const query: any = ModelUtils.buildIdSearchQuery(
+                repo,
+                modelClass,
+                obj.uid,
+                obj instanceof BaseEntity ? obj.version : undefined,
+                "productUid" in obj ? (obj as any).productUid : undefined
+            );
             old = await repo.findOne(query);
         }
         if (!old) {
