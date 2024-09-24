@@ -1,3 +1,6 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
 import { Index, Entity, Column } from "typeorm";
 import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
@@ -35,15 +38,15 @@ export default class User extends BaseMongoEntity {
     @TypeInfo([String, Number, undefined])
     public uType: string | number | undefined = undefined;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<User>) {
         super(other);
 
         if (other) {
-            this.name = 'name' in other ? other.name : this.name;
-            this.firstName = 'firstName' in other ? other.firstName : this.firstName;
-            this.lastName = 'lastName' in other ? other.lastName : this.lastName;
-            this.age = 'age' in other ? other.age : this.age;
-            this.productUid = 'productUid' in other ? other.productUid : this.productUid;
+            this.name = other.name || this.name;
+            this.firstName = other.firstName || this.firstName;
+            this.lastName = other.lastName || this.lastName;
+            this.age = other.age || this.age;
+            this.productUid = other.productUid || this.productUid;
         }
     }
 }

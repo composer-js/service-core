@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { ApiError, JWTPayload, JWTUser, JWTUtils, ObjectDecorators, UserUtils } from "@composer-js/core";
 import { Request, Response, NextFunction, RequestHandler } from "express";
@@ -7,6 +7,7 @@ import { ServerResponse } from "http";
 import { RequestWS } from "./WebSocket";
 import { OpenApiSpec } from "../OpenApiSpec";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
+import { AccessControlList, ACLUtils } from "../security";
 const { Config, Inject, Logger } = ObjectDecorators;
 const passport = require("passport");
 const _ = require("lodash");
@@ -17,6 +18,9 @@ const _ = require("lodash");
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class RouteUtils {
+    @Inject(ACLUtils)
+    private aclUtils?: ACLUtils;
+
     @Inject(OpenApiSpec)
     private apiSpec: OpenApiSpec = new OpenApiSpec();
 
@@ -30,14 +34,37 @@ export class RouteUtils {
     private logger?: any;
 
     /**
+     * Creates an Express middleware function that verifies the incoming request is from a valid user with at least
+     * one of the specified roles.
+     */
+    public checkRequiredPerms(aclUid: string): RequestHandler {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            let granted: boolean = this.aclUtils
+                ? await this.aclUtils.checkRequestPerms(aclUid, req.user as any, req)
+                : false;
+
+            if (granted) {
+                return next();
+            } else {
+                const err: ApiError = new ApiError(
+                    ApiErrors.AUTH_PERMISSION_FAILURE,
+                    403,
+                    ApiErrorMessages.AUTH_PERMISSION_FAILURE
+                );
+                return next(err);
+            }
+        };
+    }
+
+    /**
      * Returns a request handler function that will perform authentication of a websocket connection. Authentication
      * can be handled in two ways:
-     * 
+     *
      * 1. Authorization header
      * 2. Negotiation via handshake
-     * 
+     *
      * This middleware function primarily provides the implementation for item 2 above.
-     * 
+     *
      * @param required Set to `true` to indicate that auth is required, otherwise `false`.
      */
     public authWebSocket(required: boolean): RequestHandler {
@@ -75,24 +102,49 @@ export class RouteUtils {
                             if (message.type === "LOGIN") {
                                 // Is the provided auth token valid?
                                 const payload: JWTPayload = JWTUtils.decodeToken(this.authConfig, message.data);
-                                const user: JWTUser | null = payload && payload.profile ? payload.profile as JWTUser : null;
+                                const user: JWTUser | null =
+                                    payload && payload.profile ? (payload.profile as JWTUser) : null;
                                 if (user && user.uid) {
-                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: true }));
+                                    sock.send(
+                                        JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: true })
+                                    );
                                     req.user = user;
                                     next();
                                 } else if (required) {
-                                    const error: ApiError = new ApiError(ApiErrors.AUTH_FAILED, 401, ApiErrorMessages.AUTH_FAILED);
-                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: error.message }));
+                                    const error: ApiError = new ApiError(
+                                        ApiErrors.AUTH_FAILED,
+                                        401,
+                                        ApiErrorMessages.AUTH_FAILED
+                                    );
+                                    sock.send(
+                                        JSON.stringify({
+                                            id: message.id,
+                                            type: "LOGIN_RESPONSE",
+                                            success: false,
+                                            data: error.message,
+                                        })
+                                    );
                                     sock.close(1002, error.message);
                                     next(error);
                                 } else {
                                     // Notify the client that their token was bad, but we'll proceed anyway
-                                    sock.send(JSON.stringify({ id: message.id, type: "LOGIN_RESPONSE", success: false, data: "Invalid authentication token." }));
+                                    sock.send(
+                                        JSON.stringify({
+                                            id: message.id,
+                                            type: "LOGIN_RESPONSE",
+                                            success: false,
+                                            data: "Invalid authentication token.",
+                                        })
+                                    );
                                     // Auth isn't required so just move along
                                     next();
                                 }
                             } else if (required) {
-                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                const error: ApiError = new ApiError(
+                                    ApiErrors.INVALID_REQUEST,
+                                    400,
+                                    ApiErrorMessages.INVALID_REQUEST
+                                );
                                 sock.close(1002, error.code);
                                 next(error);
                             } else {
@@ -101,7 +153,11 @@ export class RouteUtils {
                             }
                         } catch (err: any) {
                             if (required) {
-                                const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                                const error: ApiError = new ApiError(
+                                    ApiErrors.INVALID_REQUEST,
+                                    400,
+                                    ApiErrorMessages.INVALID_REQUEST
+                                );
                                 sock.close(1002, error.code);
                                 next(error);
                             } else {
@@ -110,7 +166,11 @@ export class RouteUtils {
                             }
                         }
                     } else if (required) {
-                        const error: ApiError = new ApiError(ApiErrors.INVALID_REQUEST, 400, ApiErrorMessages.INVALID_REQUEST);
+                        const error: ApiError = new ApiError(
+                            ApiErrors.INVALID_REQUEST,
+                            400,
+                            ApiErrorMessages.INVALID_REQUEST
+                        );
                         sock.close(1002, error.code);
                         next(error);
                     } else {
@@ -119,7 +179,7 @@ export class RouteUtils {
                     }
                 });
             }
-        }
+        };
     }
 
     /**
@@ -135,7 +195,11 @@ export class RouteUtils {
             if (foundRole) {
                 return next();
             } else {
-                const err: ApiError = new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+                const err: ApiError = new ApiError(
+                    ApiErrors.AUTH_PERMISSION_FAILURE,
+                    403,
+                    ApiErrorMessages.AUTH_PERMISSION_FAILURE
+                );
                 return next(err);
             }
         };
@@ -207,6 +271,17 @@ export class RouteUtils {
             throw new Error("Route must specify a path: " + JSON.stringify(route));
         }
 
+        // Check if this route defines a class level ACL. If so, we need to store it and then add middleware to validate
+        // against it.
+        let defaultAcl: AccessControlList | null = Reflect.getMetadata("cjs:acl", route);
+        if (defaultAcl && this.aclUtils) {
+            try {
+                defaultAcl = await this.aclUtils.saveDefaultACL(defaultAcl);
+            } catch (err) {
+                this.logger.info(`Failed to save default ACL for: ${defaultAcl?.uid}`);
+            }
+        }
+
         // Each route definition will contain a set of functions that have been decorated to include route metadata.
         // The route metadata will include what HTTP methods and paths that the endpoint is to be bound to. Multiple
         // methods and paths can be assigned to a single decorated function. Therefore, it is necessary to register
@@ -229,6 +304,13 @@ export class RouteUtils {
                     authStrategies = ["jwt"];
                 }
 
+                // Does this endpoint have an associated ACL?
+                let acl: AccessControlList | null = Reflect.getMetadata("cjs:acl", route, key);
+                if (acl && this.aclUtils) {
+                    acl.parentUid = defaultAcl?.uid;
+                    acl = await this.aclUtils.saveDefaultACL(acl);
+                }
+
                 // Prepare the list of middleware to apply for the given endpoint.
                 // The order of operations for middleware is:
                 // 1. Auth Strategies
@@ -241,6 +323,10 @@ export class RouteUtils {
                 let middleware: Array<RequestHandler> = new Array();
                 if (requiredRoles) {
                     middleware.push(this.checkRequiredRoles(requiredRoles));
+                }
+                const aclUid: string | undefined = acl?.uid || defaultAcl?.uid;
+                if (aclUid) {
+                    middleware.push(this.checkRequiredPerms(aclUid));
                 }
                 if (validator) {
                     middleware = middleware.concat(this.getFuncArray(route, [validator]));
@@ -312,7 +398,7 @@ export class RouteUtils {
                 const routeMetadata: any = Reflect.getMetadata("cjs:route", Object.getPrototypeOf(obj), func.name);
                 const args: any[] = [];
 
-                const routeType = [...routeMetadata?.methods?.keys() || []][0];
+                const routeType = [...(routeMetadata?.methods?.keys() || [])][0];
 
                 // this.logger.debug(`Arg metadata: ${JSON.stringify(argMetadata)}`);
                 // this.logger.debug(`Route metadata: ${JSON.stringify(routeMetadata)}`);
@@ -352,11 +438,11 @@ export class RouteUtils {
                                 args[i] = req.query;
                             }
 
-                            const isGetRoute = routeType === 'get';
-                            const isHeadRoute = routeType === 'head';
+                            const isGetRoute = routeType === "get";
+                            const isHeadRoute = routeType === "head";
                             // Raw buffer encoded query
-                            if ((isGetRoute || isHeadRoute) && _.has(args[i], 'q')) {
-                                const bufferJsonString = Buffer.from(args[i]['q'], "base64").toString('ascii');
+                            if ((isGetRoute || isHeadRoute) && _.has(args[i], "q")) {
+                                const bufferJsonString = Buffer.from(args[i]["q"], "base64").toString("ascii");
                                 args[i] = JSON.parse(bufferJsonString);
                             }
                         } else if (argMetadata[i][0] === "request") {
@@ -409,14 +495,20 @@ export class RouteUtils {
 
                 // If the result is a response we need to return this immediately. We don't return the original response
                 // object because responses are passed by copy, not refernce and so the result will be different.
-                const isResponse: boolean = result instanceof ServerResponse || (result && result.headers && result.url);
+                const isResponse: boolean =
+                    result instanceof ServerResponse || (result && result.headers && result.url);
                 if (isResponse) {
                     return result.send();
                 } else {
                     if (send) {
                         let returnJson: boolean = true;
-                        if (routeMetadata && routeMetadata.contentType && typeof routeMetadata.contentType === "string" && routeMetadata.contentType.trim().length !== 0) {
-                            res.setHeader('content-type', routeMetadata.contentType.trim());
+                        if (
+                            routeMetadata &&
+                            routeMetadata.contentType &&
+                            typeof routeMetadata.contentType === "string" &&
+                            routeMetadata.contentType.trim().length !== 0
+                        ) {
+                            res.setHeader("content-type", routeMetadata.contentType.trim());
                             returnJson = routeMetadata.contentType.trim().includes("application/json");
                         }
                         // If a result was returned set it as the response body, otherwise set the status to NO_CONTENT

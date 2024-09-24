@@ -19,6 +19,11 @@ conf.defaults({
         origins: ["http://localhost:3000"],
     },
     datastores: {
+        acl: {
+            type: "mongodb",
+            url: "mongodb://localhost:9999/acls",
+            synchronize: true,
+        },
         mongodb: {
             type: "mongodb",
             host: "localhost",
@@ -29,7 +34,7 @@ conf.defaults({
         sqlite: {
             type: "sqlite",
             host: "localhost",
-            database: "axr-test",
+            database: "cjs-test",
             synchronize: true,
         },
     },
@@ -51,7 +56,7 @@ conf.defaults({
     session: {
         secret: "SessionsHaveSecrets",
     },
-    cluster_url: "http://localhost"
+    cluster_url: "http://localhost",
 });
 
 export default conf;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectId } from "mongodb";
 import { SimpleEntity } from "./SimpleEntity";
@@ -18,11 +18,15 @@ export abstract class SimpleMongoEntity extends SimpleEntity {
     @ObjectIdColumn()
     public _id?: ObjectId;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<SimpleMongoEntity>) {
         super(other);
 
         if (other) {
-            this._id = other._id ? other._id : this._id;
+            this._id = other._id
+                ? typeof other._id === "string" || typeof other._id === "number"
+                    ? new ObjectId(other._id)
+                    : other._id
+                : this._id;
         }
     }
 }

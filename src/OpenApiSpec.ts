@@ -315,6 +315,8 @@ export class OpenApiSpec {
         const contentType = metadata.contentType || "application/json";
         const data: oa.PathItemObject = {};
         const mParams: (oa.ParameterObject | oa.ReferenceObject)[] = [];
+        let aclInfo: any =
+            Reflect.getMetadata("cjs:acl", routeClass) || Reflect.getMetadata("cjs:acl", routeClass, name);
         let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name);
         let returnTypes: any = Reflect.getMetadata("design:returntype", routeClass, name);
         let security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
@@ -337,8 +339,8 @@ export class OpenApiSpec {
                         in: "path",
                         required: true,
                         schema: {
-                            type: "string"
-                        }
+                            type: "string",
+                        },
                     });
                 }
             }
@@ -355,7 +357,7 @@ export class OpenApiSpec {
             const i: number = Number(key);
             if (argMetadata[i][0] === "query") {
                 hasQuery = true;
-                const qName: string | undefined = argMetadata[i][1]
+                const qName: string | undefined = argMetadata[i][1];
                 if (qName && !["page", "limit", "sort"].includes(qName)) {
                     const ref: oa.ReferenceObject | undefined = this.getParameterReference(qName);
                     if (ref) {
@@ -365,8 +367,8 @@ export class OpenApiSpec {
                             name,
                             in: "query",
                             schema: {
-                                type: "string"
-                            }
+                                type: "string",
+                            },
                         });
                     }
                 }
@@ -423,6 +425,7 @@ export class OpenApiSpec {
             }
 
             if (schema) {
+                aclInfo = Reflect.getMetadata("cjs:classACL", routeClass.modelClass) || aclInfo;
                 data["x-schema"] = fqn;
 
                 // If the request schemas aren't explicitly declared we will infer them based on the method

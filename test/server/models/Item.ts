@@ -1,3 +1,6 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { BaseEntity } from "../../../src/models/BaseEntity";
 import { Entity, Column, Index } from "typeorm";
 import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
@@ -21,13 +24,13 @@ export default class Item extends BaseEntity {
     @Description("The cost that must be paid by the user to acquire the item.")
     public cost: number = 0;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<Item>) {
         super(other);
 
         if (other) {
-            this.name = other.name;
-            this.quantity = other.quantity;
-            this.cost = other.cost;
+            this.name = other.name || this.name;
+            this.quantity = other.quantity || this.quantity;
+            this.cost = other.cost || this.cost;
         }
     }
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import {
     After,
@@ -25,6 +25,7 @@ import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { RepoUtils } from "../../../src";
 const { Init } = ObjectDecorators;
 
 const logger = Logger();
@@ -33,6 +34,8 @@ const logger = Logger();
 @Route("/users")
 @Description("Handles processing of all HTTP requests for the path `/users`.")
 class UserRoute extends ModelRoute<UserModel> {
+    protected repoUtils?: RepoUtils<UserModel>;
+
     @MongoRepository(UserModel)
     protected repo?: Repo<UserModel>;
 
@@ -67,7 +70,12 @@ class UserRoute extends ModelRoute<UserModel> {
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns([null])
-    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+    protected count(
+        @Param() params: any,
+        @Query() query: any,
+        @Response res: XResponse,
+        @User user?: any
+    ): Promise<any> {
         return super.doCount({ params, query, res, user });
     }
 
@@ -76,7 +84,11 @@ class UserRoute extends ModelRoute<UserModel> {
     @Description("Creates a new user account.")
     @TypeInfo([UserModel, [Array, UserModel]])
     @Returns([UserModel, [Array, UserModel]])
-    protected create(objs: UserModel | UserModel[], @Request req: XRequest, @User user?: any): Promise<UserModel | UserModel[]> {
+    protected create(
+        objs: UserModel | UserModel[],
+        @Request req: XRequest,
+        @User user?: any
+    ): Promise<UserModel | UserModel[]> {
         return super.doCreate(objs, { req, user });
     }
 
@@ -97,9 +109,16 @@ class UserRoute extends ModelRoute<UserModel> {
     }
 
     @Head(":id")
-    @Description("Returns a boolean integer indicating whether or not a user account with the given unique identifier exists.")
+    @Description(
+        "Returns a boolean integer indicating whether or not a user account with the given unique identifier exists."
+    )
     @Returns([null])
-    protected exists(@Param("id") id: string, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+    protected exists(
+        @Param("id") id: string,
+        @Query() query: any,
+        @Response res: XResponse,
+        @User user?: any
+    ): Promise<any> {
         return super.doExists(id, { query, res, user });
     }
 
@@ -137,7 +156,12 @@ class UserRoute extends ModelRoute<UserModel> {
     @Description("Updates a single property of an existing user account.")
     @TypeInfo([Object])
     @Returns([UserModel])
-    protected updateProperty(@Param("id") id: string, @Param("property") propertyName: string, obj: any, @User user?: any): Promise<UserModel> {
+    protected updateProperty(
+        @Param("id") id: string,
+        @Param("property") propertyName: string,
+        obj: any,
+        @User user?: any
+    ): Promise<UserModel> {
         return super.doUpdateProperty(id, propertyName, obj, { user });
     }
 }
