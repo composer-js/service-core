@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectIdColumn } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
@@ -17,15 +17,14 @@ export abstract class BaseMongoEntity extends BaseEntity {
     @ObjectIdColumn()
     public _id?: any;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<BaseMongoEntity>) {
         super(other);
 
         if (other) {
             this._id = other._id
-                ? (typeof other._id === "string" || typeof other._id === "number"
+                ? typeof other._id === "string" || typeof other._id === "number"
                     ? new ObjectId(other._id)
                     : other._id
-                )
                 : this._id;
         }
     }

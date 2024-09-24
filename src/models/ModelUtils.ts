@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import {
     Repository,
@@ -19,7 +19,7 @@ import "reflect-metadata";
 import { isEmpty } from "lodash";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-const _ = require('lodash');
+const _ = require("lodash");
 
 const logger = Logger();
 
@@ -129,18 +129,23 @@ export class ModelUtils {
      * @param productUid The optional product uid that is associated with the uid (when a compound key is used).
      * @returns An object that can be passed to a MongoDB `find` function.
      */
-    public static buildIdSearchQueryMongo(modelClass: any, id: any | any[], version?: number, productUid?: string): any {
+    public static buildIdSearchQueryMongo(
+        modelClass: any,
+        id: any | any[],
+        version?: number,
+        productUid?: string
+    ): any {
         const props: string[] = ModelUtils.getIdPropertyNames(modelClass);
 
         // We want to performa case-insensitive search. So convert all strings to regex.
         if (Array.isArray(id)) {
             for (let i = 0; i < id.length; i++) {
                 if (typeof id[i] === "string") {
-                    id[i] = new RegExp("^" + id[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+                    id[i] = new RegExp("^" + id[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i");
                 }
             }
         } else if (typeof id === "string") {
-            id = new RegExp("^" + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "$", "i");
+            id = new RegExp("^" + id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i");
         }
 
         // Create the where in SQL syntax. We only care about one of the identifier field's matching.
@@ -214,7 +219,10 @@ export class ModelUtils {
                     case "range": {
                         const args: string[] = value.split(",");
                         if (args.length !== 2) {
-                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, { value, length: args.length });
+                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, {
+                                value,
+                                length: args.length,
+                            });
                             throw new ApiError(ApiErrors.SEARCH_INVALID_RANGE, 400, msg);
                         }
                         try {
@@ -297,7 +305,10 @@ export class ModelUtils {
                     case "range": {
                         const args: string[] = value.split(",");
                         if (args.length !== 2) {
-                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, { value, length: args.length });
+                            const msg: string = StringUtils.findAndReplace(ApiErrorMessages.SEARCH_INVALID_RANGE, {
+                                value,
+                                length: args.length,
+                            });
                             throw new ApiError(ApiErrors.SEARCH_INVALID_RANGE, 400, msg);
                         }
                         try {
@@ -340,7 +351,7 @@ export class ModelUtils {
      * * `range` - Returns matches whose parameter is greater than or equal to first given value and less than or equal to the second. e.g. `param between(1,100)`
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
-     * 
+     *
      * NOTE: The result of this function is only compatible with the `aggregate()` function when MongoDB is used.
      *
      * @param modelClass The class definition of the data model to build a search query for.
@@ -363,7 +374,7 @@ export class ModelUtils {
         if (new modelClass() instanceof RecoverableBaseEntity) {
             queryParams = {
                 ...queryParams,
-                deleted: queryParams && "deleted" in queryParams ? queryParams.deleted : false
+                deleted: queryParams && "deleted" in queryParams ? queryParams.deleted : false,
             };
         }
 
@@ -412,7 +423,11 @@ export class ModelUtils {
             // If the value is 'me' that's a special keyword to reference the user ID.
             if (params[key] === "me") {
                 if (!user) {
-                    throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                    throw new ApiError(
+                        ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                        403,
+                        ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                    );
                 }
                 query.where[key] = user.uid;
             } else {
@@ -463,7 +478,7 @@ export class ModelUtils {
                         } else {
                             let newValue: any = value;
                             newValue = {};
-                            newValue[value] = 'ASC';
+                            newValue[value] = "ASC";
                             value = newValue;
                         }
                     }
@@ -527,7 +542,7 @@ export class ModelUtils {
      * * `range` - Returns matches whose parameter is greater than or equal to first given value and less than or equal to the second. e.g. `param between(1,100)`
      *
      * When no operator is provided the comparison will always be evaluated as `eq`.
-     * 
+     *
      * NOTE: The result of this function is only compatible with the `aggregate()` function.
      *
      * @param modelClass The class definition of the data model to build a search query for.
@@ -552,7 +567,11 @@ export class ModelUtils {
             // If the value is 'me' that's a special keyword to reference the user ID.
             if (params[key] === "me") {
                 if (!user) {
-                    throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                    throw new ApiError(
+                        ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                        403,
+                        ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                    );
                 }
                 queries[0][key] = user.uid;
             } else {
@@ -586,7 +605,7 @@ export class ModelUtils {
 
                     let resolvedSort = {
                         ...sort,
-                        ...value
+                        ...value,
                     };
 
                     sort = sort || {};
@@ -597,23 +616,24 @@ export class ModelUtils {
 
                         if (!value) return;
 
-                        if (value.toUpperCase() === 'ASC') {
+                        if (value.toUpperCase() === "ASC") {
                             sort[key] = 1;
-                        } else if (value.toUpperCase() === 'DESC') {
+                        } else if (value.toUpperCase() === "DESC") {
                             sort[key] = -1;
                         }
-                    })
+                    });
                 }
 
                 continue;
             }
 
-            if (key === '$or') {
+            if (key === "$or") {
                 // Array of OR queries
                 let orResults: any[] = [];
-                for (const query of (queryParams[key] as Array<any>)) {
+                for (const query of queryParams[key] as Array<any>) {
                     const subQueryOrResult = this.buildSearchQueryMongo(modelClass, undefined, query, exactMatch, user);
-                    const validSubQueryResult = subQueryOrResult && subQueryOrResult.length > 0 && subQueryOrResult[0]['$match'];
+                    const validSubQueryResult =
+                        subQueryOrResult && subQueryOrResult.length > 0 && subQueryOrResult[0]["$match"];
                     validSubQueryResult && orResults.push(validSubQueryResult);
                 }
 
@@ -630,7 +650,7 @@ export class ModelUtils {
 
                     if (!queries[i]) {
                         queries[i] = {
-                            ...queries[0]
+                            ...queries[0],
                         };
                     }
 
@@ -643,7 +663,6 @@ export class ModelUtils {
                 }
             }
         }
-
 
         let result: any[] = [];
         if (queries.length > 0) {
@@ -671,7 +690,7 @@ export class ModelUtils {
      * @param src The path to the model files to load.
      * @returns A map containing of all loaded model names to their class definitions.
      */
-    public static async loadModels(src: string, result: Map<string, any> = new Map): Promise<Map<string, any>> {
+    public static async loadModels(src: string, result: Map<string, any> = new Map()): Promise<Map<string, any>> {
         return await new Promise(async (resolve, reject) => {
             try {
                 const classLoader: ClassLoader = new ClassLoader(src);

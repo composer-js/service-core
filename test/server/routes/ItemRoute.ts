@@ -1,18 +1,34 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Query, Param, Route, User, Get, Head, Post, Response, Validate, Delete, Put, Model } from "../../../src/decorators/RouteDecorators";
+import {
+    Query,
+    Param,
+    Route,
+    User,
+    Get,
+    Head,
+    Post,
+    Response,
+    Validate,
+    Delete,
+    Put,
+    Model,
+} from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import Item from "../models/Item";
 import { Repository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
 import { Repository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { RepoUtils } from "../../../src";
 
 @Model(Item)
 @Route("/items")
 @Description("Handles processing of all HTTP requests for the path `/items`")
 class ItemRoute extends ModelRoute<Item> {
+    protected repoUtils?: RepoUtils<Item>;
+
     @Repository(Item)
     protected repo?: Repo<Item>;
 
@@ -32,7 +48,12 @@ class ItemRoute extends ModelRoute<Item> {
     @Head()
     @Description("Returns the total number of items matching the given search criteria.")
     @Returns([null])
-    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+    protected count(
+        @Param() params: any,
+        @Query() query: any,
+        @Response res: XResponse,
+        @User user?: any
+    ): Promise<any> {
         return super.doCount({ params, query, res, user });
     }
 

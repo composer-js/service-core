@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Column } from "typeorm";
 import { BaseEntity } from "./BaseEntity";
@@ -19,11 +19,11 @@ export abstract class RecoverableBaseEntity extends BaseEntity {
     @Column()
     public deleted: boolean = false;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<RecoverableBaseEntity>) {
         super(other);
 
         if (other) {
-            this.deleted = "deleted" in other ? other.deleted : this.deleted;
+            this.deleted = other.deleted || this.deleted;
         }
     }
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
@@ -8,7 +8,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/User";
 import { MongoRepository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import { rimrafSync } from "rimraf";
 import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
@@ -66,7 +65,6 @@ describe("ModelRoute Tests [MongoDB]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimrafSync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -607,15 +605,29 @@ describe("ModelRoute Tests [MongoDB]", () => {
             }
         });
 
-        it("Cannot update documents in bulk with incorrect version. [MongoDB].", async () => {
+        it("Cannot update documents in bulk with outdated version. [MongoDB].", async () => {
             const users: User[] = await createUsers(5, "Smith");
+            // Create a second version
+            for (let i = 0; i < users.length; i++) {
+                const user: User = users[i];
+                const newUser: User = new User({
+                    ...user,
+                    _id: undefined, // This is necessary to ensure we get a new record
+                    version: user.version + 1,
+                });
+                users[i] = await repo.save(newUser);
+                // Make sure we now have two of this uid
+                const count: number = await repo.count({ uid: user.uid });
+                expect(count).toBe(2);
+            }
+
             const uids: string[] = [];
             const updates: any[] = [];
             for (const user of users) {
                 updates.push({
                     uid: user.uid,
                     firstName: "Matt",
-                    version: user.version + 1,
+                    version: 0,
                 });
                 uids.push(user.uid);
             }

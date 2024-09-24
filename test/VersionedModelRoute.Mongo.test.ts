@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
@@ -8,7 +8,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/VersionedUser";
 import { MongoRepository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import { rimrafSync } from "rimraf";
 import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
@@ -75,7 +74,6 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimrafSync("tmp-*");
     });
 
     beforeEach(async () => {

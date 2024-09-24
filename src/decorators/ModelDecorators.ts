@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
+import { AccessControlList } from "../security/AccessControlList";
 
 /**
  * Indicates that the class is cacheable with the specified TTL.
@@ -48,9 +49,67 @@ export function Identifier(target: any, propertyKey: string | symbol) {
     });
 }
 
+type PartialACL = Partial<AccessControlList> & Pick<AccessControlList, "records">;
+
+/**
+ * Apply this to a model class to indicate that it should be protected by the AccessControlList security system.
+ * The `classACL` parameter specifies the default ACL governing access to general operations against the model class
+ * (e.g. create, truncate, find). The `recordACL` parameter indicates whether or not per-record ACLs should be created
+ * for this type in order to govern access to individual record operations (e.g. delete, update, find).
+ *
+ * @param classACL The default access control list to limit access to general class operations.
+ * @param recordACL Set to `true` to create an ACL for each new record of the given type, otherwise set to false. Default
+ * is `false`.
+ */
+export function Protect(
+    classACL: PartialACL = {
+        uid: "<ClassName>",
+        records: [
+            {
+                userOrRoleId: "anonymous",
+                create: false,
+                read: true,
+                update: false,
+                delete: false,
+                special: false,
+                full: false,
+            },
+            {
+                userOrRoleId: ".*",
+                create: false,
+                read: true,
+                update: false,
+                delete: false,
+                special: false,
+                full: false,
+            },
+        ],
+    },
+    recordACL: boolean = false
+) {
+    return function (target: any) {
+        if (!classACL.uid || classACL.uid === "<ClassName>") {
+            classACL.uid = target.name;
+        }
+
+        Reflect.defineMetadata("cjs:classACL", classACL, target);
+        Object.defineProperty(target, "classACL", {
+            enumerable: true,
+            writable: false,
+            value: classACL,
+        });
+        Reflect.defineMetadata("cjs:recordACL", recordACL, target);
+        Object.defineProperty(target, "recordACL", {
+            enumerable: true,
+            writable: false,
+            value: recordACL,
+        });
+    };
+}
+
 /**
  * Indicates that the class describes an entity that will be persisted in a sharded database collection.
- * 
+ *
  * Note: Only supported by MongoDB.
  *
  * @param config The sharding configuration to pass to the database server. Default value is `{ key: { uid: 1 }, unique: false, options: {} }`.

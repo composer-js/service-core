@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -30,6 +30,14 @@ import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
 import { ApiErrors } from "./ApiErrors";
 import RedisStore from "connect-redis";
+import { ACLUtils } from "./security/ACLUtils";
+import { NotificationUtils } from "./NotificationUtils";
+import { DataSource } from "typeorm";
+import { ACLRouteMongo } from "./security/ACLRouteMongo";
+import { ACLRouteSQL } from "./security/ACLRouteSQL";
+import { EventListenerManager } from "./EventListenerManager";
+import { AccessControlListMongo } from "./security/AccessControlListMongo";
+import { AccessControlListSQL } from "./security/AccessControlListSQL";
 
 interface Entity {
     storeName?: any;
@@ -151,6 +159,8 @@ export class Server {
     protected readonly config?: any;
     /** The manager for handling database connections. */
     protected connectionManager?: ConnectionManager;
+    /** The manager for handling events. */
+    protected eventListenerManager?: EventListenerManager;
     /** The logging utility to use when outputing to console/file. */
     protected readonly logger: any;
     /** The object factory to use when injecting dependencies. */
@@ -181,7 +191,7 @@ export class Server {
         name: "request_time_milliseconds",
         help: "A histogram of the response time of handled requests by the requested method, path and code.",
         labelNames: ["method", "path", "statusCode"],
-        buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 5000]
+        buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 5000],
     });
     protected metricCompletedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_completed_requests",
@@ -204,12 +214,7 @@ export class Server {
      * @param {Logger} logger The logging utility to use for outputing to console/file.
      * @param objectFactory The object factory to use for automatic dependency injection (IOC).
      */
-    constructor(
-        config: any,
-        basePath: string = ".",
-        logger: any = Logger(),
-        objectFactory?: ObjectFactory,
-    ) {
+    constructor(config: any, basePath: string = ".", logger: any = Logger(), objectFactory?: ObjectFactory) {
         this.app = express();
         this.config = config;
         this.basePath = basePath;
@@ -255,11 +260,15 @@ export class Server {
                 const models: Map<string, any> = new Map();
 
                 this.logger.info("Loading all service classes...");
-                const classLoader: ClassLoader = new ClassLoader(this.basePath, true, true, this.config.get("scripts:ignore"));
+                const classLoader: ClassLoader = new ClassLoader(
+                    this.basePath,
+                    true,
+                    true,
+                    this.config.get("scripts:ignore")
+                );
                 try {
                     await classLoader.load();
-                }
-                catch (e) {
+                } catch (e) {
                     reject(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
                 }
 
@@ -278,9 +287,29 @@ export class Server {
                     }
                 }
 
+                // If ACL has been configured we need to make sure the proper models are configured and loaded
+                if (datastores.acl) {
+                    if (datastores.acl.type === "mongodb" || datastores.acl.type === "mongodb+srv") {
+                        models?.set(AccessControlListMongo.name, AccessControlListMongo);
+                        this.apiSpec.addModel(AccessControlListMongo.name, AccessControlListMongo);
+                    } else {
+                        models?.set(AccessControlListSQL.name, AccessControlListSQL);
+                        this.apiSpec.addModel(AccessControlListSQL.name, AccessControlListSQL);
+                    }
+                }
+
                 // Initiate all database connections
                 this.logger.info("Initializing database connection(s)...");
                 await this.connectionManager.connect(datastores, models);
+
+                // Initialize ACL utility
+                await this.objectFactory.newInstance(ACLUtils, "default");
+
+                // Initialize push notifications utility if configured
+                const pushRedis: any = this.connectionManager?.connections.get("notifications");
+                if (pushRedis) {
+                    await this.objectFactory.newInstance(NotificationUtils, "default", pushRedis);
+                }
 
                 // Express configuration
                 this.app = express();
@@ -290,27 +319,33 @@ export class Server {
                 });
                 this.app = addWebSocket(this.app, this.wss);
                 this.app.use(express.static(path.join(__dirname, "public")));
-                this.app.use(express.json({
-                    verify: (req: any, res: any, buf: any) => {
-                        req.rawBody = buf;
-                    }
-                }));
+                this.app.use(
+                    express.json({
+                        verify: (req: any, res: any, buf: any) => {
+                            req.rawBody = buf;
+                        },
+                    })
+                );
                 this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
                 this.app.use(cookieParser(this.config.get("cookie_secret")));
 
                 const cacheClient: any = this.connectionManager.connections.get("cache");
-                this.app.use(session({
-                    cookie: {
-                        sameSite: 'none',
-                        secure: true
-                    },
-                    resave: false,
-                    saveUninitialized: false,
-                    secret: this.config.get("session:secret"),
-                    store: cacheClient ? new RedisStore({
-                        client: cacheClient
-                    }) : undefined
-                }));
+                this.app.use(
+                    session({
+                        cookie: {
+                            sameSite: "none",
+                            secure: true,
+                        },
+                        resave: false,
+                        saveUninitialized: false,
+                        secret: this.config.get("session:secret"),
+                        store: cacheClient
+                            ? new RedisStore({
+                                  client: cacheClient,
+                              })
+                            : undefined,
+                    })
+                );
                 this.app.use(passport.initialize());
                 this.app.use(passport.session());
 
@@ -326,7 +361,7 @@ export class Server {
                         "Location",
                         "Origin",
                         "Set-Cookie",
-                        "X-Requested-With"
+                        "X-Requested-With",
                     ],
                     preflightContinue: false,
                     optionsSuccessStatus: 204,
@@ -348,7 +383,15 @@ export class Server {
                 if (this.config.get("auth:strategy")) {
                     const jwtOptions: JWTStrategyOptions = new JWTStrategyOptions();
                     jwtOptions.config = this.config.get("auth");
-                    passport.use("jwt", await this.objectFactory.newInstance(this.config.get("auth:strategy"), "default", true, jwtOptions));
+                    passport.use(
+                        "jwt",
+                        await this.objectFactory.newInstance(
+                            this.config.get("auth:strategy"),
+                            "default",
+                            true,
+                            jwtOptions
+                        )
+                    );
                 } else {
                     this.logger.warn("No JWT authentication strategy has been set.");
                 }
@@ -359,9 +402,11 @@ export class Server {
                     return next();
                 });
                 // Request response time
-                this.app.use(expressResponseTime((req: Request, res: Response, time) => {
-                    this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
-                }));
+                this.app.use(
+                    expressResponseTime((req: Request, res: Response, time) => {
+                        this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
+                    })
+                );
 
                 const allRoutes: Array<any> = [];
 
@@ -380,6 +425,20 @@ export class Server {
                 const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute, "default");
                 allRoutes.push(admin);
                 await this.routeUtils.registerRoute(this.app, admin);
+
+                // Register the ACLs route if configured
+                const aclConn: any = this.connectionManager?.connections.get("acl");
+                if (aclConn instanceof DataSource) {
+                    if (aclConn.driver.constructor.name === "MongoDriver") {
+                        const aclRoute: ACLRouteMongo = await this.objectFactory.newInstance(ACLRouteMongo, "default");
+                        await this.routeUtils.registerRoute(this.app, aclRoute);
+                        allRoutes.push(aclRoute);
+                    } else {
+                        const aclRoute: ACLRouteSQL = await this.objectFactory.newInstance(ACLRouteSQL, "default");
+                        await this.routeUtils.registerRoute(this.app, aclRoute);
+                        allRoutes.push(aclRoute);
+                    }
+                }
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
@@ -416,6 +475,29 @@ export class Server {
                 );
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
+                }
+
+                // Initialize the EventListenerManager
+                const redis: any = this.connectionManager?.connections.get("events");
+                if (redis) {
+                    this.logger.info("Initializing event manager...");
+                    this.eventListenerManager = await this.objectFactory.newInstance(
+                        EventListenerManager,
+                        "default",
+                        this.config,
+                        this.logger,
+                        this.objectFactory,
+                        redis
+                    );
+                    if (this.eventListenerManager) {
+                        await this.eventListenerManager.init();
+                        this.objectFactory.instances.forEach((obj: any) => {
+                            this.eventListenerManager?.register(obj);
+                        });
+                        allRoutes.forEach((obj: any) => {
+                            this.eventListenerManager?.register(obj);
+                        });
+                    }
                 }
 
                 // Perform automatic discovery of all other routes
@@ -470,7 +552,11 @@ export class Server {
                             res.json(errs);
                         } else {
                             if (!(err instanceof ApiError)) {
-                                const tmp: ApiError = new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrors.INTERNAL_ERROR);
+                                const tmp: ApiError = new ApiError(
+                                    ApiErrors.INTERNAL_ERROR,
+                                    500,
+                                    ApiErrors.INTERNAL_ERROR
+                                );
                                 tmp.stack = err.stack;
                                 err = tmp;
                             }
@@ -485,8 +571,8 @@ export class Server {
                             const formattedError = {
                                 ...err,
                                 // https://stackoverflow.com/a/25245824
-                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, '') : undefined, // eslint-disable-line no-control-regex
-                            }
+                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, "") : undefined, // eslint-disable-line no-control-regex
+                            };
                             res.json(formattedError);
                         }
 

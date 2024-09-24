@@ -1,41 +1,25 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import {
-    Route,
-    Get,
-    Param,
-    Post,
-    Validate,
-    Delete,
-    Head,
-    Put,
-    Query,
-    Model,
-    Request,
-    Response,
-    User,
-} from "../../../src/decorators/RouteDecorators";
-import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger, ObjectDecorators } from "@composer-js/core";
-import UserModel from "../models/CacheUser";
+import UserModel from "../models/ProtectedUser";
 import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
-import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
-import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
-import { OneOrMany, OneOrNull, RepoUtils } from "../../../src";
+import { DatabaseDecorators, RouteDecorators } from "../../../src/decorators";
+import { ModelRoute } from "../../../src/routes/ModelRoute";
+import { RepoUtils } from "../../../src/models";
+const { MongoRepository } = DatabaseDecorators;
 const { Init } = ObjectDecorators;
+const { Route, Get, Post, Validate, Delete, Head, Put, Param, User, Query, Response, Before, Model } = RouteDecorators;
 
 const logger = Logger();
 
 @Model(UserModel)
-@Route("/cachedusers")
-@Description("Handles processing of all HTTP requests for the path `/cachedusers`.")
-class UserRoute extends ModelRoute<UserModel> {
-    protected repoUtils?: RepoUtils<UserModel>;
-
+@Route("/userswithacl")
+class UserWithACLRoute extends ModelRoute<UserModel> {
     @MongoRepository(UserModel)
     protected repo?: Repo<UserModel>;
+    protected repoUtils?: RepoUtils<UserModel> | undefined;
 
     /**
      * Initializes a new instance with the specified defaults.
@@ -58,8 +42,6 @@ class UserRoute extends ModelRoute<UserModel> {
     }
 
     @Head()
-    @Description("Returns the total number of user accounts matching the given search criteria.")
-    @Returns(null)
     protected async count(
         @Param() params: any,
         @Query() query: any,
@@ -71,54 +53,40 @@ class UserRoute extends ModelRoute<UserModel> {
 
     @Post()
     @Validate("validate")
-    @Description("Creates a new user account.")
-    @TypeInfo([UserModel, [Array, UserModel]])
-    @Returns([UserModel, [Array, UserModel]])
-    protected async create(objs: OneOrMany<UserModel>, @User user?: any): Promise<OneOrMany<UserModel>> {
-        return await super.doCreate(objs, { user });
+    protected async create(obj: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
+        return await super.doCreate(obj, { user });
     }
 
     @Delete(":id")
-    @Description("Deletes an existing user account.")
-    @Returns(null)
     protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
         await super.doDelete(id, { user });
     }
 
     @Get()
-    @Description("Returns all user accounts matching the given search criteria.")
-    @Returns([[Array, UserModel]])
     protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
         return await super.doFindAll({ params, query, user });
     }
 
     @Get(":id")
-    @Description("Returns the user account with the given unique identifier.")
-    @Returns([UserModel, null])
     protected async findById(
         @Param("id") id: string,
         @Query() query: any,
         @User user?: any
-    ): Promise<OneOrNull<UserModel>> {
+    ): Promise<UserModel | null> {
         return await super.doFindById(id, { query, user });
     }
 
     @Delete()
-    @Description("Deletes all existing user accounts matching the given search criteria.")
-    @Returns(null)
     protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
         await super.doTruncate({ params, query, user });
     }
 
     @Put(":id")
-    @Validate("validate")
-    @Description("Updates an existing user account.")
-    @TypeInfo(UserModel)
-    @Returns(UserModel)
+    @Before("validate")
     protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {
         const newObj: UserModel = new UserModel(obj);
         return await super.doUpdate(id, newObj, { user });
     }
 }
 
-export default UserRoute;
+export default UserWithACLRoute;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import {
     Route,
@@ -23,6 +23,7 @@ import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { RepoUtils } from "../../../src";
 const { Init } = ObjectDecorators;
 
 const logger = Logger();
@@ -31,6 +32,8 @@ const logger = Logger();
 @Route("/versionedusers")
 @Description("Handles processing of all HTTP requests for the path `/versionedusers`.")
 class VersionedUserRoute extends ModelRoute<UserModel> {
+    protected repoUtils?: RepoUtils<UserModel>;
+
     @MongoRepository(UserModel)
     protected repo?: Repo<UserModel>;
 
@@ -57,7 +60,12 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns([null])
-    protected count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+    protected count(
+        @Param() params: any,
+        @Query() query: any,
+        @Response res: XResponse,
+        @User user?: any
+    ): Promise<any> {
         return super.doCount({ params, query, res, user });
     }
 
@@ -73,7 +81,12 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
     @Delete(":id")
     @Description("Deletes an existing user account.")
     @Returns([null])
-    protected delete(@Param("id") id: string, @Query("version") version?: string, @Query("purge") purge: string = "false", @User user?: any): Promise<void> {
+    protected delete(
+        @Param("id") id: string,
+        @Query("version") version?: string,
+        @Query("purge") purge: string = "false",
+        @User user?: any
+    ): Promise<void> {
         return super.doDelete(id, { purge: purge === "true" ? true : false, version, user });
     }
 

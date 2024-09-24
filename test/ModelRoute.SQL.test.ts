@@ -1,6 +1,6 @@
-/////////////////////////////////////////////////////////////////////////////////
-//   Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
 import { Server, ConnectionManager, ObjectFactory } from "../src";
@@ -9,8 +9,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";
 import { Repository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import { rimrafSync } from "rimraf";
-import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
@@ -66,7 +64,6 @@ describe("ModelRoute Tests [SQL]", () => {
                 if (err) {
                     console.log(err);
                 }
-                rimrafSync("tmp-*");
                 resolve();
             });
         });

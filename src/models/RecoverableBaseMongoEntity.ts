@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectId, ObjectIdColumn } from "typeorm";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
@@ -16,19 +16,18 @@ export abstract class RecoverableBaseMongoEntity extends RecoverableBaseEntity {
     /**
      * The internal unique identifier used by MongoDB.
      */
-     @ObjectIdColumn()
-     public _id?: any;
- 
-     constructor(other?: any) {
-         super(other);
- 
-         if (other) {
-             this._id = other._id
-                 ? (typeof other._id === "string" || typeof other._id === "number"
-                     ? new ObjectId(other._id)
-                     : other._id
-                 )
-                 : this._id;
-         }
-     }
+    @ObjectIdColumn()
+    public _id?: any;
+
+    constructor(other?: Partial<RecoverableBaseMongoEntity>) {
+        super(other);
+
+        if (other) {
+            this._id = other._id
+                ? typeof other._id === "string" || typeof other._id === "number"
+                    ? new ObjectId(other._id)
+                    : other._id
+                : this._id;
+        }
+    }
 }
