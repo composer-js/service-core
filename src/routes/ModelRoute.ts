@@ -150,9 +150,6 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     @Init
     private async superInitialize() {
-        if (!this.repo) {
-            throw new Error("repo is not set!");
-        }
         if (!this.objectFactory) {
             throw new Error("objectFactory is not set!");
         }

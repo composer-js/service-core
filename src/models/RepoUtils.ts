@@ -16,6 +16,7 @@ import { NotificationUtils } from "../NotificationUtils";
 import { RecoverableBaseEntity } from "./RecoverableBaseEntity";
 import { Admin } from "mongodb";
 import { AccessControlList, ACLAction, ACLUtils } from "../security";
+import { ConnectionManager } from "../database";
 const { Config, Init, Inject, Logger } = ObjectDecorators;
 const { RedisConnection } = DatabaseDecorators;
 
@@ -95,15 +96,39 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     @Config("trusted_roles", ["admin"])
     protected trustedRoles: string[] = ["admin"];
 
-    constructor(modelClass: any, repo: Repository<T>) {
+    constructor(modelClass: any, repo?: Repository<T>) {
         this.modelClass = modelClass;
         this.repo = repo;
     }
 
     @Init
     private async init() {
+        // Retrieve the repository based on the modelClass that was passed in to the constructor
         if (!this.repo) {
-            throw new Error("repo is not set!");
+            if (!this.modelClass.datastore) {
+                throw new Error(
+                    `Cannot initialize RepoUtils. Did you forget to add @DataStore() to ${this.modelClass.name}?`
+                );
+            }
+
+            const connMgr: ConnectionManager | undefined = this.objectFactory?.getInstance(ConnectionManager);
+            if (!connMgr) {
+                throw new Error("Cannot initialize RepoUtils. Failed to retrieve ConnectionManager.");
+            }
+
+            const ds: any = connMgr.connections.get(this.modelClass.datastore);
+            if (!ds) {
+                throw new Error(
+                    `Cannot initialize RepoUtils. No connection found for datastore '${this.modelClass.datastore}'`
+                );
+            }
+
+            const isMongoRepo: boolean = new this.modelClass() instanceof BaseMongoEntity;
+            this.repo = isMongoRepo ? ds.getMongoRepository(this.modelClass) : ds.getRepository(this.modelClass);
+        }
+
+        if (!this.repo) {
+            throw new Error(`Cannot initialize RepoUtils. No repository found for class ${this.modelClass.name}.`);
         }
 
         let defaultAcl: AccessControlList | undefined = this.getDefaultACL();
