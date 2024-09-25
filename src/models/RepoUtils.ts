@@ -52,6 +52,19 @@ export interface RepoDeleteOptions extends RepoOperationOptions {
     version?: number | string;
 }
 
+export interface RepoFindOptions extends RepoOperationOptions {
+    /** The total number of resources to retrieve. */
+    limit?: number;
+    /** The page number of the paginated results to retrieve. */
+    page?: number;
+    /** The desired product uid of the resources to retrieve. */
+    productUid?: string;
+    /** Set to `true` to skip retrieval from the cache. Default is `false`. */
+    skipCache?: boolean;
+    /** The desired version number of the resources to retrieve. */
+    version?: number | string;
+}
+
 /**
  * The available options for the `RepoUtils.update()` operation.
  */
@@ -196,6 +209,31 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      */
     public get baseCacheKey(): string {
         return "db.cache." + this.modelClass.name;
+    }
+
+    public async count(query: any, options: RepoFindOptions): Promise<number> {
+        if (!this.repo) {
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
+        }
+
+        let count: number = 0;
+
+        // Check user permissions
+        if (this.aclUtils && !options.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
+        }
+
+        if (this.repo instanceof MongoRepository && Array.isArray(query)) {
+            query.push({ $count: "count" });
+            const result: any = await this.repo.aggregate(query).next();
+            count = result ? result.count : count;
+        } else {
+            count = await this.repo.count(query);
+        }
+
+        return count;
     }
 
     /**
@@ -376,26 +414,98 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Retrieves the object with the given id from either the cache or the database. If retrieving from the database
-     * the cache is populated to speed up subsequent requests.
+     * Retrieves an array of objects from the datastore matching the given search query. This function will first
+     * attempt to look up the results in the cache. Also checks ACLs for READ permission.
      *
-     * @param id The unique identifier of the object to retrieve.
-     * @param version The desired version number of the object to retrieve. If `undefined` returns the latest.
-     * @param productUid The optional productUid associated with the object.
-     * @param skipCache Set to `true` to skip retrieval from the cache.
+     * @param query The constructed search query to run.
+     * @param options The additional options to consider during the search.
      */
-    public async fetchObject(
-        id: string,
-        version?: number | string,
-        productUid?: string,
-        skipCache: boolean = false
-    ): Promise<T | undefined> {
+    public async find(query: any, options: RepoFindOptions): Promise<Array<T>> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const query: any = this.searchIdQuery(id, version, productUid);
-        if (!skipCache && this.cacheClient && this.modelClass.cacheTTL) {
+        let results: T[] = [];
+
+        // Check user permissions
+        if (this.aclUtils && !options.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
+        }
+
+        const limit: number = options.limit ? Math.min(options.limit, 1000) : 100;
+        const page: number = options.page ? Number(options.page) : 0;
+
+        // When we hash the seach query we need to ensure we're including the pagination information to preserve
+        // like queries and results.
+        const searchQueryHash: string = this.hashQuery({
+            ...query,
+            limit,
+            page,
+        });
+
+        // Pull from the cache if available
+        if (this.cacheClient && this.modelClass.cacheTTL) {
+            const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${searchQueryHash}`);
+            if (json) {
+                try {
+                    const uids: string[] = JSON.parse(json);
+                    for (const uid of uids) {
+                        // Retrieve the object from the cache or from database if not available
+                        const obj: T | undefined = await this.findOne(uid, options);
+                        if (obj) {
+                            results.push(obj);
+                        }
+                    }
+                } catch (err) {
+                    // It doesn't matter if this fails
+                }
+            }
+        }
+
+        // If the query wasn't cached retrieve from the database
+        if (results.length === 0) {
+            if (this.repo instanceof MongoRepository && Array.isArray(query)) {
+                const skip: number = page * limit;
+                results = await this.repo.aggregate(query).skip(skip).limit(limit).toArray();
+            } else {
+                results = await this.repo.find(query);
+            }
+
+            // Cache the results for future requests
+            if (this.cacheClient && this.modelClass.cacheTTL) {
+                const uids: string[] = [];
+
+                for (const result of results) {
+                    uids.push(result.uid);
+                }
+
+                void this.cacheClient.setex(
+                    `${this.baseCacheKey}.${searchQueryHash}`,
+                    this.modelClass.cacheTTL,
+                    JSON.stringify(uids)
+                );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Retrieves the object with the given id from either the cache or the database. If retrieving from the database
+     * the cache is populated to speed up subsequent requests.
+     *
+     * @param id The unique identifier of the object to retrieve.
+     * @param options The additional options to consider during the search.
+     */
+    public async findOne(id: string, options: RepoFindOptions): Promise<T | undefined> {
+        if (!this.repo) {
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
+        }
+
+        const query: any = this.searchIdQuery(id, options.version, options.productUid);
+        if (!options.skipCache && this.cacheClient && this.modelClass.cacheTTL) {
             // First attempt to retrieve the object from the cache
             const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${this.hashQuery(query)}`);
             if (json) {
@@ -499,6 +609,42 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             typeof version === "string" ? parseInt(version, 10) : version,
             productUid
         );
+    }
+
+    public async truncate(query: any, options: RepoFindOptions): Promise<void> {
+        if (!this.repo) {
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
+        }
+
+        // Check user permissions
+        if (this.aclUtils && !options.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.DELETE))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
+        }
+
+        try {
+            let objs: T[] | undefined = undefined;
+            if (this.repo instanceof MongoRepository && Array.isArray(query)) {
+                const limit: number = options.limit ? Math.min(options.limit, 1000) : 100;
+                const page: number = options.page ? options.page : 0;
+                const skip: number = page * limit;
+                objs = await this.repo.aggregate(query).skip(skip).limit(limit).toArray();
+            } else {
+                objs = await this.repo.find(query);
+            }
+
+            if (objs) {
+                for (const obj of objs) {
+                    await this.repo.remove(obj);
+                }
+            }
+        } catch (err: any) {
+            // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
+            if (err.message !== "ns not found") {
+                throw err;
+            }
+        }
     }
 
     public async update(obj: Partial<T>, existing: T, options: RepoUpdateOptions<T>): Promise<T> {

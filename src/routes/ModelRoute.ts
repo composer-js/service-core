@@ -175,19 +175,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doCount(options: FindRequestOptions): Promise<XResponse> {
-        if (!this.repo) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
         if (!options.res) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
-        }
-
-        // Check user permissions
-        if (this.aclUtils && !options.ignoreACL) {
-            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
-                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
-            }
         }
 
         const searchQuery: any = ModelUtils.buildSearchQuery(
@@ -198,14 +191,14 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             true,
             options.user
         );
-        if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-            searchQuery.push({ $count: "count" });
-            const result: any = await this.repo.aggregate(searchQuery).next();
-            options.res.setHeader("content-length", result ? result.count : 0);
-        } else {
-            const result: number = await this.repo.count(searchQuery);
-            options.res.setHeader("content-length", result);
-        }
+        const result: number = await this.repoUtils.count(searchQuery, {
+            limit: options.query.limit,
+            page: options.query.page,
+            productUid: options.params.productUid || options.query.productUid,
+            version: options.params.version || options.query.version,
+            user: options.user,
+        });
+        options.res.setHeader("content-length", result);
 
         return options.res.status(200);
     }
@@ -321,7 +314,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const existing: T | undefined = await this.repoUtils.fetchObject(id, options.version, options.productUid);
+        const existing: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.productUid,
+            version: options.version,
+        });
         if (!existing) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
@@ -388,9 +384,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doFindAll(options: FindRequestOptions): Promise<T[]> {
-        let results: T[] = [];
-
-        if (!this.repo || !this.repoUtils) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -409,66 +403,14 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             true,
             options.user
         );
-        const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
-        const page: number = options.query.page ? Number(options.query.page) : 0;
 
-        // When we hash the seach query we need to ensure we're including the pagination information to preserve
-        // like queries and results.
-        const searchQueryHash: string = this.repoUtils.hashQuery({
-            ...searchQuery,
-            limit,
-            page,
+        return await this.repoUtils.find(searchQuery, {
+            limit: options.query.limit,
+            page: options.query.page,
+            productUid: options.params.productUid || options.query.productUid,
+            version: options.params.version || options.query.version,
+            user: options.user,
         });
-
-        // Pull from the cache if available
-        if (this.cacheClient && this.modelClass.cacheTTL) {
-            const json: string | null = await this.cacheClient.get(`${this.repoUtils.baseCacheKey}.${searchQueryHash}`);
-            if (json) {
-                try {
-                    const uids: string[] = JSON.parse(json);
-                    for (const uid of uids) {
-                        // Retrieve the object from the cache or from database if not available
-                        const obj: T | undefined = await this.repoUtils.fetchObject(
-                            uid,
-                            options.query.version,
-                            options.query.productUid
-                        );
-                        if (obj) {
-                            results.push(obj);
-                        }
-                    }
-                } catch (err) {
-                    // It doesn't matter if this fails
-                }
-            }
-        }
-
-        // If the query wasn't cached retrieve from the database
-        if (results.length === 0) {
-            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                const skip: number = page * limit;
-                results = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            } else {
-                results = await this.repo.find(searchQuery);
-            }
-
-            // Cache the results for future requests
-            if (this.cacheClient && this.modelClass.cacheTTL) {
-                const uids: string[] = [];
-
-                for (const result of results) {
-                    uids.push(result.uid);
-                }
-
-                void this.cacheClient.setex(
-                    `${this.repoUtils.baseCacheKey}.${searchQueryHash}`,
-                    this.modelClass.cacheTTL,
-                    JSON.stringify(uids)
-                );
-            }
-        }
-
-        return results;
     }
 
     /**
@@ -477,7 +419,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doFindById(id: string, options: FindRequestOptions): Promise<T | null> {
-        if (!this.repo || !this.repoUtils) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -494,11 +436,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const result: T | undefined = await this.repoUtils.fetchObject(
-            id,
-            options.query.version,
-            options.query.productUid
-        );
+        const result: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.params.productUid || options.query.productUid,
+            version: options.params.version || options.query.version,
+        });
         if (!result) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
@@ -520,55 +461,30 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doTruncate(options: TruncateRequestOptions): Promise<void> {
-        if (!this.repo) {
-            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
-        }
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,
+            this.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
 
-        // Check user permissions
-        if (this.aclUtils && !options.ignoreACL) {
-            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.DELETE))) {
-                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
-            }
-        }
+        await this.repoUtils?.truncate(searchQuery, {
+            limit: options.query.limit,
+            page: options.query.page,
+            productUid: options.params.productUid || options.query.productUid,
+            version: options.params.version || options.query.version,
+            user: options.user,
+        });
 
-        try {
-            const searchQuery: any = ModelUtils.buildSearchQuery(
-                this.modelClass,
-                this.repo,
-                options.params,
-                options.query,
-                true,
-                options.user
-            );
-            let objs: T[] | undefined = undefined;
-            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
-                const page: number = options.query.page ? options.query.page : 0;
-                const skip: number = page * limit;
-                objs = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            } else {
-                objs = await this.repo.find(searchQuery);
-            }
-
-            if (objs) {
-                for (const obj of objs) {
-                    await this.repo.remove(obj);
-                }
-            }
-
-            if (options.recordEvent) {
-                const evt: any = {
-                    type: `Truncate${this.modelClass.name}`,
-                    userUid: options.user ? options.user.uid : "anonymous",
-                    ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
-                };
-                void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
-            }
-        } catch (err: any) {
-            // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
-            if (err.message !== "ns not found") {
-                throw err;
-            }
+        if (options.recordEvent) {
+            const evt: any = {
+                type: `Truncate${this.modelClass.name}`,
+                userUid: options.user ? options.user.uid : "anonymous",
+                ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
+            };
+            void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
         }
     }
 
@@ -607,7 +523,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doUpdate(id: string, obj: UpdateObject<T>, options: UpdateRequestOptions<T>): Promise<T> {
-        if (!this.repo || !this.repoUtils) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -624,12 +540,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             }
         }
 
-        const existing: T | undefined = await this.repoUtils.fetchObject(
-            id,
-            undefined,
-            options.productUid || (obj as any).productUid,
-            true
-        );
+        const existing: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.productUid || (obj as any).productUid,
+            skipCache: true,
+        });
         if (!existing) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
@@ -679,7 +593,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const existing: T | null | undefined =
-            options.existing || (await this.repoUtils?.fetchObject(id, undefined, options.productUid));
+            options.existing ||
+            (await this.repoUtils?.findOne(id, {
+                productUid: options.productUid,
+            }));
         if (!existing) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
