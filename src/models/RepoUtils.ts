@@ -624,19 +624,32 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         try {
-            let objs: T[] | undefined = undefined;
+            let uids: string[] | undefined = undefined;
             if (this.repo instanceof MongoRepository && Array.isArray(query)) {
-                const limit: number = options.limit ? Math.min(options.limit, 1000) : 100;
-                const page: number = options.page ? options.page : 0;
-                const skip: number = page * limit;
-                objs = await this.repo.aggregate(query).skip(skip).limit(limit).toArray();
+                uids = await this.repo.distinct("uid", query);
             } else {
-                objs = await this.repo.find(query);
+                uids = await this.repo.find(query);
             }
 
-            if (objs) {
-                for (const obj of objs) {
-                    await this.repo.remove(obj);
+            if (uids) {
+                // Check if this class uses record level ACLs. If so, we need to check the perms of
+                // each one. We will remove any from our list that the user does not have permission to
+                // delete.
+                if (this.modelClass.recordACL) {
+                    for (let i = 0; i < uids.length; i++) {
+                        if (this.aclUtils && !options.ignoreACL) {
+                            if (!(await this.aclUtils.hasPermission(options.user, uids[i], ACLAction.DELETE))) {
+                                uids = uids.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+
+                // Now delete all records that were found
+                if (this.repo instanceof MongoRepository) {
+                    await this.repo.deleteMany({ uid: { $in: uids } });
+                } else {
+                    await this.repo.delete(uids);
                 }
             }
         } catch (err: any) {
