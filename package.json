@@ -112,6 +112,9 @@
     "engines": {
         "node": ">=20.0.0"
     },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/"
+    },
     "main": "dist/lib/index.js",
     "typings": "dist/types/index.d.ts",
     "files": [
