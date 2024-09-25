@@ -3,6 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
 import { AccessControlList } from "../security/AccessControlList";
+import { ColumnMetadataArgs } from "typeorm/metadata-args/ColumnMetadataArgs";
+import { getMetadataArgsStorage } from "typeorm/globals";
 
 /**
  * Indicates that the class is cacheable with the specified TTL.
@@ -17,6 +19,29 @@ export function Cache(ttl: number = 30) {
             writable: true,
             value: ttl,
         });
+    };
+}
+
+/**
+ * Indicates that a class is a child entity to some parent. Child entities will inherit all datastore configuration
+ * of the parent, including cache settings.
+ */
+export function ChildEntity() {
+    return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+        // Let TypeORM know about the `_type` property so it gets stored
+        const storage = getMetadataArgsStorage();
+        storage.columns.push({
+            target: constructor,
+            propertyName: "_type",
+            mode: "regular",
+            options: {},
+        } as ColumnMetadataArgs);
+
+        // Add the property so that it becomes an instance member
+        return class extends constructor {
+            /** The class type of the instance. */
+            public readonly _type: string = constructor.name;
+        };
     };
 }
 

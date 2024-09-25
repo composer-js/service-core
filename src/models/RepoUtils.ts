@@ -447,9 +447,15 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * Creates a new instance of obj scoped to the correct model class or sub-class.
      */
     public instantiateObject(obj: any): T {
-        if (this.objectFactory && obj.className && typeof obj.className === "string") {
-            const fqn: string = obj.className.includes(".") ? obj.className : `models.${obj.className}`;
-            return this.objectFactory.newInstance(fqn, null, false, ...obj) as T;
+        const className: string | null = obj._fqn || obj._type;
+        if (this.objectFactory) {
+            if (className && typeof className === "string") {
+                const clazz: any =
+                    this.objectFactory.classes.get(className) || this.objectFactory.classes.get(`models.${className}`);
+                return this.objectFactory.newInstance(clazz, null, false, obj) as T;
+            } else {
+                return this.objectFactory.newInstance(this.modelClass, null, false, obj) as T;
+            }
         } else {
             return new this.modelClass(obj);
         }
@@ -519,7 +525,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                         } as any)
                     );
                 } else {
-                    (await this.repo.updateOne(
+                    await this.repo.updateOne(
                         { uid: obj.uid, version: (obj as any).version },
                         {
                             $set: {
@@ -528,7 +534,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                                 version: (obj as any).version + 1,
                             },
                         }
-                    )) as any;
+                    );
                 }
             } else if (obj.uid) {
                 if (keepPrevious) {
@@ -539,14 +545,14 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                         } as any)
                     );
                 } else {
-                    result = (await this.repo.findOneAndUpdate(
+                    await this.repo.updateOne(
                         { uid: obj.uid },
                         {
                             $set: {
                                 ...obj,
                             },
                         }
-                    )) as any;
+                    );
                 }
             } else {
                 const toSave: any = obj as any;
@@ -585,7 +591,21 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
 
         query = this.searchIdQuery(existing.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
         if (!result) {
-            result = await this.repo.findOne(query);
+            if (this.repo instanceof MongoRepository) {
+                result = await this.repo
+                    .aggregate([
+                        {
+                            $match: query,
+                        },
+                        {
+                            $sort: { version: -1 },
+                        },
+                    ])
+                    .limit(1)
+                    .next();
+            } else {
+                result = await this.repo.findOne(query);
+            }
             if (!result) {
                 throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
             }

@@ -26,6 +26,7 @@ import { Request as XRequest, Response as XResponse } from "express";
 import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
+import Player from "../models/Player";
 const { Init } = ObjectDecorators;
 
 const logger = Logger();
@@ -37,7 +38,7 @@ class UserRoute extends ModelRoute<UserModel> {
     protected repoUtils?: RepoUtils<UserModel>;
 
     @MongoRepository(UserModel)
-    protected repo?: Repo<UserModel>;
+    protected repo?: Repo<UserModel | Player>;
 
     /**
      * Initializes a new instance with the specified defaults.
