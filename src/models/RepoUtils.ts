@@ -211,7 +211,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         return "db.cache." + this.modelClass.name;
     }
 
-    public async count(query: any, options: RepoFindOptions): Promise<number> {
+    public async count(query: any, options?: RepoFindOptions): Promise<number> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -219,8 +219,8 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         let count: number = 0;
 
         // Check user permissions
-        if (this.aclUtils && !options.ignoreACL) {
-            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+        if (this.aclUtils && !options?.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options?.user, this.defaultACLUid, ACLAction.READ))) {
                 throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
             }
         }
@@ -243,7 +243,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to store.
      * @param acl The ACL to use
      */
-    public async create(obj: T, options: RepoCreateOptions): Promise<T> {
+    public async create(obj: T, options?: RepoCreateOptions): Promise<T> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -251,8 +251,8 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         // Verify the user's permission to create objects
         if (
             this.aclUtils &&
-            !options.ignoreACL &&
-            !(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.CREATE))
+            !options?.ignoreACL &&
+            !(await this.aclUtils.hasPermission(options?.user, this.defaultACLUid, ACLAction.CREATE))
         ) {
             throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
         }
@@ -307,15 +307,15 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             // If ACLs are enabled but no ACL was given create one
             const acl: AccessControlList = {
                 uid: result.uid,
-                parentUid: options.acl?.parentUid || this.defaultACLUid,
-                records: options.acl?.records || [],
+                parentUid: options?.acl?.parentUid || this.defaultACLUid,
+                records: options?.acl?.records || [],
             };
 
             // Look for an existing record for the creator
-            let found: boolean = !!this.aclUtils.getRecord(acl, options.user);
+            let found: boolean = !!this.aclUtils.getRecord(acl, options?.user);
 
             // Always grant the creator CRUD access, unless the user is a superuser.
-            if (!found && options.user && !UserUtils.hasRoles(options.user, this.trustedRoles)) {
+            if (!found && options?.user && !UserUtils.hasRoles(options?.user, this.trustedRoles)) {
                 acl.records.push({
                     userOrRoleId: options.user.uid,
                     create: true,
@@ -420,7 +420,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * @param query The constructed search query to run.
      * @param options The additional options to consider during the search.
      */
-    public async find(query: any, options: RepoFindOptions): Promise<Array<T>> {
+    public async find(query: any, options?: RepoFindOptions): Promise<Array<T>> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -428,14 +428,14 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         let results: T[] = [];
 
         // Check user permissions
-        if (this.aclUtils && !options.ignoreACL) {
-            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+        if (this.aclUtils && !options?.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options?.user, this.defaultACLUid, ACLAction.READ))) {
                 throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
             }
         }
 
-        const limit: number = options.limit ? Math.min(options.limit, 1000) : 100;
-        const page: number = options.page ? Number(options.page) : 0;
+        const limit: number = options?.limit ? Math.min(options?.limit, 1000) : 100;
+        const page: number = options?.page ? Number(options?.page) : 0;
 
         // When we hash the seach query we need to ensure we're including the pagination information to preserve
         // like queries and results.
@@ -499,13 +499,13 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * @param id The unique identifier of the object to retrieve.
      * @param options The additional options to consider during the search.
      */
-    public async findOne(id: string, options: RepoFindOptions): Promise<T | undefined> {
+    public async findOne(id: string, options?: RepoFindOptions): Promise<T | undefined> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const query: any = this.searchIdQuery(id, options.version, options.productUid);
-        if (!options.skipCache && this.cacheClient && this.modelClass.cacheTTL) {
+        const query: any = this.searchIdQuery(id, options?.version, options?.productUid);
+        if (!options?.skipCache && this.cacheClient && this.modelClass.cacheTTL) {
             // First attempt to retrieve the object from the cache
             const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${this.hashQuery(query)}`);
             if (json) {
@@ -668,14 +668,14 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
     }
 
-    public async update(obj: Partial<T>, existing: T, options: RepoUpdateOptions<T>): Promise<T> {
+    public async update(obj: Partial<T>, existing: T, options?: RepoUpdateOptions<T>): Promise<T> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        if (this.aclUtils && !options.ignoreACL) {
+        if (this.aclUtils && !options?.ignoreACL) {
             const acl: AccessControlList | null = await this.aclUtils.findACL(existing.uid);
-            if (!(await this.aclUtils.hasPermission(options.user, acl ? acl : this.defaultACLUid, ACLAction.UPDATE))) {
+            if (!(await this.aclUtils.hasPermission(options?.user, acl ? acl : this.defaultACLUid, ACLAction.UPDATE))) {
                 throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
             }
         }
@@ -700,8 +700,8 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         const keepPrevious: boolean = !!this.modelClass.trackChanges;
         let query: any = this.searchIdQuery(
             existing.uid,
-            options.version || (obj as any).version,
-            options.productUid || (obj as any).productUid
+            options?.version || (obj as any).version,
+            options?.productUid || (obj as any).productUid
         );
         let result: T | null = null;
 
