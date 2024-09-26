@@ -22,20 +22,18 @@ const mongod: MongoMemoryServer = new MongoMemoryServer({
 let repo: MongoRepository<ProtectedUser>;
 let aclRepo: MongoRepository<AccessControlListMongo>;
 
-const createUser = async (firstName: string, lastName: string, age: number = 100): Promise<ProtectedUser> => {
+const createUser = async (obj: any, ownerUid?: string): Promise<ProtectedUser> => {
     const user: ProtectedUser = new ProtectedUser({
-        firstName,
-        lastName,
-        age,
+        ...obj,
     });
 
     const result: ProtectedUser = await repo.save(user);
 
     const records: ACLRecord[] = [];
 
-    // The user itself has full CRUD access
+    // The owner full CRUD access
     records.push({
-        userOrRoleId: user.uid,
+        userOrRoleId: ownerUid || user.uid,
         create: true,
         read: true,
         update: true,
@@ -79,11 +77,21 @@ const createUser = async (firstName: string, lastName: string, age: number = 100
     return result;
 };
 
-const createUsers = async (num: number): Promise<ProtectedUser[]> => {
+const createUsers = async (num: number, obj: any = {}, ownerUid?: string): Promise<ProtectedUser[]> => {
     const results: ProtectedUser[] = [];
 
     for (let i = 1; i <= num; i++) {
-        results.push(await createUser(String(i), "Doctor", 100 * i));
+        results.push(
+            await createUser(
+                {
+                    ...obj,
+                    firstName: obj.firstName || String(i),
+                    lastName: obj.lastName || "Doctor",
+                    age: obj.age || 100 * i,
+                },
+                ownerUid
+            )
+        );
     }
 
     return results;
@@ -224,7 +232,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can delete document (admin). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 name: user.name,
                 uid: uuid.v4(),
@@ -243,7 +251,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can delete document (me). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: user.uid,
                 name: user.name,
@@ -262,7 +270,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can delete document (self). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: user.uid,
                 name: user.name,
@@ -281,7 +289,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Cannot delete document (other). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "other",
@@ -300,7 +308,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Cannot delete document (anonymous). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const result = await request(server.getApplication()).delete("/userswithacl/" + user.uid);
             expect(result.status).toBe(403);
 
@@ -312,7 +320,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can find document by id (admin). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 roles: config.get("trusted_roles"),
@@ -332,7 +340,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can find document by id (me). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: user.uid,
                 name: user.name,
@@ -352,7 +360,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can find document by id (self). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: user.uid,
                 name: user.name,
@@ -372,7 +380,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can find document by id (other). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 roles: [],
@@ -392,13 +400,13 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Cannot find document by id (anonymous). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             const result = await request(server.getApplication()).get("/userswithacl/" + user.uid);
             expect(result.status).toBe(403);
         });
 
         it("Can update document (admin). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -433,7 +441,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can update document (me). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -468,7 +476,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Can update document (self). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -503,7 +511,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Cannot update document (other). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -530,7 +538,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         });
 
         it("Cannot update document (anonymous). [MongoDB]", async () => {
-            const user: ProtectedUser = await createUser("David", "Tennant", 47);
+            const user: ProtectedUser = await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
@@ -592,8 +600,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Can count documents with criteria (eq) (admin). [MongoDB]", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "admin",
@@ -610,8 +618,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Can count documents with criteria (eq) (user). [MongoDB]", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "user",
@@ -628,8 +636,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Cannot count documents with criteria (eq) (anonymouos). [MongoDB]", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const result = await request(server.getApplication()).head("/userswithacl?lastName=Doctor");
             expect(result.status).toBe(403);
         });
@@ -674,8 +682,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Can find documents with criteria (eq) (admin) [MongoDB].", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 roles: config.get("trusted_roles"),
@@ -695,8 +703,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Can find documents with criteria (eq) (user) [MongoDB].", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "user",
@@ -717,11 +725,11 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         it("Can find documents with criteria paginated (eq) (user) [MongoDB].", async () => {
             // Create some dummy users
             await createUsers(5);
-            await createUser("David", "Tennant", 47);
-            await createUser("David", "Tennant 2", 47);
-            await createUser("David", "Tennant 3", 47);
-            await createUser("David", "Tennant 4", 47);
-            await createUser("David", "Tennant 5", 47);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 2", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 3", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 4", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 5", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "user",
@@ -740,11 +748,11 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         it("Can find documents with criteria paginated middle of results (eq) (user) [MongoDB].", async () => {
             // Create some dummy users
             await createUsers(5);
-            await createUser("David", "Tennant", 47);
-            await createUser("David", "Tennant 2", 47);
-            await createUser("David", "Tennant 3", 47);
-            await createUser("David", "Tennant 4", 47);
-            await createUser("David", "Tennant 5", 47);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 2", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 3", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 4", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 5", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "user",
@@ -764,11 +772,11 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         it("Can not find documents with criteria paginated outside of range (eq) (user) [MongoDB].", async () => {
             // Create some dummy users
             await createUsers(5);
-            await createUser("David", "Tennant", 47);
-            await createUser("David", "Tennant 2", 47);
-            await createUser("David", "Tennant 3", 47);
-            await createUser("David", "Tennant 4", 47);
-            await createUser("David", "Tennant 5", 47);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 2", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 3", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 4", age: 47 });
+            await createUser({ firstName: "David", lastName: "Tennant 5", age: 47 });
             const token = JWTUtils.createToken(config.get("auth"), {
                 uid: uuid.v4(),
                 name: "user",
@@ -785,8 +793,8 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
 
         it("Cannot find documents with criteria (eq) (anonymous) [MongoDB].", async () => {
             const users: ProtectedUser[] = await createUsers(13);
-            await createUser("David", "Tennant", 47);
-            await createUser("Matt", "Smith", 36);
+            await createUser({ firstName: "David", lastName: "Tennant", age: 47 });
+            await createUser({ firstName: "Matt", lastName: "Smith", age: 36 });
             const result = await request(server.getApplication()).get("/userswithacl?lastName=Doctor");
             expect(result.status).toBe(403);
         });
@@ -807,6 +815,24 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
             expect(count).toBe(0);
         });
 
+        it("Can truncate datastore for items only user has permissions for [MongoDB].", async () => {
+            const userUid: string = uuid.v4();
+            const users: ProtectedUser[] = await createUsers(25);
+            const myUsers: ProtectedUser[] = await createUsers(5, undefined, userUid);
+            const token = JWTUtils.createToken(config.get("auth"), {
+                uid: userUid,
+                name: "joe",
+                roles: [],
+            });
+            const result = await request(server.getApplication())
+                .delete("/userswithacl")
+                .set("Authorization", `jwt ${token}`);
+            expect(result.status).toBe(204);
+
+            const count: number = await repo.count();
+            expect(count).toBe(users.length);
+        });
+
         it("Cannot truncate datastore (user) [MongoDB].", async () => {
             const users: ProtectedUser[] = await createUsers(25);
             const token = JWTUtils.createToken(config.get("auth"), {
@@ -817,7 +843,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
             const result = await request(server.getApplication())
                 .delete("/userswithacl")
                 .set("Authorization", `jwt ${token}`);
-            expect(result.status).toBe(403);
+            expect(result.status).toBe(204);
 
             const count: number = await repo.count();
             expect(count).toBe(users.length);
@@ -826,7 +852,7 @@ describe("AXRModelRoute (ACLs Enabled) Tests [MongoDB]", () => {
         it("Cannot truncate datastore (anonymous) [MongoDB].", async () => {
             const users: ProtectedUser[] = await createUsers(25);
             const result = await request(server.getApplication()).delete("/userswithacl");
-            expect(result.status).toBe(403);
+            expect(result.status).toBe(204);
 
             const count: number = await repo.count();
             expect(count).toBe(users.length);

@@ -616,30 +616,37 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        // Check user permissions
-        if (this.aclUtils && !options.ignoreACL) {
+        // Check user permissions. Don't check if record-level ACLs are used as this will be done
+        // per record later.
+        if (this.aclUtils && !options.ignoreACL && !this.modelClass.recordACL) {
             if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.DELETE))) {
                 throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
             }
         }
 
         try {
-            let uids: string[] | undefined = undefined;
-            if (this.repo instanceof MongoRepository && Array.isArray(query)) {
-                uids = await this.repo.distinct("uid", query);
+            let uids: Array<string> = [];
+            if (this.repo instanceof MongoRepository) {
+                if (Array.isArray(query)) {
+                    uids = await this.repo.distinct("uid", query[0].$match);
+                } else {
+                    uids = await this.repo.distinct("uid", query);
+                }
             } else {
-                uids = await this.repo.find(query);
+                (await this.repo.find(query)).forEach((obj: T) => uids.push(obj.uid));
             }
 
-            if (uids) {
+            if (uids.length > 0) {
+                let finalUids: string[] = [];
+
                 // Check if this class uses record level ACLs. If so, we need to check the perms of
                 // each one. We will remove any from our list that the user does not have permission to
                 // delete.
                 if (this.modelClass.recordACL) {
-                    for (let i = 0; i < uids.length; i++) {
+                    for (const uid of uids) {
                         if (this.aclUtils && !options.ignoreACL) {
-                            if (!(await this.aclUtils.hasPermission(options.user, uids[i], ACLAction.DELETE))) {
-                                uids = uids.splice(i, 1);
+                            if (await this.aclUtils.hasPermission(options.user, uid, ACLAction.DELETE)) {
+                                finalUids.push(uid);
                             }
                         }
                     }
@@ -647,9 +654,9 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
 
                 // Now delete all records that were found
                 if (this.repo instanceof MongoRepository) {
-                    await this.repo.deleteMany({ uid: { $in: uids } });
+                    await this.repo.deleteMany({ uid: { $in: finalUids } });
                 } else {
-                    await this.repo.delete(uids);
+                    await this.repo.delete(finalUids);
                 }
             }
         } catch (err: any) {

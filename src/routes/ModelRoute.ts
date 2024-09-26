@@ -192,10 +192,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             options.user
         );
         const result: number = await this.repoUtils.count(searchQuery, {
-            limit: options.query.limit,
-            page: options.query.page,
-            productUid: options.params.productUid || options.query.productUid,
-            version: options.params.version || options.query.version,
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
             user: options.user,
         });
         options.res.setHeader("content-length", result);
@@ -405,10 +405,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         );
 
         return await this.repoUtils.find(searchQuery, {
-            limit: options.query.limit,
-            page: options.query.page,
-            productUid: options.params.productUid || options.query.productUid,
-            version: options.params.version || options.query.version,
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
             user: options.user,
         });
     }
@@ -437,8 +437,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const result: T | undefined = await this.repoUtils.findOne(id, {
-            productUid: options.params.productUid || options.query.productUid,
-            version: options.params.version || options.query.version,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
         });
         if (!result) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
@@ -471,10 +471,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         );
 
         await this.repoUtils?.truncate(searchQuery, {
-            limit: options.query.limit,
-            page: options.query.page,
-            productUid: options.params.productUid || options.query.productUid,
-            version: options.params.version || options.query.version,
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
             user: options.user,
         });
 
