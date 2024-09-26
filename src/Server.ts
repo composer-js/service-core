@@ -245,12 +245,28 @@ export class Server {
     }
 
     /**
+     * Override this function to add custom behavior before the server is started.
+     */
+    protected preStart(): void | Promise<void> {
+        // Nothing to do
+    }
+
+    /**
+     * Override this function to add custom behavior after the server is started.
+     */
+    protected postStart(): void | Promise<void> {
+        // Nothing to do
+    }
+
+    /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
     public start(): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
                 this.logger.info("Starting server...");
+
+                await this.preStart();
 
                 // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
                 this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, { name: "default" });
@@ -328,26 +344,7 @@ export class Server {
                 );
                 this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
                 this.app.use(cookieParser(this.config.get("cookie_secret")));
-
-                const cacheClient: any = this.connectionManager.connections.get("cache");
-                this.app.use(
-                    session({
-                        cookie: {
-                            sameSite: "none",
-                            secure: true,
-                        },
-                        resave: false,
-                        saveUninitialized: false,
-                        secret: this.config.get("session:secret"),
-                        store: cacheClient
-                            ? new RedisStore({
-                                  client: cacheClient,
-                              })
-                            : undefined,
-                    })
-                );
                 this.app.use(passport.initialize());
-                this.app.use(passport.session());
 
                 // cors
                 const corsOptions: CorsOptions = {
@@ -367,6 +364,29 @@ export class Server {
                     optionsSuccessStatus: 204,
                 };
                 this.app.use(cors(corsOptions));
+
+                // Sessions
+                const cacheClient: any = this.connectionManager.connections.get("cache");
+                const sessionConfig: any = this.config.get("session");
+                if (cacheClient && sessionConfig) {
+                    this.app.use(
+                        session({
+                            cookie: {
+                                sameSite: "none",
+                                secure: true,
+                            },
+                            resave: false,
+                            saveUninitialized: false,
+                            secret: sessionConfig.secret,
+                            store: cacheClient
+                                ? new RedisStore({
+                                      client: cacheClient,
+                                  })
+                                : undefined,
+                        })
+                    );
+                    this.app.use(passport.session());
+                }
 
                 // passport (authentication) setup
                 passport.deserializeUser((profile: any, done: any) => {
@@ -395,12 +415,18 @@ export class Server {
                     this.logger.warn("No JWT authentication strategy has been set.");
                 }
 
-                // Set x-powered-by header
+                // Set all custom headers
+                const headers: any = this.config.get("headers") || {
+                    "x-powered-by": "composer.js",
+                };
                 this.app.use((req: Request, res: Response, next: NextFunction) => {
-                    res.setHeader("x-powered-by", "ComposerJS");
+                    for (const key in headers) {
+                        res.setHeader(key, headers[key]);
+                    }
                     return next();
                 });
-                // Request response time
+
+                // Track request response time
                 this.app.use(
                     expressResponseTime((req: Request, res: Response, time) => {
                         this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
@@ -585,6 +611,8 @@ export class Server {
                     this.metricCompletedRequests.inc(1);
                     return !res.writableEnded ? res.send() : res;
                 });
+
+                await this.postStart();
 
                 // Initialize the HTTP listen server
                 this.server.listen(this.port, "0.0.0.0", () => {
