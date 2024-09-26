@@ -637,12 +637,13 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             }
 
             if (uids.length > 0) {
-                let finalUids: string[] = [];
+                let finalUids: string[] = uids;
 
                 // Check if this class uses record level ACLs. If so, we need to check the perms of
                 // each one. We will remove any from our list that the user does not have permission to
                 // delete.
                 if (this.modelClass.recordACL) {
+                    finalUids = [];
                     for (const uid of uids) {
                         if (this.aclUtils && !options.ignoreACL) {
                             if (await this.aclUtils.hasPermission(options.user, uid, ACLAction.DELETE)) {
