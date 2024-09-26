@@ -21,12 +21,12 @@ const unixLineEndings = (input: string): string => {
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
-        dbName: "axr-test",
+        dbName: "mongomemory-cjs-test",
     },
 });
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");
 jest.setTimeout(1200000);
-
+const regenOpenapiFile = process.env["XBE_REGEN"] || false;
 describe("Server Tests", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
     const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
@@ -104,9 +104,13 @@ describe("Server Tests", () => {
         expect(result2).toHaveProperty("text");
         expect(result2.type).toBe("text/yaml");
 
-        // TODO Does this test make sense given dynamic generation?
-        // const testFile: string = fs.readFileSync("./test/openapi.yaml").toString("utf-8");
-        // expect(unixLineEndings(result2.text)).toEqual(unixLineEndings(testFile));
+        if (regenOpenapiFile) {
+            fs.writeFileSync(`./test/openapi.yaml`, result2.text);
+        }
+        // Even with dynamic , leverage test to validate OpenApiSpec isn't broken
+        // TODO: Possibly validate parts of JSON spec to better isolate errors and allow for date to be moved around 
+        const testFile: string = fs.readFileSync("./test/openapi.yaml").toString("utf-8");
+        expect(unixLineEndings(result2.text)).toEqual(unixLineEndings(testFile));
 
         const result3 = await request(server.getApplication()).get("/api-docs");
         expect(result3).toHaveProperty("status");

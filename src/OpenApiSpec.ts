@@ -517,6 +517,14 @@ export class OpenApiSpec {
                             schema: this.getSchemaReference("Error")
                         }
                     }
+                } : undefined,
+                ["403"]: aclInfo ? {
+                    description: "Returnedwhentheuserdoesnothavepermissiontoperformthisaction.",
+                    content: {
+                        [contentType]: {
+                            schema: this.getSchemaReference("Error")
+                        }
+                    }
                 } : undefined
             },
             security,
@@ -563,6 +571,10 @@ export class OpenApiSpec {
         const trackChanges: any = Reflect.getMetadata("cjs:trackChanges", clazz);
 
         const result: oa.SchemaObject = {};
+        const docs: any = Reflect.getMetadata("cjs:docs", clazz) || {};
+        const { description } = docs;
+        result.description = description;
+        result.type = "object";
         result.properties = {};
         result.required = [];
 

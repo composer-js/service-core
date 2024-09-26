@@ -101,6 +101,193 @@ paths:
       security:
         - jwt: []
       x-name: restart
+  /acls:
+    x-schema: AccessControlListMongo
+    x-name: _a
+    post:
+      description: Creates one or more access control lists.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/AccessControlListMongo"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/AccessControlListMongo"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AccessControlListMongo"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/AccessControlListMongo"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: create
+    put:
+      description: Saves modifications for the given collection of access control lists.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/AccessControlListMongo"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccessControlListMongo"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: updateBulk
+    head:
+      description: Returns the total number of access control lists matching the given
+        search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: count
+    get:
+      description: Returns a collection of access control lists matching the given
+        search criteria.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                  - $ref: "#/components/schemas/AccessControlListMongo"
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: findAll
+  /acls/:id:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    x-schema: AccessControlListMongo
+    x-name: _a
+    delete:
+      description: Deletes the access control list with the given unique identifier
+        and optional version.
+      parameters:
+        - $ref: "#/components/parameters/version"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: delete
+    get:
+      description: Returns the access control list with the given unique identifier.
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessControlListMongo"
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: findById
+    put:
+      description: Saves modifications to existing access control list with the given
+        unique identifier.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessControlListMongo"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessControlListMongo"
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: update
   /:
     x-name: OpenAPIRoute
     get:
@@ -475,6 +662,82 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
       x-name: update
+  /protected/hello:
+    x-name: routes.ProtectedRoute
+    get:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: helloWorld
+  /protected/foobar:
+    x-name: routes.ProtectedRoute
+    get:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: foobar
+  /protected/roletest:
+    x-name: routes.ProtectedRoute
+    get:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: roletest
+  /protected/token:
+    x-name: routes.ProtectedRoute
+    get:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "401":
+          description: Returned when a valid authentication token is not provided.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - jwt: []
+      x-name: authToken
   /users:
     x-schema: models.User
     x-name: routes.UserRoute
@@ -655,6 +918,155 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
       x-name: updateProperty
+  /userswithacl:
+    x-schema: models.ProtectedUser
+    x-name: routes.UserWithACLRoute
+    head:
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: count
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/models.ProtectedUser"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: create
+    get:
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: findAll
+    delete:
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/sort"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: truncate
+  /userswithacl/:id:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    x-schema: models.ProtectedUser
+    x-name: routes.UserWithACLRoute
+    delete:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: delete
+    get:
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: findById
+    x-before:
+      - validate
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/models.ProtectedUser"
+      responses:
+        "200":
+          description: Returned when the operation is successful.
+          content:
+            application/json:
+              schema:
+                type: promise
+        "400":
+          description: Returned when the request content is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Returnedwhentheuserdoesnothavepermissiontoperformthisaction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      x-name: update
   /versionedusers:
     x-schema: models.VersionedUser
     x-name: routes.VersionedUserRoute
@@ -790,6 +1202,9 @@ components:
           type: number
           example: 400
     models.CacheUser:
+      description: The CacheUser class describes a user within the system that
+        utilizes the second-level caching system.
+      type: object
       properties:
         uid:
           default: randomUUID()
@@ -834,6 +1249,8 @@ components:
       x-cache: 30
       x-datastore: mongodb
     models.Item:
+      description: An Item describes a resource within the system that is used by a player.
+      type: object
       properties:
         uid:
           default: randomUUID()
@@ -877,7 +1294,119 @@ components:
         - cost
       x-baseClass: BaseEntity
       x-datastore: sqlite
+    models.Player:
+      description: The player of a game.
+      type: object
+      properties:
+        uid:
+          default: randomUUID()
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: new Date()
+          description: The date and time that the entity was created.
+          format: date
+          type: string
+        dateModified:
+          default: new Date()
+          description: The date and time that the entity was last modified.
+          format: date
+          type: string
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        name:
+          default: ""
+          description: The unique identifier of the user.
+          type: string
+          x-identifier: true
+        firstName:
+          default: ""
+          description: The first name of the user.
+          type: string
+        lastName:
+          default: ""
+          description: The surname of the user.
+          type: string
+        age:
+          default: 0
+          description: The age of the user.
+          type: number
+        productUid:
+          description: The uuid of the product that is associated with this user.
+          type: string
+          x-identifier: true
+        uType:
+          oneOf:
+            - type: string
+            - type: number
+        skillRating:
+          default: 1500
+          description: The skill ranking of the player.
+          type: number
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - name
+        - firstName
+        - lastName
+        - age
+        - skillRating
+      x-baseClass: models.User
+      x-datastore: mongodb
+    models.ProtectedUser:
+      type: object
+      properties:
+        uid:
+          default: randomUUID()
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: new Date()
+          description: The date and time that the entity was created.
+          format: date
+          type: string
+        dateModified:
+          default: new Date()
+          description: The date and time that the entity was last modified.
+          format: date
+          type: string
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        name:
+          default: ""
+          type: string
+          x-identifier: true
+        firstName:
+          default: ""
+          type: string
+        lastName:
+          default: ""
+          type: string
+        age:
+          default: 0
+          type: number
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - name
+        - firstName
+        - lastName
+        - age
+      x-baseClass: BaseMongoEntity
+      x-datastore: mongodb
     models.User:
+      description: The User class describes a user within the system.
+      type: object
       properties:
         uid:
           default: randomUUID()
@@ -935,6 +1464,9 @@ components:
       x-baseClass: BaseMongoEntity
       x-datastore: mongodb
     models.VersionedUser:
+      description: The User class describes a user within the system that utilizes
+        document versioning.
+      type: object
       properties:
         uid:
           default: randomUUID()
@@ -988,6 +1520,67 @@ components:
       x-baseClass: RecoverableBaseMongoEntity
       x-datastore: mongodb
       x-versioned: -1
+    AccessControlListMongo:
+      description: >-
+        The access control list provides a generic interface for the storage of
+        user and roles permissions. Each ACL object
+         represents the permission set for a single entity within the system. The entity is identified generically by its
+         universally unique identifier (`uuid`). Each entry in the ACL records the permissions available to a particular user
+         or role.
+
+         Each permission can be one of the following actions:
+         - `Create` - The user or role can create a new record or object.
+         - `Read` - The user or role can read the record or object.
+         - `Update` - The user or role can modify existing records or objects.
+         - `Delete` - The user or role can delete existing records or objects.
+         - `Special` - The user or role has special prilieges to edit the ACL permissions.
+         - `Full` - The user or role has total control over the record or object and supersedes any of the above.
+
+         For each of the above actions the user or role will be granted either an `allow` permission or a `deny` permission.
+         If an `allow` is granted, the user or role has permission to perform that action. If a `deny` is set, then the user
+         or role is denied that action. If no explicit `allow` or `deny` is set then the user or role will inherit the
+         permission from a parent role or ACL.
+
+         ACLs can be chained via single inheritance through the specification of the `parentUid`. This allows the ability to
+         create complex trees of permissions that can easily inherit control schemes to make the definition of permissions
+         easier.
+      type: object
+      properties:
+        uid:
+          default: randomUUID()
+          description: The universally unique identifier of the entity.
+          type: string
+          x-identifier: true
+        dateCreated:
+          default: new Date()
+          description: The date and time that the entity was created.
+          format: date
+          type: string
+        dateModified:
+          default: new Date()
+          description: The date and time that the entity was last modified.
+          format: date
+          type: string
+        version:
+          default: 0
+          description: The optimistic lock version.
+          type: number
+        records:
+          default: []
+          description: The list of all permission records associated with this access
+            control list.
+          type: array
+          items:
+            $ref: "#/components/schemas/ACLRecordMongo"
+      required:
+        - uid
+        - dateCreated
+        - dateModified
+        - version
+        - records
+      x-baseClass: BaseMongoEntity
+      x-cache: 3600
+      x-datastore: acl
   responses: {}
   parameters:
     id:

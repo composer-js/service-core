@@ -23,7 +23,7 @@ describe("ACLUtils Tests", () => {
         const mongod: MongoMemoryServer = new MongoMemoryServer({
             instance: {
                 port: 9999,
-                dbName: "axr-test",
+                dbName: "mongomemory-cjs-test",
             },
         });
         const redis: any = new Redis();

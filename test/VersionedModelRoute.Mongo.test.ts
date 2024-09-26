@@ -13,7 +13,7 @@ import * as uuid from "uuid";
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
-        dbName: "axr-test",
+        dbName: "mongomemory-cjs-test",
     },
 });
 let repo: MongoRepository<User>;
