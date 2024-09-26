@@ -56,7 +56,9 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
     const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
-        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");
+        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, {
+            name: "default",
+        });
         connMgr.connections.set("cache", redis);
         await mongod.start();
         await server.start();

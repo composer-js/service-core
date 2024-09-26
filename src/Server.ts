@@ -253,9 +253,9 @@ export class Server {
                 this.logger.info("Starting server...");
 
                 // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
-                this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, "default");
+                this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, { name: "default" });
 
-                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
+                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, { name: "default" });
                 const datastores: any = this.config.get("datastores");
                 const models: Map<string, any> = new Map();
 
@@ -303,12 +303,12 @@ export class Server {
                 await this.connectionManager.connect(datastores, models);
 
                 // Initialize ACL utility
-                await this.objectFactory.newInstance(ACLUtils, "default");
+                await this.objectFactory.newInstance(ACLUtils, { name: "default" });
 
                 // Initialize push notifications utility if configured
                 const pushRedis: any = this.connectionManager?.connections.get("notifications");
                 if (pushRedis) {
-                    await this.objectFactory.newInstance(NotificationUtils, "default", pushRedis);
+                    await this.objectFactory.newInstance(NotificationUtils, { name: "default", args: [pushRedis] });
                 }
 
                 // Express configuration
@@ -385,12 +385,11 @@ export class Server {
                     jwtOptions.config = this.config.get("auth");
                     passport.use(
                         "jwt",
-                        await this.objectFactory.newInstance(
-                            this.config.get("auth:strategy"),
-                            "default",
-                            true,
-                            jwtOptions
-                        )
+                        await this.objectFactory.newInstance(this.config.get("auth:strategy"), {
+                            name: "default",
+                            initialize: true,
+                            args: [jwtOptions],
+                        })
                     );
                 } else {
                     this.logger.warn("No JWT authentication strategy has been set.");
@@ -410,19 +409,19 @@ export class Server {
 
                 const allRoutes: Array<any> = [];
 
-                this.routeUtils = await this.objectFactory.newInstance(RouteUtils, "default");
+                this.routeUtils = await this.objectFactory.newInstance(RouteUtils, { name: "default" });
                 if (!this.routeUtils) {
                     reject("Failed to instantiate RouteUtils.");
                     return;
                 }
 
                 // Register the index route
-                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute, "default");
+                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute, { name: "default" });
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 
                 // Register the admin route
-                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute, "default");
+                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute, { name: "default" });
                 allRoutes.push(admin);
                 await this.routeUtils.registerRoute(this.app, admin);
 
@@ -430,11 +429,15 @@ export class Server {
                 const aclConn: any = this.connectionManager?.connections.get("acl");
                 if (aclConn instanceof DataSource) {
                     if (aclConn.driver.constructor.name === "MongoDriver") {
-                        const aclRoute: ACLRouteMongo = await this.objectFactory.newInstance(ACLRouteMongo, "default");
+                        const aclRoute: ACLRouteMongo = await this.objectFactory.newInstance(ACLRouteMongo, {
+                            name: "default",
+                        });
                         await this.routeUtils.registerRoute(this.app, aclRoute);
                         allRoutes.push(aclRoute);
                     } else {
-                        const aclRoute: ACLRouteSQL = await this.objectFactory.newInstance(ACLRouteSQL, "default");
+                        const aclRoute: ACLRouteSQL = await this.objectFactory.newInstance(ACLRouteSQL, {
+                            name: "default",
+                        });
                         await this.routeUtils.registerRoute(this.app, aclRoute);
                         allRoutes.push(aclRoute);
                     }
@@ -442,18 +445,19 @@ export class Server {
 
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
-                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(
-                        OpenAPIRoute,
-                        "default",
-                        true,
-                        this.apiSpec
-                    );
+                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, {
+                        name: "default",
+                        initialize: true,
+                        args: [this.apiSpec],
+                    });
                     await this.routeUtils.registerRoute(this.app, oasRoute);
                     allRoutes.push(oasRoute);
                 }
 
                 // Register the metrics route
-                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute, "default");
+                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute, {
+                    name: "default",
+                });
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
                 // Initialize the background service manager
@@ -464,15 +468,11 @@ export class Server {
                         serviceClasses[name] = clazz;
                     }
                 }
-                this.serviceManager = await this.objectFactory.newInstance(
-                    BackgroundServiceManager,
-                    "default",
-                    true,
-                    this.objectFactory,
-                    serviceClasses,
-                    this.config,
-                    this.logger
-                );
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, {
+                    name: "default",
+                    initialize: true,
+                    args: [this.objectFactory, serviceClasses, this.config, this.logger],
+                });
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
                 }
@@ -481,14 +481,10 @@ export class Server {
                 const redis: any = this.connectionManager?.connections.get("events");
                 if (redis) {
                     this.logger.info("Initializing event manager...");
-                    this.eventListenerManager = await this.objectFactory.newInstance(
-                        EventListenerManager,
-                        "default",
-                        this.config,
-                        this.logger,
-                        this.objectFactory,
-                        redis
-                    );
+                    this.eventListenerManager = await this.objectFactory.newInstance(EventListenerManager, {
+                        name: "default",
+                        args: [this.config, this.logger, this.objectFactory, redis],
+                    });
                     if (this.eventListenerManager) {
                         await this.eventListenerManager.init();
                         this.objectFactory.instances.forEach((obj: any) => {
@@ -509,7 +505,7 @@ export class Server {
                             : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
                             this.objectFactory.register(clazz, fqn);
-                            const route: any = await this.objectFactory.newInstance(fqn, "default");
+                            const route: any = await this.objectFactory.newInstance(fqn, { name: "default" });
                             await this.routeUtils.registerRoute(this.app, route);
                             allRoutes.push(route);
                         }

@@ -154,13 +154,11 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new Error("objectFactory is not set!");
         }
 
-        this.repoUtils = await this.objectFactory.newInstance(
-            RepoUtils,
-            this.modelClass.name,
-            true,
-            this.modelClass,
-            this.repo
-        );
+        this.repoUtils = await this.objectFactory.newInstance(RepoUtils, {
+            name: this.modelClass.name,
+            initialize: true,
+            args: [this.modelClass, this.repo],
+        });
 
         let defaultAcl: AccessControlList | undefined = this.repoUtils.getDefaultACL();
         if (defaultAcl) {

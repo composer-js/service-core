@@ -587,9 +587,9 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             if (className && typeof className === "string") {
                 const clazz: any =
                     this.objectFactory.classes.get(className) || this.objectFactory.classes.get(`models.${className}`);
-                return this.objectFactory.newInstance(clazz, null, false, obj) as T;
+                return this.objectFactory.newInstance(clazz, { initialize: false, args: [obj] }) as T;
             } else {
-                return this.objectFactory.newInstance(this.modelClass, null, false, obj) as T;
+                return this.objectFactory.newInstance(this.modelClass, { initialize: false, args: [obj] }) as T;
             }
         } else {
             return new this.modelClass(obj);

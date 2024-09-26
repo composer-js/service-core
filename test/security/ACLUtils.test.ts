@@ -176,7 +176,9 @@ describe("ACLUtils Tests", () => {
             };
             const models: any = await ModelUtils.loadModels("./src/security");
 
-            const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");
+            const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, {
+                name: "default",
+            });
             connMgr.connections.set("cache", redis);
             await connMgr.connect(datastores, models);
 
@@ -185,7 +187,7 @@ describe("ACLUtils Tests", () => {
                 aclRepo = conn.getMongoRepository(AccessControlListMongo);
             }
 
-            aclUtils = await objectFactory.newInstance(ACLUtils, "default");
+            aclUtils = await objectFactory.newInstance(ACLUtils, { name: "default" });
             (aclUtils as any).trustedRoles = ["super"];
         });
 

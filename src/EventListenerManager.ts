@@ -56,7 +56,7 @@ export class EventListenerManager {
                         Reflect.hasOwnMetadata("cjs:eventListeners", clazz) &&
                         clazz.prototype.constructor.length === 0
                     ) {
-                        const obj = await this.objectFactory.newInstance(clazz, "default");
+                        const obj = await this.objectFactory.newInstance(clazz, { name: "default" });
                         this.register(obj);
                     }
                 } catch (err) {

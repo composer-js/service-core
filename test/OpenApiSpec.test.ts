@@ -18,7 +18,7 @@ describe("OpenApiSpec Tests", () => {
 
     const createSpec = async (): Promise<OpenApiSpec | undefined> => {
         objectFactory.clear();
-        const apiSpec: OpenApiSpec | undefined = await objectFactory.newInstance(OpenApiSpec, "default");
+        const apiSpec: OpenApiSpec | undefined = await objectFactory.newInstance(OpenApiSpec, { name: "default" });
         const admin: AdminRoute = await objectFactory.newInstance(AdminRoute);
         const routeUtils: RouteUtils = await objectFactory.newInstance(RouteUtils);
         await routeUtils.registerRoute(express(), admin);
