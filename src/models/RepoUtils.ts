@@ -335,8 +335,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         if (!options?.skipPush) {
-            let channels: string[] = options?.pushChannels || [];
-            channels.push(result.uid);
+            let channels: string[] = [result.uid].concat(options?.pushChannels || []);
             this.notificationUtils?.sendMessage(channels, this.modelClass.name, "create", result);
         }
 
@@ -398,8 +397,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         if (!options?.skipPush) {
-            let channels: string[] = options?.pushChannels || [];
-            channels.push(uid);
+            let channels: string[] = [uid].concat(options?.pushChannels || []);
             this.notificationUtils?.sendMessage(channels, this.modelClass.name, "delete", {
                 uid,
                 productUid: options.productUid,
@@ -827,8 +825,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         if (!options?.skipPush) {
-            let channels: string[] = options?.pushChannels || [];
-            channels.push(result.uid);
+            let channels: string[] = [result.uid].concat(options?.pushChannels || []);
             this.notificationUtils?.sendMessage(channels, this.modelClass.name, "update", result);
         }
 
