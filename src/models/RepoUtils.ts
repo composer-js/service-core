@@ -26,8 +26,12 @@ const { RedisConnection } = DatabaseDecorators;
 export interface RepoOperationOptions {
     /** Set to `true` to ignore the ACL permissions check. */
     ignoreACL?: boolean;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
     /** Indicates if a telemetry event should be broadcast for the request. */
     recordEvent?: boolean;
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
     /** The authenticated user making the request. */
     user?: JWTUser;
 }
@@ -330,22 +334,11 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             await this.aclUtils?.saveACL(acl);
         }
 
-        // If the document contains a userId or personaId reference send a push notification
-        // to that client so that they're aware of the change.
-        const objAny: any = obj;
-        const id: string | undefined = objAny.userUid
-            ? objAny.userUid
-            : objAny.userId
-            ? objAny.userId
-            : objAny.personaUid
-            ? objAny.personaUid
-            : objAny.personaId
-            ? objAny.personaId
-            : undefined;
-        if (id) {
-            this.notificationUtils?.sendMessage(id, this.modelClass.name, "create", obj);
+        if (!options?.skipPush) {
+            let channels: string[] = options?.pushChannels || [];
+            channels.push(result.uid);
+            this.notificationUtils?.sendMessage(channels, this.modelClass.name, "create", result);
         }
-        this.notificationUtils?.sendMessage(obj.uid, this.modelClass.name, "create", obj);
 
         return result;
     }
@@ -404,13 +397,15 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             void this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
         }
 
-        // If the document contains a userId or personaId reference send a push notification
-        // to that client so that they're aware of the change.
-        this.notificationUtils?.sendMessage(uid, this.modelClass.name, "delete", {
-            uid,
-            productUid: options.productUid,
-            version: options.version,
-        });
+        if (!options?.skipPush) {
+            let channels: string[] = options?.pushChannels || [];
+            channels.push(uid);
+            this.notificationUtils?.sendMessage(channels, this.modelClass.name, "delete", {
+                uid,
+                productUid: options.productUid,
+                version: options.version,
+            });
+        }
     }
 
     /**
@@ -659,6 +654,18 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                 } else {
                     await this.repo.delete(finalUids);
                 }
+
+                if (!options?.skipPush) {
+                    let channels: string[] = options?.pushChannels || [];
+                    for (const uid of finalUids) {
+                        const finalChannels: string[] = channels.concat([uid]);
+                        this.notificationUtils?.sendMessage(finalChannels, this.modelClass.name, "delete", {
+                            uid,
+                            productUid: options.productUid,
+                            version: options.version,
+                        });
+                    }
+                }
             }
         } catch (err: any) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
@@ -819,14 +826,11 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             );
         }
 
-        // If the document contains a userId or personaId reference send a push notification
-        // to that client so that they're aware of the change.
-        const objAny: any = result;
-        const userId: string | undefined = objAny.userUid ? objAny.userUid : objAny.userId ? objAny.userId : undefined;
-        if (userId) {
-            this.notificationUtils?.sendMessage(userId, this.modelClass.name, "update", obj);
+        if (!options?.skipPush) {
+            let channels: string[] = options?.pushChannels || [];
+            channels.push(result.uid);
+            this.notificationUtils?.sendMessage(channels, this.modelClass.name, "update", result);
         }
-        this.notificationUtils?.sendMessage(result.uid, this.modelClass.name, "update", obj);
 
         return result;
     }
