@@ -34,6 +34,10 @@ export interface RequestOptions extends RepoOperationOptions {
  */
 export interface CreateRequestOptions extends RequestOptions {
     acl?: AccessControlList | AccessControlList[];
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
 }
 
 /**
@@ -44,6 +48,10 @@ export interface DeleteRequestOptions extends RequestOptions {
     productUid?: string;
     /** Set to true to permanently remove the object from the database (if applicable). */
     purge?: boolean;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
     /** The desired version number of the resource to delete. */
     version?: number | string;
 }
@@ -64,8 +72,12 @@ export interface FindRequestOptions extends RequestOptions {
 export interface TruncateRequestOptions extends DeleteRequestOptions {
     /** The list of URL parameters to use in the search. */
     params: any;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
     /** The list of query parameters to use in the search. */
     query: any;
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
 }
 
 /** A Partial type for a BaseEntity or SimpleEntity. */
@@ -79,6 +91,10 @@ export interface UpdateRequestOptions<T extends BaseEntity | SimpleEntity> exten
     existing?: T | null;
     /** The desired product uid of the resource to update. */
     productUid?: string;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
     /** The desired version number of the resource to update. */
     version?: number | string;
 }
@@ -472,6 +488,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             limit: options.query?.limit,
             page: options.query?.page,
             productUid: options.params?.productUid || options.query?.productUid,
+            pushChannels: options.pushChannels,
+            skipPush: options.skipPush,
             version: options.params?.version || options.query?.version,
             user: options.user,
         });
