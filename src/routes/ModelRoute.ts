@@ -136,7 +136,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     protected notificationUtils?: NotificationUtils;
 
     @Inject(ObjectFactory)
-    private objectFactory?: ObjectFactory;
+    protected objectFactory?: ObjectFactory;
 
     /** The model class associated with the controller to perform operations against. */
     protected abstract repo?: Repository<T>;
