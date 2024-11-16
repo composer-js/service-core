@@ -2,13 +2,13 @@
 // Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ////////////////////////////////////////////////////////////////////////////////
 import * as crypto from "crypto";
-import { Repository, MongoRepository, EntityMetadata } from "typeorm";
+import { Repository, MongoRepository, EntityMetadata, DataSource } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BaseMongoEntity } from "../models/BaseMongoEntity";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-import { ApiError, JWTUser, ObjectDecorators, UserUtils } from "@composer-js/core";
+import { ApiError, JWTUser, ObjectDecorators, ObjectUtils, UserUtils } from "@composer-js/core";
 import { DatabaseDecorators } from "../decorators";
 import Redis from "ioredis";
 import { ObjectFactory } from "../ObjectFactory";
@@ -93,6 +93,9 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     @Config()
     protected config: any;
 
+    @Inject(ConnectionManager)
+    protected connectionManager?: ConnectionManager;
+
     /** The unique identifier of the default ACL for the model type. */
     protected defaultACLUid: string = "";
 
@@ -128,12 +131,11 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                 );
             }
 
-            const connMgr: ConnectionManager | undefined = this.objectFactory?.getInstance(ConnectionManager);
-            if (!connMgr) {
+            if (!this.connectionManager) {
                 throw new Error("Cannot initialize RepoUtils. Failed to retrieve ConnectionManager.");
             }
 
-            const ds: any = connMgr.connections.get(this.modelClass.datastore);
+            const ds: any = this.connectionManager.connections.get(this.modelClass.datastore);
             if (!ds) {
                 throw new Error(
                     `Cannot initialize RepoUtils. No connection found for datastore '${this.modelClass.datastore}'`
@@ -830,5 +832,46 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         return result;
+    }
+
+    /**
+     * Performs validation on the object(s) provided. This function first calls `ObjectUtils.validate()` to check
+     * any class level defined validation functions. Second, it scans for any properties with the `@Reference`
+     * decorator and attempts to verify that an existing object for the given reference ID is valid.
+     *
+     * @param objs The object(s) to validate.
+     */
+    public async validate(objs: T | T[]): Promise<void> {
+        objs = Array.isArray(objs) ? objs : [objs];
+
+        try {
+            ObjectUtils.validate(objs);
+
+            for (const obj of objs) {
+                // Iterate through all properties and look for `@Reference`
+                for (const member of Object.getOwnPropertyNames(obj)) {
+                    const clazz: any = Reflect.getMetadata("cjs:reference", obj, member);
+                    if (clazz && clazz.datastore && obj[member]) {
+                        // Attempt to grab the repository for this reference type
+                        const conn: any = this.connectionManager?.connections.get(clazz.datastore);
+                        const repo: Repository<any> | undefined =
+                            conn instanceof DataSource ? conn.getMongoRepository(clazz) : undefined;
+                        if (repo) {
+                            // Check to see if there are any objects with this UID in the datastore
+                            const count: number = await repo.count({ uid: obj[member] } as any);
+                            if (count === 0) {
+                                throw new ApiError(
+                                    ApiErrorMessages.INVALID_REQUEST,
+                                    400,
+                                    `Property ${member} is invalid. No resource found with the given identifier.`
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err: any) {
+            throw new ApiError(ApiErrorMessages.INVALID_REQUEST, 400, err.message);
+        }
     }
 }

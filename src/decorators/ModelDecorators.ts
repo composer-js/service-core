@@ -133,6 +133,17 @@ export function Protect(
 }
 
 /**
+ * Apply this to a property to indicate that the value is a reference to another stored entity.
+ *
+ * @param clazz The class type of the referenced object.
+ */
+export function Reference(clazz: any) {
+    return function (target: any, propertyKey: string | symbol) {
+        Reflect.defineMetadata("cjs:reference", clazz, target, propertyKey);
+    };
+}
+
+/**
  * Indicates that the class describes an entity that will be persisted in a sharded database collection.
  *
  * Note: Only supported by MongoDB.

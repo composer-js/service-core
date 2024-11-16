@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository } from "typeorm";
+import { Repository, DataSource } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
 import { RepoOperationOptions, RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
@@ -11,12 +11,13 @@ import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-import { ApiError, Event, EventUtils, ObjectDecorators } from "@composer-js/core";
+import { ApiError, Event, EventUtils, ObjectDecorators, ObjectUtils } from "@composer-js/core";
 import { AccessControlList, ACLAction } from "../security/AccessControlList";
 import { ACLUtils } from "../security/ACLUtils";
 import { NotificationUtils } from "../NotificationUtils";
 import { NetUtils } from "../NetUtils";
 import { ObjectFactory } from "../ObjectFactory";
+import { ConnectionManager } from "../database";
 const { Config, Init, Inject, Logger } = ObjectDecorators;
 
 /**
@@ -630,5 +631,12 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
                 existing,
             }
         );
+    }
+
+    /**
+     * Calls `repoUtils.validate()` to validate the object(s) provided.
+     */
+    protected async doValidate(objs: T | T[]): Promise<void> {
+        await this.repoUtils?.validate(objs);
     }
 }
