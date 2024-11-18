@@ -142,8 +142,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                 );
             }
 
-            const isMongoRepo: boolean = new this.modelClass() instanceof BaseMongoEntity;
-            this.repo = isMongoRepo ? ds.getMongoRepository(this.modelClass) : ds.getRepository(this.modelClass);
+            this.repo = ds.getRepository(this.modelClass);
         }
 
         if (!this.repo) {
@@ -574,20 +573,35 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Creates a new instance of obj scoped to the correct model class or sub-class.
+     * Returns the class type (constructor) for the given object. This uses the `_fqn` or `_type` property of `obj` to
+     * identify the class. If neither property is defined `modelClass` is assumed.
+     * 
+     * @param obj The object whose class type to look up.
+     * @returns The class type (constructor) associated with the given object.
      */
-    public instantiateObject(obj: any): T {
+    public getClassType(obj: any): any {
         const className: string | null = obj._fqn || obj._type;
+
         if (this.objectFactory) {
             if (className && typeof className === "string") {
                 const clazz: any =
                     this.objectFactory.classes.get(className) || this.objectFactory.classes.get(`models.${className}`);
-                return this.objectFactory.newInstance(clazz, { initialize: false, args: [obj] }) as T;
-            } else {
-                return this.objectFactory.newInstance(this.modelClass, { initialize: false, args: [obj] }) as T;
+                return clazz;
             }
+        }
+
+        return this.modelClass;
+    }
+
+    /**
+     * Creates a new instance of obj scoped to the correct model class or sub-class.
+     */
+    public instantiateObject(obj: any): T {
+        const clazz: any = this.getClassType(obj);
+        if (this.objectFactory) {
+            return this.objectFactory.newInstance(clazz, { initialize: false, args: [obj] }) as T;
         } else {
-            return new this.modelClass(obj);
+            return new clazz(obj);
         }
     }
 
@@ -845,20 +859,27 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         objs = Array.isArray(objs) ? objs : [objs];
 
         try {
-            ObjectUtils.validate(objs);
+            for (let obj of objs) {
+                // Instantiate the correct object type so that we can perform validation correctly. If we don't do this
+                // then the provided object will be missing all decorators and validation won't work as desired.
+                const metadataObj: T = this.instantiateObject(obj);
 
-            for (const obj of objs) {
+                ObjectUtils.validate(obj, (metadataObj as any).constructor);
+
                 // Iterate through all properties and look for `@Reference`
                 for (const member of Object.getOwnPropertyNames(obj)) {
-                    const clazz: any = Reflect.getMetadata("cjs:reference", obj, member);
+                    const clazz: any = Reflect.getMetadata("cjs:reference", metadataObj, member);
                     if (clazz && clazz.datastore && obj[member]) {
                         // Attempt to grab the repository for this reference type
                         const conn: any = this.connectionManager?.connections.get(clazz.datastore);
                         const repo: Repository<any> | undefined =
-                            conn instanceof DataSource ? conn.getMongoRepository(clazz) : undefined;
+                            conn instanceof DataSource
+                                ? conn.getRepository(clazz)
+                                : undefined;
                         if (repo) {
                             // Check to see if there are any objects with this UID in the datastore
-                            const count: number = await repo.count({ uid: obj[member] } as any);
+                            const query: any = { uid: obj[member] };
+                            const count: number = await repo.count(query);
                             if (count === 0) {
                                 throw new ApiError(
                                     ApiErrorMessages.INVALID_REQUEST,

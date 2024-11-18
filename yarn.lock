@@ -413,9 +413,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@composer-js/core@npm:^6.0.0-rc.16":
-  version: 6.0.0-rc.16
-  resolution: "@composer-js/core@npm:6.0.0-rc.16"
+"@composer-js/core@npm:^6.0.0-rc.19":
+  version: 6.0.0-rc.19
+  resolution: "@composer-js/core@npm:6.0.0-rc.19"
   dependencies:
     form-data: "npm:^4.0.0"
     handlebars: "npm:^4.7.8"
@@ -432,7 +432,7 @@ __metadata:
     reflect-metadata: 0.2.x
     winston: 3.x
     winston-transport: 4.x
-  checksum: 10c0/f3aadfacaa96489b8fb6a3b440def308d1b5f59ded8d94e1be874c15175625a6b578438952614edd11beb8d5cb0afa02800de8fd06ab3acf17fc41faa96f5105
+  checksum: 10c0/7ea91a4d6e694d5df59bad4a4dbdd7dceb9c8d585b0e1bd24734bad0c56d9d62380eb5ab8b7d284bfc21a4a8579d6c3555e1edcec351605e9b9f80c7e4ec385e
   languageName: node
   linkType: hard
 
@@ -440,7 +440,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@composer-js/service-core@workspace:."
   dependencies:
-    "@composer-js/core": "npm:^6.0.0-rc.16"
+    "@composer-js/core": "npm:^6.0.0-rc.19"
     "@types/cookie-parser": "npm:^1.4.7"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"

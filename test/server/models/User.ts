@@ -5,6 +5,8 @@ import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
 import { Index, Entity, Column } from "typeorm";
 import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
 import { Description, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { ObjectDecorators } from "@composer-js/core";
+const { Nullable, Validator } = ObjectDecorators;
 
 @DataStore("mongodb")
 @Entity()
@@ -14,6 +16,7 @@ export default class User extends BaseMongoEntity {
     @Index()
     @Column()
     @Description("The unique identifier of the user.")
+    @Validator((val) => !!(/[a-zA-Z0-9_\-]+/.test(val)))
     public name: string = "";
 
     @Column()
@@ -25,17 +28,20 @@ export default class User extends BaseMongoEntity {
     public lastName: string = "";
 
     @Column()
-    @Description("The age of the user.")
+    @Description("The age of the user. Must be 13 or older.")
+    @Validator((val) => val >= 13)
     public age: number = 0;
 
     @Identifier
     @Index()
     @Column()
     @Description("The uuid of the product that is associated with this user.")
+    @Nullable
     public productUid: string | undefined = undefined;
 
     @Column()
     @TypeInfo([String, Number, undefined])
+    @Nullable
     public uType: string | number | undefined = undefined;
 
     constructor(other?: Partial<User>) {

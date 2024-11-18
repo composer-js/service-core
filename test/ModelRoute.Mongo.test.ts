@@ -6,94 +6,105 @@ import * as request from "supertest";
 import { Server, ConnectionManager, ObjectFactory } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/User";
-import { MongoRepository, DataSource } from "typeorm";
+import { MongoRepository, DataSource, Repository } from "typeorm";
 import { Logger } from "@composer-js/core";
 import * as uuid from "uuid";
 import Player from "./server/models/Player";
+import Item from "./server/models/Item";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
     },
 });
-let repo: MongoRepository<User | Player>;
-
-const createUser = async (
-    name: string,
-    firstName: string,
-    lastName: string,
-    age: number = 100,
-    productUid?: string
-): Promise<User> => {
-    const user: User = new User({
-        name,
-        firstName,
-        lastName,
-        age,
-        productUid,
-    });
-
-    return await repo.save(user);
-};
-
-const createUsers = async (num: number, lastName: string = "Doctor", productUid?: string): Promise<User[]> => {
-    const results: User[] = [];
-
-    for (let i = 1; i <= num; i++) {
-        results.push(await createUser(`user-${i}`, String(i), lastName, 100 * i, productUid));
-    }
-
-    return results;
-};
-
-const createPlayer = async (
-    name: string,
-    firstName: string,
-    lastName: string,
-    age: number = 100,
-    skillRating: number = 1500,
-    productUid?: string
-): Promise<Player> => {
-    const player: Player = new Player({
-        name,
-        firstName,
-        lastName,
-        age,
-        productUid,
-        skillRating,
-    });
-
-    return await repo.save(player);
-};
-
-const createPlayers = async (
-    num: number,
-    lastName: string = "Doctor",
-    skillRating: number = 1500,
-    productUid?: string
-): Promise<Player[]> => {
-    const results: Player[] = [];
-
-    for (let i = 1; i <= num; i++) {
-        results.push(await createPlayer(`user-${i}`, String(i), lastName, 100 * i, skillRating, productUid));
-    }
-
-    return results;
-};
 
 jest.setTimeout(60000);
 describe("ModelRoute Tests [MongoDB]", () => {
     const objectFactory: ObjectFactory = new ObjectFactory(config, Logger());
     const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
+    let repo: MongoRepository<User | Player>;
+    let itemRepo: Repository<Item>;
+
+    const createUser = async (
+        name: string,
+        firstName: string,
+        lastName: string,
+        age: number = 21,
+        productUid?: string
+    ): Promise<User> => {
+        const user: User = new User({
+            name,
+            firstName,
+            lastName,
+            age,
+            productUid,
+        });
+
+        return await repo.save(user);
+    };
+
+    const createUsers = async (num: number, lastName: string = "Doctor", productUid?: string): Promise<User[]> => {
+        const results: User[] = [];
+
+        for (let i = 1; i <= num; i++) {
+            results.push(await createUser(`user-${i}`, String(i), lastName, 100 * i, productUid));
+        }
+
+        return results;
+    };
+
+    const createPlayer = async (
+        name: string,
+        firstName: string,
+        lastName: string,
+        age: number = 21,
+        skillRating: number = 1500,
+        productUid?: string
+    ): Promise<Player> => {
+        const player: Player = new Player({
+            name,
+            firstName,
+            lastName,
+            age,
+            productUid,
+            skillRating,
+        });
+
+        return await repo.save(player);
+    };
+
+    const createPlayers = async (
+        num: number,
+        lastName: string = "Doctor",
+        skillRating: number = 1500,
+        productUid?: string
+    ): Promise<Player[]> => {
+        const results: Player[] = [];
+
+        for (let i = 1; i <= num; i++) {
+            results.push(await createPlayer(`user-${i}`, String(i), lastName, 100 * i, skillRating, productUid));
+        }
+
+        return results;
+    };
+
+    const createItem = async (data?: any): Promise<Item> => {
+        const item: Item = new Item(data);
+        return await itemRepo.save(item);
+    };
 
     beforeAll(async () => {
         await mongod.start();
         await server.start();
 
         const connMgr: ConnectionManager | undefined = objectFactory.getInstance(ConnectionManager);
-        const conn: any = connMgr?.connections.get("mongodb");
+        let conn: any = connMgr?.connections.get("mongodb");
         if (conn instanceof DataSource) {
             repo = conn.getMongoRepository(User);
+        }
+        conn = connMgr?.connections.get("sqlite");
+        if (conn instanceof DataSource) {
+            itemRepo = conn.getRepository(Item);
         }
     });
 
@@ -106,6 +117,7 @@ describe("ModelRoute Tests [MongoDB]", () => {
     beforeEach(async () => {
         try {
             await repo.clear();
+            await itemRepo.clear();
         } catch (err) {
             // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
             if (err.message !== "ns not found") {
@@ -204,12 +216,16 @@ describe("ModelRoute Tests [MongoDB]", () => {
         });
 
         it("Can create child document. [MongoDB]", async () => {
+            const item: Item = await createItem({
+                name: "myItem",
+            });
             const player: Player = new Player({
                 name: "dtennant",
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
                 skillRating: 2500,
+                itemUid: item.uid
             });
             const result = await request(server.getApplication()).post("/users").send(player);
             expect(result).toHaveProperty("body");
@@ -239,6 +255,19 @@ describe("ModelRoute Tests [MongoDB]", () => {
                 expect(stored.age).toEqual(player.age);
                 expect(stored.skillRating).toEqual(player.skillRating);
             }
+        });
+
+        it("Cannot create child document with invalid item id. [MongoDB]", async () => {
+            const player: Player = new Player({
+                name: "dtennant",
+                firstName: "David",
+                lastName: "Tennant",
+                age: 47,
+                skillRating: 2500,
+                itemUid: uuid.v4()
+            });
+            const result = await request(server.getApplication()).post("/users").send(player);
+            expect(result.status).toBe(400);
         });
 
         it("Can delete document. [MongoDB]", async () => {

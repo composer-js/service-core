@@ -1332,7 +1332,7 @@ components:
           type: string
         age:
           default: 0
-          description: The age of the user.
+          description: The age of the user. Must be 13 or older.
           type: number
         productUid:
           description: The uuid of the product that is associated with this user.
@@ -1442,7 +1442,7 @@ components:
           type: string
         age:
           default: 0
-          description: The age of the user.
+          description: The age of the user. Must be 13 or older.
           type: number
         productUid:
           description: The uuid of the product that is associated with this user.

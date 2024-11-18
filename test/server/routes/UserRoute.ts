@@ -35,7 +35,7 @@ const logger = Logger();
 @Route("/users")
 @Description("Handles processing of all HTTP requests for the path `/users`.")
 class UserRoute extends ModelRoute<UserModel> {
-    protected repoUtils?: RepoUtils<UserModel>;
+    protected repoUtils?: RepoUtils<UserModel | Player>;
 
     @MongoRepository(UserModel)
     protected repo?: Repo<UserModel | Player>;
@@ -54,10 +54,8 @@ class UserRoute extends ModelRoute<UserModel> {
         }
     }
 
-    private validate(obj: UserModel | UserModel[]): void {
-        if (!obj) {
-            throw new Error("Did not receive object to validate");
-        }
+    private validate(obj: UserModel | UserModel[]): Promise<void> {
+        return super.doValidate(obj);
     }
 
     private cleanPII(obj: UserModel, @User user?: any): UserModel {
