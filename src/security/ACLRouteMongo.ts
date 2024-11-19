@@ -5,27 +5,22 @@ import { Request as XRequest, Response as XResponse } from "express";
 import { AccessControlListMongo } from "./AccessControlListMongo";
 import { MongoRepository as Repo } from "typeorm";
 import { ACLAction } from "./AccessControlList";
-import { ApiError, JWTUser, ObjectDecorators, UserUtils } from "@composer-js/core";
-import { ACLUtils } from "./ACLUtils";
+import { ApiError, JWTUser, UserUtils } from "@composer-js/core";
 import { DatabaseDecorators, DocDecorators, RouteDecorators } from "../decorators";
 import { ModelRoute } from "../routes/ModelRoute";
 import { RepoUtils } from "../models";
 import { ApiErrorMessages } from "../ApiErrors";
 const { MongoRepository } = DatabaseDecorators;
 const { Description, Returns, TypeInfo } = DocDecorators;
-const { Inject } = ObjectDecorators;
 const { Auth, Delete, Get, Head, Model, Param, Post, Put, Query, Request, Response, Route, User } = RouteDecorators;
 
 @Model(AccessControlListMongo)
 @Route("/acls")
 export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
-    @Inject(ACLUtils)
-    protected aclUtils?: ACLUtils;
-
     @MongoRepository(AccessControlListMongo)
     protected repo?: Repo<AccessControlListMongo>;
 
-    protected repoUtils?: RepoUtils<AccessControlListMongo>;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     constructor() {
         super();

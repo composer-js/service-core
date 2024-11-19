@@ -12,16 +12,13 @@ import {
     Put,
     Query,
     Model,
-    Request,
     Response,
     User,
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/VersionedUser";
-import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
-import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
 const { Init } = ObjectDecorators;
@@ -32,23 +29,13 @@ const logger = Logger();
 @Route("/versionedusers")
 @Description("Handles processing of all HTTP requests for the path `/versionedusers`.")
 class VersionedUserRoute extends ModelRoute<UserModel> {
-    protected repoUtils?: RepoUtils<UserModel>;
-
-    @MongoRepository(UserModel)
-    protected repo?: Repo<UserModel>;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     /**
      * Initializes a new instance with the specified defaults.
      */
     constructor() {
         super();
-    }
-
-    @Init
-    private async initialize() {
-        if (this.repo) {
-            logger.info("Calling init counting users " + (await this.repo.count()));
-        }
     }
 
     private validate(obj: UserModel): void {

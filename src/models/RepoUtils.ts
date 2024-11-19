@@ -97,7 +97,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     protected connectionManager?: ConnectionManager;
 
     /** The unique identifier of the default ACL for the model type. */
-    protected defaultACLUid: string = "";
+    public defaultACLUid: string = "";
 
     @Logger
     protected logger: any;
@@ -111,7 +111,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     protected notificationUtils?: NotificationUtils;
 
     /** The model class associated with the controller to perform operations against. */
-    protected repo?: Repository<T>;
+    public repo?: Repository<T>;
 
     @Config("trusted_roles", ["admin"])
     protected trustedRoles: string[] = ["admin"];

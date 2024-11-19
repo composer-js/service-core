@@ -3,12 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/ProtectedUser";
-import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
-import { DatabaseDecorators, RouteDecorators } from "../../../src/decorators";
+import { RouteDecorators } from "../../../src/decorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { RepoUtils } from "../../../src/models";
-const { MongoRepository } = DatabaseDecorators;
 const { Init } = ObjectDecorators;
 const { Route, Get, Post, Validate, Delete, Head, Put, Param, User, Query, Response, Before, Model } = RouteDecorators;
 
@@ -17,22 +15,13 @@ const logger = Logger();
 @Model(UserModel)
 @Route("/userswithacl")
 class UserWithACLRoute extends ModelRoute<UserModel> {
-    @MongoRepository(UserModel)
-    protected repo?: Repo<UserModel>;
-    protected repoUtils?: RepoUtils<UserModel> | undefined;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     /**
      * Initializes a new instance with the specified defaults.
      */
     constructor() {
         super();
-    }
-
-    @Init
-    private async initialize() {
-        if (this.repo) {
-            logger.info("Calling init counting users " + (await this.repo.count()));
-        }
     }
 
     private validate(obj: UserModel): void {

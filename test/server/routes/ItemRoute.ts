@@ -17,9 +17,7 @@ import {
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import Item from "../models/Item";
-import { Repository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
-import { Repository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
 
@@ -27,10 +25,7 @@ import { RepoUtils } from "../../../src";
 @Route("/items")
 @Description("Handles processing of all HTTP requests for the path `/items`")
 class ItemRoute extends ModelRoute<Item> {
-    protected repoUtils?: RepoUtils<Item>;
-
-    @Repository(Item)
-    protected repo?: Repo<Item>;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     /**
      * Initializes a new instance with the specified defaults.

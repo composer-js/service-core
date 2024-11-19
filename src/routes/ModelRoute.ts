@@ -139,11 +139,11 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     @Inject(ObjectFactory)
     protected objectFactory?: ObjectFactory;
 
-    /** The model class associated with the controller to perform operations against. */
-    protected abstract repo?: Repository<T>;
+    /** The class of the RepoUtils to use when instantiating the utility. */
+    protected readonly abstract repoUtilsClass: any;
 
     /** The repository utility class to use for common operations. */
-    protected abstract repoUtils?: RepoUtils<T>;
+    protected repoUtils?: RepoUtils<T>;
 
     /**
      * The number of previous document versions to store in the database. A negative value indicates storing all
@@ -171,10 +171,10 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new Error("objectFactory is not set!");
         }
 
-        this.repoUtils = await this.objectFactory.newInstance(RepoUtils, {
+        this.repoUtils = await this.objectFactory.newInstance(this.repoUtilsClass || RepoUtils, {
             name: this.modelClass.name,
             initialize: true,
-            args: [this.modelClass, this.repo],
+            args: [this.modelClass],
         });
 
         let defaultAcl: AccessControlList | undefined = this.repoUtils.getDefaultACL();
@@ -199,8 +199,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const searchQuery: any = ModelUtils.buildSearchQuery(
-            this.modelClass,
-            this.repo,
+            this.modelClass,    
+            this.repoUtils.repo,
             options.params,
             options.query,
             true,
@@ -312,7 +312,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doDelete(id: string, options: DeleteRequestOptions): Promise<void> {
-        if (!this.repo || !this.repoUtils) {
+        if (!this.repoUtils || !this.repoUtils.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -339,7 +339,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         await this.repoUtils.delete(existing.uid, options as any);
 
         if (options.recordEvent) {
-            const count: number = await this.repo.count({ uid: existing.uid } as any);
+            const count: number = await this.repoUtils.repo.count({ uid: existing.uid } as any);
             const evt: any = {
                 type: `Delete${this.modelClass.name}`,
                 objectUid: existing.uid,
@@ -358,7 +358,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doExists(id: string, options: FindRequestOptions): Promise<any> {
-        if (!this.repo || !this.repoUtils || !options.res) {
+        if (!this.repoUtils || !options.res) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -383,7 +383,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         }
 
         const query: any = this.repoUtils.searchIdQuery(id, options.query.version);
-        const result: number = await this.repo.count(query);
+        const result: number = await this.repoUtils.count(query);
         if (result > 0) {
             return options.res.status(200).setHeader("content-length", result);
         } else {
@@ -412,7 +412,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
 
         const searchQuery: any = ModelUtils.buildSearchQuery(
             this.modelClass,
-            this.repo,
+            this.repoUtils.repo,
             options.params,
             options.query,
             true,
@@ -476,9 +476,13 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doTruncate(options: TruncateRequestOptions): Promise<void> {
+        if (!this.repoUtils) {
+            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
+        }
+        
         const searchQuery: any = ModelUtils.buildSearchQuery(
             this.modelClass,
-            this.repo,
+            this.repoUtils.repo,
             options.params,
             options.query,
             true,

@@ -23,7 +23,6 @@ import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
-import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
 import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
 import Player from "../models/Player";
@@ -35,10 +34,8 @@ const logger = Logger();
 @Route("/users")
 @Description("Handles processing of all HTTP requests for the path `/users`.")
 class UserRoute extends ModelRoute<UserModel> {
-    protected repoUtils?: RepoUtils<UserModel | Player>;
-
-    @MongoRepository(UserModel)
     protected repo?: Repo<UserModel | Player>;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     /**
      * Initializes a new instance with the specified defaults.
