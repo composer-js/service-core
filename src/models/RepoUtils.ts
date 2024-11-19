@@ -84,7 +84,7 @@ export interface RepoUpdateOptions<T extends BaseEntity | SimpleEntity> extends 
  */
 export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     @Inject("ACLUtils")
-    private aclUtils?: ACLUtils;
+    protected aclUtils?: ACLUtils;
 
     /** The redis client that will be used as a 2nd level cache for all cacheable models. */
     @RedisConnection("cache")
