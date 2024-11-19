@@ -877,10 +877,12 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
                                 ? conn.getRepository(clazz)
                                 : undefined;
                         if (repo) {
-                            // Check to see if there are any objects with this UID in the datastore
-                            const query: any = { uid: obj[member] };
+                            // Check to see if there are any objects with this UID in the datastore. If the value is an array
+                            // let's make sure that every uid is valid.
+                            const uids: string[] = Array.isArray(obj[member]) ? obj[member] : [obj[member]];
+                            const query: any = ModelUtils.buildIdSearchQuery(repo, clazz, uids);
                             const count: number = await repo.count(query);
-                            if (count === 0) {
+                            if (count !== uids.length) {
                                 throw new ApiError(
                                     ApiErrorMessages.INVALID_REQUEST,
                                     400,

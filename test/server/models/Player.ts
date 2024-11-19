@@ -16,17 +16,23 @@ export default class Player extends User {
     @Column()
     public skillRating: number = 1500;
 
-    @Description("The unique identifier of the item associated with this player.")
+    @Description("The list of unique identifier of items associated with this player.")
     @Reference(Item)
     @Nullable
-    itemUid?: string;
+    items?: string[];
+
+    @Description("The unique identifier of the parent associated with this player.")
+    @Reference(User)
+    @Nullable
+    parentUid?: string;
 
     constructor(other?: Partial<Player>) {
         super(other);
 
         if (other) {
             this.skillRating = other.skillRating || this.skillRating;
-            this.itemUid = "itemUid" in other ? other.itemUid : this.itemUid;
+            this.items = "items" in other ? other.items : this.items;
+            this.parentUid = "parentUid" in other ? other.parentUid : this.parentUid;
         }
     }
 }

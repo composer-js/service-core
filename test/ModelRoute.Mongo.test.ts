@@ -93,6 +93,16 @@ describe("ModelRoute Tests [MongoDB]", () => {
         return await itemRepo.save(item);
     };
 
+    const createItems = async (num: number, data?: any): Promise<Item[]> => {
+        const results: Item[] = [];
+
+        for (let i = 1; i <= num; i++) {
+            results.push(await createItem({ name: "Item" + i }));
+        }
+
+        return results;
+    };
+
     beforeAll(async () => {
         await mongod.start();
         await server.start();
@@ -216,16 +226,16 @@ describe("ModelRoute Tests [MongoDB]", () => {
         });
 
         it("Can create child document. [MongoDB]", async () => {
-            const item: Item = await createItem({
-                name: "myItem",
-            });
+            const items: Item[] = await createItems(5);
+            const parent: User = await createUser("parent", "John", "Smith");
             const player: Player = new Player({
                 name: "dtennant",
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
-                skillRating: 2500,
-                itemUid: item.uid
+                items: items.map((item) => item.uid),
+                parentUid: parent.uid,
+                skillRating: 2500
             });
             const result = await request(server.getApplication()).post("/users").send(player);
             expect(result).toHaveProperty("body");
@@ -257,14 +267,32 @@ describe("ModelRoute Tests [MongoDB]", () => {
             }
         });
 
-        it("Cannot create child document with invalid item id. [MongoDB]", async () => {
+        it("Cannot create child document with invalid parent id. [MongoDB]", async () => {
+            const items: Item[] = await createItems(5);
             const player: Player = new Player({
                 name: "dtennant",
                 firstName: "David",
                 lastName: "Tennant",
                 age: 47,
-                skillRating: 2500,
-                itemUid: uuid.v4()
+                items: items.map((item) => item.uid),
+                parentUid: uuid.v4(),
+                skillRating: 2500
+            });
+            const result = await request(server.getApplication()).post("/users").send(player);
+            expect(result.status).toBe(400);
+        });
+
+        it("Cannot create child document with invalid item id. [MongoDB]", async () => {
+            const items: Item[] = await createItems(5);
+            const parent: User = await createUser("parent", "John", "Smith");
+            const player: Player = new Player({
+                name: "dtennant",
+                firstName: "David",
+                lastName: "Tennant",
+                age: 47,
+                items: items.map((item) => item.uid).concat([uuid.v4()]),
+                parentUid: parent.uid,
+                skillRating: 2500
             });
             const result = await request(server.getApplication()).post("/users").send(player);
             expect(result.status).toBe(400);
