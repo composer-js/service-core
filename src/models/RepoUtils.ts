@@ -105,7 +105,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     protected modelClass: any;
 
     @Inject(ObjectFactory)
-    private objectFactory?: ObjectFactory;
+    protected objectFactory?: ObjectFactory;
 
     @Inject(NotificationUtils)
     protected notificationUtils?: NotificationUtils;
@@ -122,7 +122,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     }
 
     @Init
-    private async init() {
+    protected async init() {
         // Retrieve the repository based on the modelClass that was passed in to the constructor
         if (!this.repo) {
             if (!this.modelClass.datastore) {
