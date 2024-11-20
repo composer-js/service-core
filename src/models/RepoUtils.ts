@@ -248,7 +248,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to store.
      * @param acl The ACL to use
      */
-    public async create(obj: T, options?: RepoCreateOptions): Promise<T> {
+    public async create(obj: Partial<T>, options?: RepoCreateOptions): Promise<T> {
         if (!this.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
@@ -262,23 +262,27 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
             throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
         }
 
+        // Instantiate the object if not already done
+        const clazz: any = this.getClassType(obj);
+        const newObj: T = obj instanceof clazz ? obj as T : this.instantiateObject(obj, clazz);
+
         // Make sure an existing object doesn't already exist with the same identifiers
         const ids: any[] = [];
-        const idProps: string[] = ModelUtils.getIdPropertyNames(obj.constructor);
+        const idProps: string[] = ModelUtils.getIdPropertyNames(clazz);
         for (const prop of idProps) {
             // Skip `productUid` as it is considered a compound key
             if (prop === "productUid") continue;
-            const val: string = (obj as any)[prop];
+            const val: string = (newObj as any)[prop];
             if (val) {
                 ids.push(val);
             }
         }
         const query: any = ModelUtils.buildIdSearchQuery(
             this.repo,
-            obj.constructor,
+            clazz,
             ids,
             undefined,
-            (obj as any).productUid
+            (newObj as any).productUid
         );
         const count: number = await this.repo.count(query);
         if (!this.modelClass.trackChanges && count > 0) {
@@ -286,24 +290,24 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
         }
 
         // Override the date and version fields with their defaults
-        if (obj instanceof BaseEntity) {
-            obj.dateCreated = new Date();
-            obj.dateModified = new Date();
-            obj.version = count;
+        if (newObj instanceof BaseEntity) {
+            newObj.dateCreated = new Date();
+            newObj.dateModified = new Date();
+            newObj.version = count;
         }
 
         // Are we tracking multiple versions for this object?
-        if (obj instanceof BaseEntity && this.modelClass.trackChanges === 0) {
-            (obj as any).version = 0;
+        if (newObj instanceof BaseEntity && this.modelClass.trackChanges === 0) {
+            (newObj as any).version = 0;
         }
 
         // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
         // extends BaseEntity.
-        const result: T = this.instantiateObject(await this.repo.save(obj));
+        const result: T = this.instantiateObject(await this.repo.save(newObj));
 
         if (this.cacheClient && this.modelClass.cacheTTL) {
             // Cache the object for faster retrieval
-            const query: any = this.searchIdQuery(obj.uid);
+            const query: any = this.searchIdQuery(newObj.uid);
             const cacheKey: string = `${this.baseCacheKey}.${this.hashQuery(query)}`;
             void this.cacheClient.setex(cacheKey, this.modelClass.cacheTTL, JSON.stringify(result));
         }
@@ -596,8 +600,11 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
     /**
      * Creates a new instance of obj scoped to the correct model class or sub-class.
      */
-    public instantiateObject(obj: any): T {
-        const clazz: any = this.getClassType(obj);
+    public instantiateObject(obj: any, clazz?: any): T {
+        if (!clazz) {
+            clazz = this.getClassType(obj);
+        }
+
         if (this.objectFactory) {
             return this.objectFactory.newInstance(clazz, { initialize: false, args: [obj] }) as T;
         } else {
@@ -854,8 +861,9 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * decorator and attempts to verify that an existing object for the given reference ID is valid.
      *
      * @param objs The object(s) to validate.
+     * @param options The optional set of arguments that can be passed to perform additonal checks.
      */
-    public async validate(objs: T | T[]): Promise<void> {
+    public async validate(objs: T | T[], options?: RepoOperationOptions): Promise<void> {
         objs = Array.isArray(objs) ? objs : [objs];
 
         try {
