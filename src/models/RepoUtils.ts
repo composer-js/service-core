@@ -863,7 +863,7 @@ export class RepoUtils<T extends BaseEntity | SimpleEntity> {
      * @param objs The object(s) to validate.
      * @param options The optional set of arguments that can be passed to perform additonal checks.
      */
-    public async validate(objs: T | T[], options?: RepoOperationOptions): Promise<void> {
+    public async validate(objs: Partial<T> | Partial<T>[], options?: RepoOperationOptions): Promise<void> {
         objs = Array.isArray(objs) ? objs : [objs];
 
         try {
