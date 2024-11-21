@@ -640,7 +640,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Calls `repoUtils.validate()` to validate the object(s) provided.
      */
-    protected async doValidate(objs: Partial<T> | Partial<T>[]): Promise<void> {
-        await this.repoUtils?.validate(objs);
+    protected async doValidate(objs: Partial<T> | Partial<T>[], options?: CreateRequestOptions | UpdateRequestOptions<T>): Promise<void> {
+        await this.repoUtils?.validate(objs, options);
     }
 }
