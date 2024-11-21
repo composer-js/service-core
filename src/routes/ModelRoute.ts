@@ -479,7 +479,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
         if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
-        
+
         const searchQuery: any = ModelUtils.buildSearchQuery(
             this.modelClass,
             this.repoUtils.repo,
@@ -640,7 +640,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     /**
      * Calls `repoUtils.validate()` to validate the object(s) provided.
      */
-    protected async doValidate(objs: T | T[]): Promise<void> {
+    protected async doValidate(objs: Partial<T> | Partial<T>[]): Promise<void> {
         await this.repoUtils?.validate(objs);
     }
 }
