@@ -13,6 +13,7 @@ import * as sqlite3 from "sqlite3";
 import * as uuid from "uuid";
 
 import { JWTUtils, Logger, sleep } from "@composer-js/core";
+import { StatusExtraData } from "../src/models/StatusExtraData";
 
 const unixLineEndings = (input: string): string => {
     return input.replace(/\r\n/g, "\n");
@@ -87,6 +88,21 @@ describe("Server Tests", () => {
         expect(result).toHaveProperty("body");
         expect(result.body).toHaveProperty("name");
         expect(result.body).toHaveProperty("version");
+    });
+
+    it("Can serve status, with data updates.", async () => {
+        const statusExtraData: StatusExtraData = await objectFactory.newInstance(StatusExtraData, { name: "default" });
+        statusExtraData.data = {
+            test: "Updates"
+        };
+        expect(server.isRunning()).toBe(true);
+        const result = await request(server.getApplication()).get("/status");
+        expect(result).toHaveProperty("status");
+        expect(result.status).toBe(200);
+        expect(result).toHaveProperty("body");
+        expect(result.body).toHaveProperty("name");
+        expect(result.body).toHaveProperty("version");
+        expect(result.body.test).toBe("Updates");
     });
 
     it("Can serve OpenAPI spec.", async () => {

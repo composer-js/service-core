@@ -29,7 +29,7 @@ import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
 import { ApiErrors } from "./ApiErrors";
-import RedisStore from "connect-redis";
+import { RedisStore } from "connect-redis";
 import { ACLUtils } from "./security/ACLUtils";
 import { NotificationUtils } from "./NotificationUtils";
 import { DataSource } from "typeorm";
@@ -380,8 +380,8 @@ export class Server {
                             secret: sessionConfig.secret,
                             store: cacheClient
                                 ? new RedisStore({
-                                      client: cacheClient,
-                                  })
+                                    client: cacheClient,
+                                })
                                 : undefined,
                         })
                     );

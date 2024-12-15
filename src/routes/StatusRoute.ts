@@ -4,7 +4,8 @@
 import { Get, Route } from "../decorators/RouteDecorators";
 import { Description, Returns } from "../decorators/DocDecorators";
 import { ObjectDecorators } from "@composer-js/core";
-const { Config } = ObjectDecorators;
+import { StatusExtraData } from "../models/StatusExtraData";
+const { Config, Inject } = ObjectDecorators;
 
 /**
  * The `StatusRoute` provides a default `/status` endpoint the returns metadata information about the service such as
@@ -17,6 +18,10 @@ export class StatusRoute {
     @Config()
     private config: any;
 
+    @Inject(StatusExtraData)
+    private statusExtraData: StatusExtraData | undefined;
+
+
     @Description("Returns information about the service and it's operational status.")
     @Get()
     @Returns([Object])
@@ -25,6 +30,7 @@ export class StatusRoute {
             name: this.config.get("service_name"),
             time: new Date().toISOString(),
             version: this.config.get("version"),
+            ...this.statusExtraData?.data
         };
     }
 }
