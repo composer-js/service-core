@@ -5,7 +5,7 @@ cache:
         - node_modules/
         - dist/
 .job_template: &job_configuration
-    image: node:lts-buster
+    image: node:lts-bookworm
     before_script:
         - corepack enable
 
