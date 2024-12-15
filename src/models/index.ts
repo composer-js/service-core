@@ -6,3 +6,4 @@ export * from "./RecoverableBaseMongoEntity";
 export * from "./RepoUtils";
 export * from "./SimpleEntity";
 export * from "./SimpleMongoEntity";
+export * from "./StatusExtraData";
