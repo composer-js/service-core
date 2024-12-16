@@ -104,11 +104,9 @@
         "ws": "^8.18.0"
     },
     "resolutions": {
-        "path-scurry": "^1.11.1",
-        "braces": "3.0.3",
-        "lru-cache": "11.0.1"
+        "cross-spawn": "^7.0.5"
     },
-    "packageManager": "yarn@4.2.2",
+    "packageManager": "yarn@4.5.3",
     "engines": {
         "node": ">=20.0.0"
     },
