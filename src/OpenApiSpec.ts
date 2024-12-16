@@ -5,7 +5,7 @@ import { oas31 as oa } from "openapi3-ts";
 import { DocumentsData } from "./decorators/DocDecorators";
 import * as merge from "deepmerge";
 import * as _ from "lodash";
-import { ObjectDecorators } from "@composer-js/core";
+import { ObjectDecorators, StringUtils } from "@composer-js/core";
 const { Config, Init } = ObjectDecorators;
 
 /**
@@ -473,7 +473,11 @@ export class OpenApiSpec {
             data["x-upgrade"] = true;
             responseSchemas.splice(0, responseSchemas.length);
         }
-
+        const errorContent = {
+            ["application/json"]: {
+                schema: this.getSchemaReference("Error")
+            }
+        };
         // Finally add the operation object for the given method
         const opObject: oa.OperationObject = {
             description,
@@ -504,31 +508,19 @@ export class OpenApiSpec {
                 } : undefined,
                 ["400"]: requestSchemas.length > 0 ? {
                     description: "Returned when the request content is invalid.",
-                    content: {
-                        [contentType]: {
-                            schema: this.getSchemaReference("Error")
-                        }
-                    }
+                    content: errorContent
                 } : undefined,
                 ["401"]: authRequired ? {
                     description: "Returned when a valid authentication token is not provided.",
-                    content: {
-                        [contentType]: {
-                            schema: this.getSchemaReference("Error")
-                        }
-                    }
+                    content: errorContent
                 } : undefined,
                 ["403"]: aclInfo ? {
-                    description: "Returnedwhentheuserdoesnothavepermissiontoperformthisaction.",
-                    content: {
-                        [contentType]: {
-                            schema: this.getSchemaReference("Error")
-                        }
-                    }
+                    description: "Returned when the user does not have permission to perform this action.",
+                    content: errorContent
                 } : undefined
             },
             security,
-            summary,
+            summary: (summary && StringUtils.findAndReplace(summary, { serviceName: `${this.config.get("service_name")} -` || "Service -" })),
             tags,
             "x-name": name
         };

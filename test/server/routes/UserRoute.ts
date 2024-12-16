@@ -23,7 +23,7 @@ import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/User";
 import { MongoRepository as Repo } from "typeorm";
 import { Request as XRequest, Response as XResponse } from "express";
-import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { Description, Returns, TypeInfo, Summary } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
 import Player from "../models/Player";
 const { Init } = ObjectDecorators;
@@ -63,6 +63,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return obj;
     }
 
+    @Summary("Request")
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns([null])
@@ -75,6 +76,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doCount({ params, query, res, user });
     }
 
+    @Summary("Request")
     @Post()
     @Validate("validate")
     @Description("Creates a new user account.")
@@ -88,6 +90,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doCreate(objs, { req, user });
     }
 
+    @Summary("Request")
     @Put()
     @Validate("validate")
     @Description("Updates multiple user accounts in bulk.")
@@ -97,6 +100,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doBulkUpdate(objs, { user });
     }
 
+    @Summary("Request")
     @Delete(":id")
     @Description("Deletes an existing user account.")
     @Returns([null])
@@ -104,6 +108,7 @@ class UserRoute extends ModelRoute<UserModel> {
         await super.doDelete(id, { user });
     }
 
+    @Summary("Request")
     @Head(":id")
     @Description(
         "Returns a boolean integer indicating whether or not a user account with the given unique identifier exists."
@@ -118,6 +123,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doExists(id, { query, res, user });
     }
 
+    @Summary("Request")
     @Get()
     @Description("Returns all user accounts matching the given search criteria.")
     @Returns([[Array, UserModel]])
@@ -125,6 +131,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doFindAll({ params, query, user });
     }
 
+    @Summary("Request")
     @Get(":id")
     @After("cleanPII")
     @Description("Returns the user account with the given unique identifier.")
@@ -133,6 +140,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doFindById(id, { query, user });
     }
 
+    @Summary("Request")
     @Delete()
     @Description("Deletes all existing user accounts matching the given search criteria.")
     @Returns([null])
@@ -140,6 +148,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doTruncate({ params, query, user });
     }
 
+    @Summary("Request")
     @Put(":id")
     @Before("validate")
     @Description("Updates an existing user account.")
@@ -147,6 +156,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return super.doUpdate(id, obj, { user });
     }
 
+    @Summary("Request")
     @Put(":id/:property")
     @Before("validate")
     @Description("Updates a single property of an existing user account.")

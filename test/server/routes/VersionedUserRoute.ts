@@ -16,14 +16,10 @@ import {
     User,
 } from "../../../src/decorators/RouteDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
-import { Logger, ObjectDecorators } from "@composer-js/core";
 import UserModel from "../models/VersionedUser";
 import { Response as XResponse } from "express";
-import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { Description, Returns, TypeInfo, Summary } from "../../../src/decorators/DocDecorators";
 import { RepoUtils } from "../../../src";
-const { Init } = ObjectDecorators;
-
-const logger = Logger();
 
 @Model(UserModel)
 @Route("/versionedusers")
@@ -44,6 +40,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         }
     }
 
+    @Summary("Request")
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns([null])
@@ -56,6 +53,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doCount({ params, query, res, user });
     }
 
+    @Summary("Request")
     @Post()
     @Validate("validate")
     @Description("Creates a new user account.")
@@ -65,6 +63,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doCreate(obj, { user });
     }
 
+    @Summary("Request")
     @Delete(":id")
     @Description("Deletes an existing user account.")
     @Returns([null])
@@ -77,6 +76,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doDelete(id, { purge: purge === "true" ? true : false, version, user });
     }
 
+    @Summary("Request")
     @Get()
     @Description("Returns all user accounts matching the given search criteria.")
     @Returns([[Array, UserModel]])
@@ -84,6 +84,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doFindAll({ params, query, user });
     }
 
+    @Summary("Request")
     @Get(":id")
     @Description("Returns the user account with the given unique identifier.")
     @Returns([UserModel])
@@ -91,6 +92,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doFindById(id, { query, user });
     }
 
+    @Summary("Request")
     @Delete()
     @Description("Deletes all existing user accounts matching the given search criteria.")
     @Returns([null])
@@ -98,6 +100,7 @@ class VersionedUserRoute extends ModelRoute<UserModel> {
         return super.doTruncate({ params, query, user });
     }
 
+    @Summary("Request")
     @Put(":id")
     @Validate("validate")
     @Description("Updates an existing user account.")

@@ -4,11 +4,9 @@
 import { Route, Get, User, Auth, WebSocket, Socket, Query } from "../../../src/decorators/RouteDecorators";
 import { ApiError, Logger, ObjectDecorators } from "@composer-js/core";
 import * as ws from "ws";
-import { Description, Returns } from "../../../src/decorators/DocDecorators";
+import { Description, Returns, Summary } from "../../../src/decorators/DocDecorators";
 import { ApiErrors, ApiErrorMessages } from "../../../src/ApiErrors";
 const { Init } = ObjectDecorators;
-
-const logger = Logger();
 
 @Route("/")
 @Description("Handles processing of all HTTP requests to the `/` path.")
@@ -25,6 +23,7 @@ class DefaultRoute {
         // NO-OP
     }
 
+    @Summary("Request")
     @Get("hello")
     @Description("Returns `Hello World!`.")
     @Returns([Object])
@@ -32,6 +31,7 @@ class DefaultRoute {
         return { msg: "Hello World!" };
     }
 
+    @Summary("Request")
     @Auth(["jwt"])
     @Get("token")
     @Description("Returns the user data for a valid authenticated user.")
@@ -40,6 +40,7 @@ class DefaultRoute {
         return user;
     }
 
+    @Summary("Request")
     @Get("error")
     @Description("Throws a 400-level error and returns the error as the response body.")
     @Returns([null])
@@ -47,6 +48,7 @@ class DefaultRoute {
         throw new ApiError(ApiErrors.INVALID_REQUEST, 400, "This is a test.");
     }
 
+    @Summary("Request")
     @WebSocket("connect")
     @Description("Establishes a socket connection that responds to all messages with `echo ${msg}`.")
     protected wsConnect(@Socket ws: ws, @User user?: any): void {
@@ -56,6 +58,7 @@ class DefaultRoute {
         ws.send(`hello ${user && user.uid ? user.uid : "guest"}`);
     }
 
+    @Summary("Request")
     @Auth(["jwt"])
     @WebSocket("connect-secure")
     @Description("Establishes a secured socket connection that responds to all messages with `echo ${msg}`.")
@@ -70,6 +73,7 @@ class DefaultRoute {
         }
     }
 
+    @Summary("Request")
     @WebSocket("connect-query")
     @Description("Establishes a socket connection that responds to all messages with the query message and message `echo ${message} ${msg}` or `echo ${msg}`.")
     protected wsConnectQuery(@Query("message") message, @Socket ws: ws, @User user?: any): void {

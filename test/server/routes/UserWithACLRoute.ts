@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Logger, ObjectDecorators } from "@composer-js/core";
+import { Logger } from "@composer-js/core";
 import UserModel from "../models/ProtectedUser";
 import { Response as XResponse } from "express";
-import { RouteDecorators } from "../../../src/decorators";
+import { DocDecorators, RouteDecorators } from "../../../src/decorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { RepoUtils } from "../../../src/models";
-const { Init } = ObjectDecorators;
+const { Description, Summary } = DocDecorators;
 const { Route, Get, Post, Validate, Delete, Head, Put, Param, User, Query, Response, Before, Model } = RouteDecorators;
 
 const logger = Logger();
@@ -30,6 +30,8 @@ class UserWithACLRoute extends ModelRoute<UserModel> {
         }
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Head()
     protected async count(
         @Param() params: any,
@@ -40,22 +42,30 @@ class UserWithACLRoute extends ModelRoute<UserModel> {
         return await super.doCount({ params, query, res, user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Post()
     @Validate("validate")
     protected async create(obj: UserModel | UserModel[], @User user?: any): Promise<UserModel | UserModel[]> {
         return await super.doCreate(obj, { user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Delete(":id")
     protected async delete(@Param("id") id: string, @User user?: any): Promise<void> {
         await super.doDelete(id, { user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Get()
     protected async findAll(@Param() params: any, @Query() query: any, @User user?: any): Promise<UserModel[]> {
         return await super.doFindAll({ params, query, user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Get(":id")
     protected async findById(
         @Param("id") id: string,
@@ -65,11 +75,15 @@ class UserWithACLRoute extends ModelRoute<UserModel> {
         return await super.doFindById(id, { query, user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Delete()
     protected async truncate(@Param() params: any, @Query() query: any, @User user?: any): Promise<void> {
         await super.doTruncate({ params, query, user });
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Put(":id")
     @Before("validate")
     protected async update(@Param("id") id: string, obj: UserModel, @User user?: any): Promise<UserModel> {

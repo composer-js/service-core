@@ -2,7 +2,7 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Get, Route } from "../decorators/RouteDecorators";
-import { Description, Returns } from "../decorators/DocDecorators";
+import { Description, Returns, Summary } from "../decorators/DocDecorators";
 import { ObjectDecorators } from "@composer-js/core";
 import { StatusExtraData } from "../models/StatusExtraData";
 const { Config, Inject } = ObjectDecorators;
@@ -22,6 +22,7 @@ export class StatusRoute {
     private statusExtraData: StatusExtraData | undefined;
 
 
+    @Summary("{{serviceName}} servrice and operational status")
     @Description("Returns information about the service and it's operational status.")
     @Get()
     @Returns([Object])

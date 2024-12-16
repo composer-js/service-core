@@ -11,7 +11,7 @@ import { ModelRoute } from "../routes/ModelRoute";
 import { RepoUtils } from "../models";
 import { ApiErrorMessages } from "../ApiErrors";
 const { MongoRepository } = DatabaseDecorators;
-const { Description, Returns, TypeInfo } = DocDecorators;
+const { Description, Returns, Summary, TypeInfo } = DocDecorators;
 const { Auth, Delete, Get, Head, Model, Param, Post, Put, Query, Request, Response, Route, User } = RouteDecorators;
 
 @Model(AccessControlListMongo)
@@ -33,6 +33,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return "db.cache.AccessControlList";
     }
 
+    @Summary("Creates Access Control Lists.")
     @Description("Creates one or more access control lists.")
     @Auth(["jwt"])
     @Post()
@@ -49,6 +50,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doCreate(objs, { user, recordEvent: true, req });
     }
 
+    @Summary("Bulk Update Access Control Lists.")
     @Description("Saves modifications for the given collection of access control lists.")
     @Auth(["jwt"])
     @Put()
@@ -65,6 +67,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doBulkUpdate(objs, { user, recordEvent: true, req });
     }
 
+    @Summary("Count Access Control Lists.")
     @Description("Returns the total number of access control lists matching the given search criteria.")
     @Auth(["jwt"])
     @Head()
@@ -82,10 +85,11 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doCount({ params, query, res, user });
     }
 
+    @Summary("Find All Access Control Lists.")
     @Description("Returns a collection of access control lists matching the given search criteria.")
     @Auth(["jwt"])
     @Get()
-    @Returns([Array, AccessControlListMongo])
+    @Returns([[Array, AccessControlListMongo]])
     private findAll(
         @Param() params: any,
         @Query() query: any,
@@ -98,6 +102,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doFindAll({ params, query, user });
     }
 
+    @Summary("Delete Access Control Lists by Id.")
     @Description("Deletes the access control list with the given unique identifier and optional version.")
     @Auth(["jwt"])
     @Delete("/:id")
@@ -123,6 +128,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doDelete(id, { version, user, recordEvent: true, req });
     }
 
+    @Summary("Find Access Control Lists by Id.")
     @Description("Returns the access control list with the given unique identifier.")
     @Auth(["jwt"])
     @Get("/:id")
@@ -143,6 +149,7 @@ export class ACLRouteMongo extends ModelRoute<AccessControlListMongo> {
         return super.doFindById(id, { query, user });
     }
 
+    @Summary("Update Access Control Lists by Id.")
     @Description("Saves modifications to existing access control list with the given unique identifier.")
     @Auth(["jwt"])
     @Put("/:id")

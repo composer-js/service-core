@@ -11,7 +11,7 @@ import { ModelRoute } from "../routes/ModelRoute";
 import { RepoUtils } from "../models";
 import { ApiErrorMessages } from "../ApiErrors";
 const { Repository } = DatabaseDecorators;
-const { Description, Returns, TypeInfo } = DocDecorators;
+const { Description, Returns, TypeInfo, Summary } = DocDecorators;
 const { Auth, Delete, Get, Head, Model, Param, Post, Put, Query, Request, Response, Route, User } = RouteDecorators;
 
 @Model(AccessControlListSQL)
@@ -33,6 +33,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return "db.cache.AccessControlList";
     }
 
+    @Summary("Creates Access Control Lists.")
     @Description("Creates one or more access control lists.")
     @Auth(["jwt"])
     @Post()
@@ -49,6 +50,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doCreate(objs, { user, recordEvent: true, req });
     }
 
+    @Summary("Bulk Update Access Control Lists.")
     @Description("Saves modifications for the given collection of access control lists.")
     @Auth(["jwt"])
     @Put()
@@ -65,6 +67,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doBulkUpdate(objs, { user, recordEvent: true, req });
     }
 
+    @Summary("Count Access Control Lists.")
     @Description("Returns the total number of access control lists matching the given search criteria.")
     @Auth(["jwt"])
     @Head()
@@ -82,6 +85,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doCount({ params, query, res, user });
     }
 
+    @Summary("Find All Access Control Lists.")
     @Description("Returns a collection of access control lists matching the given search criteria.")
     @Auth(["jwt"])
     @Get()
@@ -94,6 +98,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doFindAll({ params, query, user });
     }
 
+    @Summary("Delete Access Control Lists by Id.")
     @Description("Deletes the access control list with the given unique identifier and optional version.")
     @Auth(["jwt"])
     @Delete("/:id")
@@ -119,6 +124,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doDelete(id, { version, user, recordEvent: true, req });
     }
 
+    @Summary("Find Access Control Lists by Id.")
     @Description("Returns the access control list with the given unique identifier.")
     @Auth(["jwt"])
     @Get("/:id")
@@ -139,6 +145,7 @@ export class ACLRouteSQL extends ModelRoute<AccessControlListSQL> {
         return super.doFindById(id, { query, user });
     }
 
+    @Summary("Update Access Control Lists by Id.")
     @Description("Saves modifications to existing access control list with the given unique identifier.")
     @Auth(["jwt"])
     @Put("/:id")

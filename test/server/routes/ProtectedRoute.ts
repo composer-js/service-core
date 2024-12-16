@@ -3,6 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { Logger } from "@composer-js/core";
 import { RouteDecorators } from "../../../src/decorators";
+import { Description, Summary } from "../../../src/decorators/DocDecorators";
 const { Auth, Get, Protect, RequiresRole, Route, User } = RouteDecorators;
 
 const logger = Logger();
@@ -31,6 +32,8 @@ const logger = Logger();
     ],
 })
 class ProtectedDefaultRoute {
+    @Summary("Request")
+    @Description("Request")
     @Get("hello")
     @Protect({
         uid: "",
@@ -59,17 +62,23 @@ class ProtectedDefaultRoute {
         return { msg: "Hello World!" };
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Get("foobar")
     protected foobar(): any {
         return { msg: "foobar" };
     }
 
+    @Summary("Request")
+    @Description("Request")
     @RequiresRole("test")
     @Get("roletest")
     protected roletest(): any {
         return { msg: "success" };
     }
 
+    @Summary("Request")
+    @Description("Request")
     @Auth(["jwt"])
     @Get("token")
     protected async authToken(@User user?: any): Promise<any> {

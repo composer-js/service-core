@@ -45,6 +45,7 @@ describe("OpenApiSpec Tests", () => {
                     url: config.get("cluster_url")
                 })
             ]));
+            expect(apiSpec1.paths["/admin/clear-cache"].get?.summary).toEqual("api_service - flush second-level cache");
         }
         expect(apiSpec2).toBeDefined();
         if (apiSpec2) {

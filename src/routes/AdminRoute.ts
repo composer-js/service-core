@@ -7,7 +7,7 @@ import * as Transport from "winston-transport";
 import { Auth, ContentType, Get, Route, Socket, User, WebSocket } from "../decorators/RouteDecorators";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
 import ws, { createWebSocketStream } from "ws";
-import { Description, Returns } from "../decorators/DocDecorators";
+import { Description, Returns, Summary } from "../decorators/DocDecorators";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
 const { Config, Init, Logger } = ObjectDecorators;
 
@@ -45,6 +45,7 @@ export class RedisTransport extends Transport {
  *
  * @author Jean-Philippe Steinmetz
  */
+@Summary("Admin routes supporting cache-clearing, restarting, logs and release notes")
 @Route("/admin")
 export class AdminRoute {
     /** A map of user uid's to active sockets. */
@@ -109,6 +110,7 @@ export class AdminRoute {
         }
     }
 
+    @Summary("{{serviceName}} flush second-level cache")
     @Description("Flushes the second-level cache so that subsequent requests will pull directly from the database.")
     @Auth(["jwt"])
     @Get("/clear-cache")
@@ -135,6 +137,7 @@ export class AdminRoute {
         }
     }
 
+    @Summary("{{serviceName}} websocket for NodeJS debug inspector")
     @Description("Establishes a connection to the remote NodeJS debug inspector.")
     @Auth(["jwt"])
     @WebSocket("/inspect")
@@ -168,6 +171,7 @@ export class AdminRoute {
         });
     }
 
+    @Summary("{{serviceName}} websocket to view live logs")
     @Description("Establishes a connection to the live log socket.")
     @Auth(["jwt"])
     @WebSocket("/logs")
@@ -233,6 +237,7 @@ export class AdminRoute {
         }
     }
 
+    @Summary("{{serviceName}} release notes")
     @Description("Returns the release notes file for the service.")
     @Auth(["jwt"])
     @Get("/release-notes")
@@ -246,6 +251,7 @@ export class AdminRoute {
         }
     }
 
+    @Summary("{{serviceName}} Restart")
     @Description("Immediately restarts the service.")
     @Auth(["jwt"])
     @Get("/restart")

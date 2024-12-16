@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 import { ObjectDecorators } from "@composer-js/core";
 import { OpenApiSpec } from "../OpenApiSpec";
-import { Description, Returns } from "../decorators/DocDecorators";
+import { Description, Returns, Summary } from "../decorators/DocDecorators";
 import { Get, Route, ContentType } from "../decorators/RouteDecorators";
 const swagger = require("swagger-ui-express");
 const { Inject } = ObjectDecorators;
@@ -20,6 +20,7 @@ export class OpenAPIRoute {
     @Inject(OpenApiSpec)
     private apiSpec: OpenApiSpec = new OpenApiSpec();
 
+    @Summary("{{serviceName}} OpenAPI, HTLM format")
     @Description("Returns the OpenAPI specification for the service in HTML format.")
     @Get()
     @ContentType("text/html")
@@ -28,6 +29,7 @@ export class OpenAPIRoute {
         return swagger.generateHTML(this.apiSpec.getSpec());
     }
 
+    @Summary("{{serviceName}} OpenAPI, JSON format")
     @Description("Returns the OpenAPI specification for the service in JSON format.")
     @Get("openapi.json")
     @Returns([String])
@@ -35,6 +37,7 @@ export class OpenAPIRoute {
         return this.apiSpec.getSpec();
     }
 
+    @Summary("{{serviceName}} OpenAPI, YAML format")
     @Description("Returns the OpenAPI specification for the service in YAML format.")
     @Get("openapi.yaml")
     @ContentType("text/yaml")

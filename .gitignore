@@ -23,3 +23,4 @@ mongomemory-*-test
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+openapi.*

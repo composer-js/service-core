@@ -19,7 +19,7 @@ import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/CacheUser";
 import { Response as XResponse } from "express";
-import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { Description, Returns, Summary, TypeInfo } from "../../../src/decorators/DocDecorators";
 import { OneOrMany, OneOrNull, RepoUtils } from "../../../src";
 
 const logger = Logger();
@@ -43,6 +43,7 @@ class UserRoute extends ModelRoute<UserModel> {
         }
     }
 
+    @Summary("Count")
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns(null)
@@ -55,6 +56,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doCount({ params, query, res, user });
     }
 
+    @Summary("Create")
     @Post()
     @Validate("validate")
     @Description("Creates a new user account.")
@@ -64,6 +66,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doCreate(objs, { user });
     }
 
+    @Summary("Delete")
     @Delete(":id")
     @Description("Deletes an existing user account.")
     @Returns(null)
@@ -71,6 +74,7 @@ class UserRoute extends ModelRoute<UserModel> {
         await super.doDelete(id, { user });
     }
 
+    @Summary("FindAll")
     @Get()
     @Description("Returns all user accounts matching the given search criteria.")
     @Returns([[Array, UserModel]])
@@ -78,6 +82,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doFindAll({ params, query, user });
     }
 
+    @Summary("FindById")
     @Get(":id")
     @Description("Returns the user account with the given unique identifier.")
     @Returns([UserModel, null])
@@ -89,6 +94,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doFindById(id, { query, user });
     }
 
+    @Summary("Truncate")
     @Delete()
     @Description("Deletes all existing user accounts matching the given search criteria.")
     @Returns(null)
@@ -96,6 +102,7 @@ class UserRoute extends ModelRoute<UserModel> {
         await super.doTruncate({ params, query, user });
     }
 
+    @Summary("Update")
     @Put(":id")
     @Validate("validate")
     @Description("Updates an existing user account.")
