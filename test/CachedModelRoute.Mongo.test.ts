@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as crypto from "crypto";
@@ -9,7 +9,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoRepository, DataSource } from "typeorm";
 import CacheUser from "./server/models/CacheUser";
 import { Logger } from "@composer-js/core";
-import * as rimraf from "rimraf";
 const Redis = require("ioredis-mock");
 
 const baseCacheKey: string = "db.cache.CacheUser";
@@ -47,14 +46,7 @@ const createUsers = async (num: number): Promise<CacheUser[]> => {
  * @param query The query object to hash.
  */
 const getCacheKey = function (query: any): string {
-    return (
-        baseCacheKey +
-        "." +
-        crypto
-            .createHash("sha512")
-            .update(JSON.stringify(query))
-            .digest("hex")
-    );
+    return baseCacheKey + "." + crypto.createHash("sha512").update(JSON.stringify(query)).digest("hex");
 };
 
 jest.setTimeout(120000);
@@ -64,7 +56,9 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
     const server: Server = new Server(config, "./test/server", Logger(), objectFactory);
 
     beforeAll(async () => {
-        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, "default");
+        const connMgr: ConnectionManager = await objectFactory.newInstance(ConnectionManager, {
+            name: "default",
+        });
         connMgr.connections.set("cache", redis);
         await mongod.start();
         await server.start();
@@ -78,7 +72,6 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimraf.sync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -99,9 +92,7 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 lastName: "Tennant",
                 age: 47,
             });
-            const result = await request(server.getApplication())
-                .post("/cachedusers")
-                .send(user);
+            const result = await request(server.getApplication()).post("/cachedusers").send(user);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
             expect(result.body.version).toEqual(user.version);
@@ -125,6 +116,8 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 const parsed: CacheUser = JSON.parse(json);
                 expect(parsed).toBeDefined();
                 expect(parsed.uid).toEqual(stored.uid);
+                expect(new Date(parsed.dateCreated)).toEqual(stored.dateCreated);
+                expect(new Date(parsed.dateModified)).toEqual(stored.dateModified);
                 expect(parsed.version).toEqual(stored.version);
                 expect(parsed.firstName).toEqual(stored.firstName);
                 expect(parsed.lastName).toEqual(stored.lastName);
@@ -152,6 +145,8 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 .send();
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
+            expect(new Date(result.body.dateCreated)).toEqual(user.dateCreated);
+            expect(new Date(result.body.dateModified)).toEqual(user.dateModified);
             expect(result.body.version).toEqual(user.version);
             expect(result.body.firstName).toEqual(user.firstName);
             expect(result.body.lastName).toEqual(user.lastName);
@@ -163,7 +158,13 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(json).toBeDefined();
             const cachedObj: any = JSON.parse(json);
             expect(cachedObj).toBeDefined();
-            expect(cachedObj).toEqual(result.body);
+            expect(cachedObj.uid).toEqual(result.body.uid);
+            expect(cachedObj.dateCreated).toEqual(result.body.dateCreated);
+            expect(cachedObj.dateModified).toEqual(result.body.dateModified);
+            expect(cachedObj.version).toEqual(result.body.version);
+            expect(cachedObj.firstName).toEqual(result.body.firstName);
+            expect(cachedObj.lastName).toEqual(result.body.lastName);
+            expect(cachedObj.age).toEqual(result.body.age);
         });
 
         // The following test catches potential lookup errors from previously cached records
@@ -174,6 +175,8 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 .send();
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
+            expect(new Date(result.body.dateCreated)).toEqual(user.dateCreated);
+            expect(new Date(result.body.dateModified)).toEqual(user.dateModified);
             expect(result.body.version).toEqual(user.version);
             expect(result.body.firstName).toEqual(user.firstName);
             expect(result.body.lastName).toEqual(user.lastName);
@@ -185,7 +188,13 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(json).toBeDefined();
             const cachedObj: any = JSON.parse(json);
             expect(cachedObj).toBeDefined();
-            expect(cachedObj).toEqual(result.body);
+            expect(cachedObj.uid).toEqual(result.body.uid);
+            expect(cachedObj.dateCreated).toEqual(result.body.dateCreated);
+            expect(cachedObj.dateModified).toEqual(result.body.dateModified);
+            expect(cachedObj.version).toEqual(result.body.version);
+            expect(cachedObj.firstName).toEqual(result.body.firstName);
+            expect(cachedObj.lastName).toEqual(result.body.lastName);
+            expect(cachedObj.age).toEqual(result.body.age);
         });
 
         it("Can update cached document.", async () => {
@@ -199,6 +208,8 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveProperty("uid");
             expect(result.body.uid).toBe(user.uid);
+            expect(new Date(result.body.dateCreated)).toEqual(user.dateCreated);
+            expect(new Date(result.body.dateModified).getTime()).toBeGreaterThan(user.dateModified.getTime());
             expect(result.body.version).toBeGreaterThan(user.version);
             expect(result.body.firstName).toBe(user.firstName);
             expect(result.body.lastName).toBe(user.lastName);
@@ -212,15 +223,19 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
                 expect(existing.firstName).toBe(result.body.firstName);
                 expect(existing.lastName).toBe(result.body.lastName);
                 expect(existing.age).toBe(result.body.age);
-            }
 
-            const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, user.uid);
-            const cacheKey: string = getCacheKey(query);
-            const json: string = await redis.get(cacheKey);
-            expect(json).toBeDefined();
-            const cachedObj: CacheUser = new CacheUser(JSON.parse(json));
-            expect(cachedObj).toBeDefined();
-            expect(cachedObj).toEqual(existing);
+                const query: any = ModelUtils.buildIdSearchQueryMongo(CacheUser, user.uid);
+                const cacheKey: string = getCacheKey(query);
+                const json: string = await redis.get(cacheKey);
+                expect(json).toBeDefined();
+                const cachedObj: CacheUser = new CacheUser(JSON.parse(json));
+                expect(cachedObj).toBeDefined();
+                expect(cachedObj.uid).toEqual(existing.uid);
+                expect(cachedObj.version).toEqual(existing.version);
+                expect(cachedObj.firstName).toEqual(existing.firstName);
+                expect(cachedObj.lastName).toEqual(existing.lastName);
+                expect(cachedObj.age).toEqual(existing.age);
+            }
         });
     });
 
@@ -231,6 +246,15 @@ describe("ModelRoute Tests [MongoDB with Caching]", () => {
             const result = await request(server.getApplication()).get("/cachedusers");
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveLength(users.length);
+            for (let i = 0; i < result.body.length; i++) {
+                expect(result.body[i].uid).toBe(users[i].uid);
+                expect(result.body[i].age).toBe(users[i].age);
+                expect(new Date(result.body[i].dateCreated)).toEqual(users[i].dateCreated);
+                expect(new Date(result.body[i].dateModified)).toEqual(users[i].dateModified);
+                expect(result.body[i].firstName).toBe(users[i].firstName);
+                expect(result.body[i].lastName).toBe(users[i].lastName);
+                expect(result.body[i].version).toBe(users[i].version);
+            }
 
             const result2 = await request(server.getApplication()).get("/cachedusers");
             expect(result2).toHaveProperty("body");

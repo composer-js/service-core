@@ -16,7 +16,7 @@ import { JWTUtils } from "@composer-js/core";
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
-        dbName: "axr-test",
+        dbName: "mongomemory-cjs-test",
     },
 });
 const sqlite: sqlite3.Database = new sqlite3.Database(":memory:");

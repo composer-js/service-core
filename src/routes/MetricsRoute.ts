@@ -2,9 +2,10 @@
 // Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import * as prom from "prom-client";
-import { Config } from "../decorators/ObjectDecorators";
 import { Get, Param, Route, ContentType } from "../decorators/RouteDecorators";
-import { Description, Returns } from "../decorators/DocDecorators";
+import { Description, Returns, Summary } from "../decorators/DocDecorators";
+import { ObjectDecorators } from "@composer-js/core";
+const { Config } = ObjectDecorators;
 
 /**
  * Handles all REST API requests for the endpoint `/metrics'. This route handler produces Prometheus compatible metrics
@@ -15,14 +16,13 @@ import { Description, Returns } from "../decorators/DocDecorators";
  */
 @Route("/metrics")
 export class MetricsRoute {
-    @Config()
-    private config: any;
     private registry: prom.Registry;
 
     constructor() {
         this.registry = prom.register;
     }
 
+    @Summary("{{serviceName}} all Prometheus metrics")
     @Description("Returns all Prometheus metrics emitted by this service.")
     @Get()
     @ContentType(prom.register.contentType)
@@ -31,6 +31,7 @@ export class MetricsRoute {
         return await this.registry.metrics();
     }
 
+    @Summary("{{serviceName}} Prometheus metrics by name")
     @Description("Returns the Prometheus metric emitted by this service with the given name.")
     @Get("/:metric")
     @ContentType(prom.register.contentType)

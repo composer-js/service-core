@@ -1,6 +1,6 @@
-/////////////////////////////////////////////////////////////////////////////////
-//   Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
 import { Server, ConnectionManager, ObjectFactory } from "../src";
@@ -9,13 +9,11 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import * as sqlite3 from "sqlite3";
 import { Repository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import * as rimraf from "rimraf";
-import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
-        dbName: "axr-test",
+        dbName: "mongomemory-cjs-test",
     },
 });
 let repo: Repository<Item>;
@@ -62,11 +60,10 @@ describe("ModelRoute Tests [SQL]", () => {
         await mongod.stop();
         await objectFactory.destroy();
         return await new Promise<void>((resolve) => {
-            sqlite.close(err => {
+            sqlite.close((err) => {
                 if (err) {
                     console.log(err);
                 }
-                rimraf.sync("tmp-*");
                 resolve();
             });
         });
@@ -83,9 +80,7 @@ describe("ModelRoute Tests [SQL]", () => {
                 quantity: 1,
                 cost: 10000,
             });
-            const result = await request(server.getApplication())
-                .post("/items")
-                .send(item);
+            const result = await request(server.getApplication()).post("/items").send(item);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(item.uid);
             expect(result.body.version).toEqual(item.version);
@@ -159,7 +154,7 @@ describe("ModelRoute Tests [SQL]", () => {
             const items: Item[] = await createItems(20);
             const result = await request(server.getApplication()).head("/items");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(items.length.toString());
+            expect(result.headers["content-length"]).toBe(items.length.toString());
         });
 
         it("Can count documents with criteria (eq). [SQL]", async () => {
@@ -169,7 +164,7 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("Boomerang", 1, 100);
             const result = await request(server.getApplication()).head("/items?name=B-Bomb");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((1).toString());
+            expect(result.headers["content-length"]).toBe((1).toString());
         });
 
         it("Can count documents with criteria (like). [SQL]", async () => {
@@ -179,7 +174,7 @@ describe("ModelRoute Tests [SQL]", () => {
             await createItem("Boomerang", 1, 100);
             const result = await request(server.getApplication()).head("/items?name=like(Item%)");
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(items.length.toString());
+            expect(result.headers["content-length"]).toBe(items.length.toString());
         });
 
         it("Can find all documents. [SQL]", async () => {

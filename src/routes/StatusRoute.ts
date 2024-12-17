@@ -2,8 +2,10 @@
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Get, Route } from "../decorators/RouteDecorators";
-import { Config } from "../decorators/ObjectDecorators";
-import { Description, Returns } from "../decorators/DocDecorators";
+import { Description, Returns, Summary } from "../decorators/DocDecorators";
+import { ObjectDecorators } from "@composer-js/core";
+import { StatusExtraData } from "../models/StatusExtraData";
+const { Config, Inject } = ObjectDecorators;
 
 /**
  * The `StatusRoute` provides a default `/status` endpoint the returns metadata information about the service such as
@@ -16,6 +18,11 @@ export class StatusRoute {
     @Config()
     private config: any;
 
+    @Inject(StatusExtraData)
+    private statusExtraData: StatusExtraData | undefined;
+
+
+    @Summary("{{serviceName}} servrice and operational status")
     @Description("Returns information about the service and it's operational status.")
     @Get()
     @Returns([Object])
@@ -24,6 +31,7 @@ export class StatusRoute {
             name: this.config.get("service_name"),
             time: new Date().toISOString(),
             version: this.config.get("version"),
+            ...this.statusExtraData?.data
         };
     }
 }

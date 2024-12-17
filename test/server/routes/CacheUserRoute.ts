@@ -1,29 +1,26 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import {
     Route,
     Get,
+    Param,
     Post,
     Validate,
     Delete,
     Head,
     Put,
-    Param,
-    User,
     Query,
-    Response,
     Model,
+    Response,
+    User,
 } from "../../../src/decorators/RouteDecorators";
-import { Init } from "../../../src/decorators/ObjectDecorators";
 import { ModelRoute } from "../../../src/routes/ModelRoute";
 import { Logger } from "@composer-js/core";
 import UserModel from "../models/CacheUser";
-import { MongoRepository as Repo } from "typeorm";
 import { Response as XResponse } from "express";
-import { MongoRepository } from "../../../src/decorators/DatabaseDecorators";
-import { Description, Returns, TypeInfo } from "../../../src/decorators/DocDecorators";
-import { OneOrMany, OneOrNull } from "../../../src";
+import { Description, Returns, Summary, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { OneOrMany, OneOrNull, RepoUtils } from "../../../src";
 
 const logger = Logger();
 
@@ -31,8 +28,7 @@ const logger = Logger();
 @Route("/cachedusers")
 @Description("Handles processing of all HTTP requests for the path `/cachedusers`.")
 class UserRoute extends ModelRoute<UserModel> {
-    @MongoRepository(UserModel)
-    protected repo?: Repo<UserModel>;
+    protected readonly repoUtilsClass: any = RepoUtils;
 
     /**
      * Initializes a new instance with the specified defaults.
@@ -41,26 +37,26 @@ class UserRoute extends ModelRoute<UserModel> {
         super();
     }
 
-    @Init
-    private async initialize() {
-        if (this.repo) {
-            logger.info("Calling init counting users " + (await this.repo.count()));
-        }
-    }
-
     private validate(obj: UserModel): void {
         if (!obj) {
             throw new Error("Did not receive object to validate");
         }
     }
 
+    @Summary("Count")
     @Head()
     @Description("Returns the total number of user accounts matching the given search criteria.")
     @Returns(null)
-    protected async count(@Param() params: any, @Query() query: any, @Response res: XResponse, @User user?: any): Promise<any> {
+    protected async count(
+        @Param() params: any,
+        @Query() query: any,
+        @Response res: XResponse,
+        @User user?: any
+    ): Promise<any> {
         return await super.doCount({ params, query, res, user });
     }
 
+    @Summary("Create")
     @Post()
     @Validate("validate")
     @Description("Creates a new user account.")
@@ -70,6 +66,7 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doCreate(objs, { user });
     }
 
+    @Summary("Delete")
     @Delete(":id")
     @Description("Deletes an existing user account.")
     @Returns(null)
@@ -77,6 +74,7 @@ class UserRoute extends ModelRoute<UserModel> {
         await super.doDelete(id, { user });
     }
 
+    @Summary("FindAll")
     @Get()
     @Description("Returns all user accounts matching the given search criteria.")
     @Returns([[Array, UserModel]])
@@ -84,13 +82,19 @@ class UserRoute extends ModelRoute<UserModel> {
         return await super.doFindAll({ params, query, user });
     }
 
+    @Summary("FindById")
     @Get(":id")
     @Description("Returns the user account with the given unique identifier.")
     @Returns([UserModel, null])
-    protected async findById(@Param("id") id: string, @Query() query: any, @User user?: any): Promise<OneOrNull<UserModel>> {
+    protected async findById(
+        @Param("id") id: string,
+        @Query() query: any,
+        @User user?: any
+    ): Promise<OneOrNull<UserModel>> {
         return await super.doFindById(id, { query, user });
     }
 
+    @Summary("Truncate")
     @Delete()
     @Description("Deletes all existing user accounts matching the given search criteria.")
     @Returns(null)
@@ -98,6 +102,7 @@ class UserRoute extends ModelRoute<UserModel> {
         await super.doTruncate({ params, query, user });
     }
 
+    @Summary("Update")
     @Put(":id")
     @Validate("validate")
     @Description("Updates an existing user account.")

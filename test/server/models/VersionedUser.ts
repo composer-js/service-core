@@ -1,9 +1,12 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { Entity, Column, Index } from "typeorm";
-import { Identifier, Model, TrackChanges } from "../../../src/decorators/ModelDecorators";
+import { Identifier, DataStore, TrackChanges } from "../../../src/decorators/ModelDecorators";
 import { RecoverableBaseMongoEntity } from "../../../src/models";
 import { Description } from "../../../src/decorators/DocDecorators";
 
-@Model("mongodb")
+@DataStore("mongodb")
 @Entity()
 @TrackChanges()
 @Description("The User class describes a user within the system that utilizes document versioning.")
@@ -26,14 +29,14 @@ export default class VersionedUser extends RecoverableBaseMongoEntity {
     @Description("The age of the user.")
     public age: number = 0;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<VersionedUser>) {
         super(other);
 
         if (other) {
-            this.name = 'name' in other ? other.name : this.name;
-            this.firstName = 'firstName' in other ? other.firstName : this.firstName;
-            this.lastName = 'lastName' in other ? other.lastName : this.lastName;
-            this.age = 'age' in other ? other.age : this.age;
+            this.name = other.name || this.name;
+            this.firstName = other.firstName || this.firstName;
+            this.lastName = other.lastName || this.lastName;
+            this.age = other.age || this.age;
         }
     }
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Default, Description } from "../decorators/DocDecorators";
 import { Identifier } from "../decorators/ModelDecorators";
@@ -23,9 +23,11 @@ export abstract class SimpleEntity {
     @PrimaryColumn()
     public uid: string = uuid.v4();
 
-    constructor(other?: any) {
+    constructor(other?: Partial<SimpleEntity>) {
         if (other) {
-            this.uid = 'uid' in other ? other.uid : this.uid;
+            this.uid = other.uid || this.uid;
         }
     }
 }
+
+export type PartialSimpleEntity<T extends SimpleEntity> = Partial<T> & Pick<T, "uid">;

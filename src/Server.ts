@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -29,7 +29,15 @@ import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
 import { ApiErrors } from "./ApiErrors";
-import RedisStore from "connect-redis";
+import { RedisStore } from "connect-redis";
+import { ACLUtils } from "./security/ACLUtils";
+import { NotificationUtils } from "./NotificationUtils";
+import { DataSource } from "typeorm";
+import { ACLRouteMongo } from "./security/ACLRouteMongo";
+import { ACLRouteSQL } from "./security/ACLRouteSQL";
+import { EventListenerManager } from "./EventListenerManager";
+import { AccessControlListMongo } from "./security/AccessControlListMongo";
+import { AccessControlListSQL } from "./security/AccessControlListSQL";
 
 interface Entity {
     storeName?: any;
@@ -151,6 +159,8 @@ export class Server {
     protected readonly config?: any;
     /** The manager for handling database connections. */
     protected connectionManager?: ConnectionManager;
+    /** The manager for handling events. */
+    protected eventListenerManager?: EventListenerManager;
     /** The logging utility to use when outputing to console/file. */
     protected readonly logger: any;
     /** The object factory to use when injecting dependencies. */
@@ -181,7 +191,7 @@ export class Server {
         name: "request_time_milliseconds",
         help: "A histogram of the response time of handled requests by the requested method, path and code.",
         labelNames: ["method", "path", "statusCode"],
-        buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 5000]
+        buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 5000],
     });
     protected metricCompletedRequests: prom.Counter<string> = new prom.Counter({
         name: "num_completed_requests",
@@ -204,12 +214,7 @@ export class Server {
      * @param {Logger} logger The logging utility to use for outputing to console/file.
      * @param objectFactory The object factory to use for automatic dependency injection (IOC).
      */
-    constructor(
-        config: any,
-        basePath: string = ".",
-        logger: any = Logger(),
-        objectFactory?: ObjectFactory,
-    ) {
+    constructor(config: any, basePath: string = ".", logger: any = Logger(), objectFactory?: ObjectFactory) {
         this.app = express();
         this.config = config;
         this.basePath = basePath;
@@ -240,6 +245,20 @@ export class Server {
     }
 
     /**
+     * Override this function to add custom behavior before the server is started.
+     */
+    protected preStart(): void | Promise<void> {
+        // Nothing to do
+    }
+
+    /**
+     * Override this function to add custom behavior after the server is started.
+     */
+    protected postStart(): void | Promise<void> {
+        // Nothing to do
+    }
+
+    /**
      * Starts an HTTP listen server based on the provided configuration and OpenAPI specification.
      */
     public start(): Promise<void> {
@@ -247,19 +266,25 @@ export class Server {
             try {
                 this.logger.info("Starting server...");
 
-                // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
-                this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, "default");
+                await this.preStart();
 
-                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, "default");
+                // Create an OpenApiSpec object that we'll use to build an external reference of the server's API
+                this.apiSpec = await this.objectFactory.newInstance(OpenApiSpec, { name: "default" });
+
+                this.connectionManager = await this.objectFactory.newInstance(ConnectionManager, { name: "default" });
                 const datastores: any = this.config.get("datastores");
                 const models: Map<string, any> = new Map();
 
                 this.logger.info("Loading all service classes...");
-                const classLoader: ClassLoader = new ClassLoader(this.basePath, true, true, this.config.get("scripts:ignore"));
+                const classLoader: ClassLoader = new ClassLoader(
+                    this.basePath,
+                    true,
+                    true,
+                    this.config.get("scripts:ignore")
+                );
                 try {
                     await classLoader.load();
-                }
-                catch (e) {
+                } catch (e) {
                     reject(`[server-core|Server.ts]**ERR @ start, loading service classes: ${e}`);
                 }
 
@@ -278,9 +303,29 @@ export class Server {
                     }
                 }
 
+                // If ACL has been configured we need to make sure the proper models are configured and loaded
+                if (datastores.acl) {
+                    if (datastores.acl.type === "mongodb" || datastores.acl.type === "mongodb+srv") {
+                        models?.set(AccessControlListMongo.name, AccessControlListMongo);
+                        this.apiSpec.addModel(AccessControlListMongo.name, AccessControlListMongo);
+                    } else {
+                        models?.set(AccessControlListSQL.name, AccessControlListSQL);
+                        this.apiSpec.addModel(AccessControlListSQL.name, AccessControlListSQL);
+                    }
+                }
+
                 // Initiate all database connections
                 this.logger.info("Initializing database connection(s)...");
                 await this.connectionManager.connect(datastores, models);
+
+                // Initialize ACL utility
+                await this.objectFactory.newInstance(ACLUtils, { name: "default" });
+
+                // Initialize push notifications utility if configured
+                const pushRedis: any = this.connectionManager?.connections.get("notifications");
+                if (pushRedis) {
+                    await this.objectFactory.newInstance(NotificationUtils, { name: "default", args: [pushRedis] });
+                }
 
                 // Express configuration
                 this.app = express();
@@ -290,29 +335,16 @@ export class Server {
                 });
                 this.app = addWebSocket(this.app, this.wss);
                 this.app.use(express.static(path.join(__dirname, "public")));
-                this.app.use(express.json({
-                    verify: (req: any, res: any, buf: any) => {
-                        req.rawBody = buf;
-                    }
-                }));
+                this.app.use(
+                    express.json({
+                        verify: (req: any, res: any, buf: any) => {
+                            req.rawBody = buf;
+                        },
+                    })
+                );
                 this.app.use(express.urlencoded({ extended: false, type: "application/x-www-form-urlencoded" }));
                 this.app.use(cookieParser(this.config.get("cookie_secret")));
-
-                const cacheClient: any = this.connectionManager.connections.get("cache");
-                this.app.use(session({
-                    cookie: {
-                        sameSite: 'none',
-                        secure: true
-                    },
-                    resave: false,
-                    saveUninitialized: false,
-                    secret: this.config.get("session:secret"),
-                    store: cacheClient ? new RedisStore({
-                        client: cacheClient
-                    }) : undefined
-                }));
                 this.app.use(passport.initialize());
-                this.app.use(passport.session());
 
                 // cors
                 const corsOptions: CorsOptions = {
@@ -326,12 +358,35 @@ export class Server {
                         "Location",
                         "Origin",
                         "Set-Cookie",
-                        "X-Requested-With"
+                        "X-Requested-With",
                     ],
                     preflightContinue: false,
                     optionsSuccessStatus: 204,
                 };
                 this.app.use(cors(corsOptions));
+
+                // Sessions
+                const cacheClient: any = this.connectionManager.connections.get("cache");
+                const sessionConfig: any = this.config.get("session");
+                if (cacheClient && sessionConfig) {
+                    this.app.use(
+                        session({
+                            cookie: {
+                                sameSite: "none",
+                                secure: true,
+                            },
+                            resave: false,
+                            saveUninitialized: false,
+                            secret: sessionConfig.secret,
+                            store: cacheClient
+                                ? new RedisStore({
+                                    client: cacheClient,
+                                })
+                                : undefined,
+                        })
+                    );
+                    this.app.use(passport.session());
+                }
 
                 // passport (authentication) setup
                 passport.deserializeUser((profile: any, done: any) => {
@@ -348,48 +403,87 @@ export class Server {
                 if (this.config.get("auth:strategy")) {
                     const jwtOptions: JWTStrategyOptions = new JWTStrategyOptions();
                     jwtOptions.config = this.config.get("auth");
-                    passport.use("jwt", await this.objectFactory.newInstance(this.config.get("auth:strategy"), "default", jwtOptions));
+                    passport.use(
+                        "jwt",
+                        await this.objectFactory.newInstance(this.config.get("auth:strategy"), {
+                            name: "default",
+                            initialize: true,
+                            args: [jwtOptions],
+                        })
+                    );
                 } else {
                     this.logger.warn("No JWT authentication strategy has been set.");
                 }
 
-                // Set x-powered-by header
+                // Set all custom headers
+                const headers: any = this.config.get("headers") || {
+                    "x-powered-by": "composer.js",
+                };
                 this.app.use((req: Request, res: Response, next: NextFunction) => {
-                    res.setHeader("x-powered-by", "ComposerJS");
+                    for (const key in headers) {
+                        res.setHeader(key, headers[key]);
+                    }
                     return next();
                 });
-                // Request response time
-                this.app.use(expressResponseTime((req: Request, res: Response, time) => {
-                    this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
-                }));
+
+                // Track request response time
+                this.app.use(
+                    expressResponseTime((req: Request, res: Response, time) => {
+                        this.metricRequestTime.labels(req.method, req.path, String(res.statusCode)).observe(time);
+                    })
+                );
 
                 const allRoutes: Array<any> = [];
 
-                this.routeUtils = await this.objectFactory.newInstance(RouteUtils, "default");
+                this.routeUtils = await this.objectFactory.newInstance(RouteUtils, { name: "default" });
                 if (!this.routeUtils) {
                     reject("Failed to instantiate RouteUtils.");
                     return;
                 }
 
                 // Register the index route
-                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute);
+                const index: StatusRoute = await this.objectFactory.newInstance(StatusRoute, { name: "default" });
                 allRoutes.push(index);
                 await this.routeUtils.registerRoute(this.app, index);
 
                 // Register the admin route
-                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute);
+                const admin: AdminRoute = await this.objectFactory.newInstance(AdminRoute, { name: "default" });
                 allRoutes.push(admin);
                 await this.routeUtils.registerRoute(this.app, admin);
 
+                // Register the ACLs route if configured
+                const aclConn: any = this.connectionManager?.connections.get("acl");
+                if (aclConn instanceof DataSource) {
+                    if (aclConn.driver.constructor.name === "MongoDriver") {
+                        const aclRoute: ACLRouteMongo = await this.objectFactory.newInstance(ACLRouteMongo, {
+                            name: "default",
+                        });
+                        await this.routeUtils.registerRoute(this.app, aclRoute);
+                        allRoutes.push(aclRoute);
+                    } else {
+                        const aclRoute: ACLRouteSQL = await this.objectFactory.newInstance(ACLRouteSQL, {
+                            name: "default",
+                        });
+                        await this.routeUtils.registerRoute(this.app, aclRoute);
+                        allRoutes.push(aclRoute);
+                    }
+                }
+
                 // Register the OpenAPI route if a spec has been provided
                 if (this.apiSpec) {
-                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, "default", this.apiSpec);
+                    const oasRoute: OpenAPIRoute = await this.objectFactory.newInstance(OpenAPIRoute, {
+                        name: "default",
+                        initialize: true,
+                        args: [this.apiSpec],
+                    });
                     await this.routeUtils.registerRoute(this.app, oasRoute);
                     allRoutes.push(oasRoute);
                 }
 
                 // Register the metrics route
-                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute);
+                const metricsRoute: MetricsRoute = await this.objectFactory.newInstance(MetricsRoute, {
+                    name: "default",
+                });
                 await this.routeUtils.registerRoute(this.app, metricsRoute);
 
                 // Initialize the background service manager
@@ -400,19 +494,44 @@ export class Server {
                         serviceClasses[name] = clazz;
                     }
                 }
-                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, "default", this.objectFactory, serviceClasses, this.config, this.logger);
+                this.serviceManager = await this.objectFactory.newInstance(BackgroundServiceManager, {
+                    name: "default",
+                    initialize: true,
+                    args: [this.objectFactory, serviceClasses, this.config, this.logger],
+                });
                 if (this.serviceManager) {
                     await this.serviceManager.startAll();
+                }
+
+                // Initialize the EventListenerManager
+                const redis: any = this.connectionManager?.connections.get("events");
+                if (redis) {
+                    this.logger.info("Initializing event manager...");
+                    this.eventListenerManager = await this.objectFactory.newInstance(EventListenerManager, {
+                        name: "default",
+                        args: [this.config, this.logger, this.objectFactory, redis],
+                    });
+                    if (this.eventListenerManager) {
+                        await this.eventListenerManager.init();
+                        this.objectFactory.instances.forEach((obj: any) => {
+                            this.eventListenerManager?.register(obj);
+                        });
+                        allRoutes.forEach((obj: any) => {
+                            this.eventListenerManager?.register(obj);
+                        });
+                    }
                 }
 
                 // Perform automatic discovery of all other routes
                 this.logger.info("Scanning for routes...");
                 try {
                     for (const [fqn, clazz] of classLoader.getClasses().entries()) {
-                        const routePaths: string[] | undefined = clazz.prototype ? Reflect.getMetadata("cjs:routePaths", clazz.prototype) : Reflect.getMetadata("cjs:routePaths", clazz);
+                        const routePaths: string[] | undefined = clazz.prototype
+                            ? Reflect.getMetadata("cjs:routePaths", clazz.prototype)
+                            : Reflect.getMetadata("cjs:routePaths", clazz);
                         if (routePaths) {
                             this.objectFactory.register(clazz, fqn);
-                            const route: any = await this.objectFactory.newInstance(fqn);
+                            const route: any = await this.objectFactory.newInstance(fqn, { name: "default" });
                             await this.routeUtils.registerRoute(this.app, route);
                             allRoutes.push(route);
                         }
@@ -455,7 +574,11 @@ export class Server {
                             res.json(errs);
                         } else {
                             if (!(err instanceof ApiError)) {
-                                const tmp: ApiError = new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrors.INTERNAL_ERROR);
+                                const tmp: ApiError = new ApiError(
+                                    ApiErrors.INTERNAL_ERROR,
+                                    500,
+                                    ApiErrors.INTERNAL_ERROR
+                                );
                                 tmp.stack = err.stack;
                                 err = tmp;
                             }
@@ -470,8 +593,8 @@ export class Server {
                             const formattedError = {
                                 ...err,
                                 // https://stackoverflow.com/a/25245824
-                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, '') : undefined, // eslint-disable-line no-control-regex
-                            }
+                                level: err.level ? err.level.replace(/\u001b\[.*?m/g, "") : undefined, // eslint-disable-line no-control-regex
+                            };
                             res.json(formattedError);
                         }
 
@@ -488,6 +611,8 @@ export class Server {
                     this.metricCompletedRequests.inc(1);
                     return !res.writableEnded ? res.send() : res;
                 });
+
+                await this.postStart();
 
                 // Initialize the HTTP listen server
                 this.server.listen(this.port, "0.0.0.0", () => {

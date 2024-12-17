@@ -1,9 +1,10 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
+import { ObjectDecorators } from "@composer-js/core";
 import Redis from "ioredis";
 import * as typeorm from "typeorm";
-import { Destroy, Logger } from "../decorators/ObjectDecorators";
+const { Destroy, Logger } = ObjectDecorators;
 
 /**
  * Provides database connection management.

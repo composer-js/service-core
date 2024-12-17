@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (C) Xsolla USA, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { oas31 as oa } from 'openapi3-ts';
-import { Config, Init } from "./decorators/ObjectDecorators";
+import { oas31 as oa } from "openapi3-ts";
 import { DocumentsData } from "./decorators/DocDecorators";
 import * as merge from "deepmerge";
 import * as _ from "lodash";
+import { ObjectDecorators, StringUtils } from "@composer-js/core";
+const { Config, Init } = ObjectDecorators;
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
@@ -314,6 +315,8 @@ export class OpenApiSpec {
         const contentType = metadata.contentType || "application/json";
         const data: oa.PathItemObject = {};
         const mParams: (oa.ParameterObject | oa.ReferenceObject)[] = [];
+        let aclInfo: any =
+            Reflect.getMetadata("cjs:acl", routeClass) || Reflect.getMetadata("cjs:acl", routeClass, name);
         let requestTypes: any = Reflect.getMetadata("design:type", routeClass, name);
         let returnTypes: any = Reflect.getMetadata("design:returntype", routeClass, name);
         let security: oa.SecurityRequirementObject[] | undefined = authRequired ? [] : undefined;
@@ -336,8 +339,8 @@ export class OpenApiSpec {
                         in: "path",
                         required: true,
                         schema: {
-                            type: "string"
-                        }
+                            type: "string",
+                        },
                     });
                 }
             }
@@ -354,7 +357,7 @@ export class OpenApiSpec {
             const i: number = Number(key);
             if (argMetadata[i][0] === "query") {
                 hasQuery = true;
-                const qName: string | undefined = argMetadata[i][1]
+                const qName: string | undefined = argMetadata[i][1];
                 if (qName && !["page", "limit", "sort"].includes(qName)) {
                     const ref: oa.ReferenceObject | undefined = this.getParameterReference(qName);
                     if (ref) {
@@ -364,8 +367,8 @@ export class OpenApiSpec {
                             name,
                             in: "query",
                             schema: {
-                                type: "string"
-                            }
+                                type: "string",
+                            },
                         });
                     }
                 }
@@ -422,6 +425,7 @@ export class OpenApiSpec {
             }
 
             if (schema) {
+                aclInfo = Reflect.getMetadata("cjs:classACL", routeClass.modelClass) || aclInfo;
                 data["x-schema"] = fqn;
 
                 // If the request schemas aren't explicitly declared we will infer them based on the method
@@ -469,7 +473,11 @@ export class OpenApiSpec {
             data["x-upgrade"] = true;
             responseSchemas.splice(0, responseSchemas.length);
         }
-
+        const errorContent = {
+            ["application/json"]: {
+                schema: this.getSchemaReference("Error")
+            }
+        };
         // Finally add the operation object for the given method
         const opObject: oa.OperationObject = {
             description,
@@ -500,23 +508,19 @@ export class OpenApiSpec {
                 } : undefined,
                 ["400"]: requestSchemas.length > 0 ? {
                     description: "Returned when the request content is invalid.",
-                    content: {
-                        [contentType]: {
-                            schema: this.getSchemaReference("Error")
-                        }
-                    }
+                    content: errorContent
                 } : undefined,
                 ["401"]: authRequired ? {
                     description: "Returned when a valid authentication token is not provided.",
-                    content: {
-                        [contentType]: {
-                            schema: this.getSchemaReference("Error")
-                        }
-                    }
+                    content: errorContent
+                } : undefined,
+                ["403"]: aclInfo ? {
+                    description: "Returned when the user does not have permission to perform this action.",
+                    content: errorContent
                 } : undefined
             },
             security,
-            summary,
+            summary: (summary && StringUtils.findAndReplace(summary, { serviceName: `${this.config.get("service_name")} -` || "Service -" })),
             tags,
             "x-name": name
         };
@@ -559,6 +563,10 @@ export class OpenApiSpec {
         const trackChanges: any = Reflect.getMetadata("cjs:trackChanges", clazz);
 
         const result: oa.SchemaObject = {};
+        const docs: any = Reflect.getMetadata("cjs:docs", clazz) || {};
+        const { description } = docs;
+        result.description = description;
+        result.type = "object";
         result.properties = {};
         result.required = [];
 

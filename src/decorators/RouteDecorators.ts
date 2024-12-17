@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import "reflect-metadata";
+import { AccessControlList } from "../security/AccessControlList";
 
 /**
  * Indicates a provided function or list of functions to execute *after* the decorated function and before the response
@@ -156,7 +157,7 @@ export function Method(method: string | string[], path?: string) {
  * @param type The data model class type to associate the class with.
  */
 export function Model(type: any) {
-    return function <T extends { new(...args: any[]): {} }>(constructor: T) {
+    return function <T extends { new (...args: any[]): {} }>(constructor: T) {
         return class extends constructor {
             /** The class type of the data model type associated with this class. */
             public static readonly modelClass: any = type;
@@ -212,6 +213,56 @@ export function Post(path?: string) {
  */
 export function Put(path?: string) {
     return Method("put", path);
+}
+
+type PartialACL = Partial<AccessControlList> & Pick<AccessControlList, "records">;
+
+/**
+ * Apply this to any route handler class or an individual route handler function to indicate that it should be
+ * protected by the AccessControlList security system. The `acl` parameter specifies the ACL governing access
+ * to the HTTP resource(s) defined. If a class and a given route handler function both have this decorator
+ * applied, the class ACL will be listed as the parent to the function's ACL object, thus inheriting
+ * whatever permissions applied to the class level.
+ *
+ * @param acl The access control list to define for this route class or handler. Not specifying a value here
+ * *          will default to the behavior of denying anonymous access to the resource and allowing any authenticated
+ * *         user CRUD access.
+ */
+export function Protect(
+    acl: PartialACL = {
+        uid: "<UniqueName>",
+        records: [
+            {
+                userOrRoleId: "anonymous",
+                create: false,
+                read: false,
+                update: false,
+                delete: false,
+                special: false,
+                full: false,
+            },
+            {
+                userOrRoleId: ".*",
+                create: true,
+                read: true,
+                update: true,
+                delete: true,
+                special: false,
+                full: false,
+            },
+        ],
+    }
+) {
+    return function (target: any, propertyKey?: string) {
+        if (!acl.uid || acl.uid === "<UniqueName>") {
+            acl.uid = propertyKey ? `${target.constructor.name}.${propertyKey}` : `${target.name}`;
+        }
+        if (propertyKey) {
+            Reflect.defineMetadata("cjs:acl", acl, target, propertyKey);
+        } else {
+            Reflect.defineMetadata("cjs:acl", acl, target.prototype);
+        }
+    };
 }
 
 /**

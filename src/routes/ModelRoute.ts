@@ -1,38 +1,44 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Repository, MongoRepository, AggregationCursor, EntityMetadata } from "typeorm";
+import { Repository, DataSource } from "typeorm";
 import { ModelUtils } from "../models/ModelUtils";
-import { RepoUtils } from "../models/RepoUtils";
+import { RepoOperationOptions, RepoUtils } from "../models/RepoUtils";
 import { BaseEntity } from "../models/BaseEntity";
 import Redis from "ioredis";
 import { RedisConnection } from "../decorators/DatabaseDecorators";
-import * as crypto from "crypto";
-import { Logger, Config, Init } from "../decorators/ObjectDecorators";
 import { Request as XRequest, Response as XResponse } from "express";
 import { SimpleEntity } from "../models/SimpleEntity";
 import { BulkError } from "../BulkError";
-import { RecoverableBaseEntity } from "../models";
-import { Admin } from "mongodb";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
-import { ApiError } from "@composer-js/core";
+import { ApiError, Event, EventUtils, ObjectDecorators, ObjectUtils } from "@composer-js/core";
+import { AccessControlList, ACLAction } from "../security/AccessControlList";
+import { ACLUtils } from "../security/ACLUtils";
+import { NotificationUtils } from "../NotificationUtils";
+import { NetUtils } from "../NetUtils";
+import { ObjectFactory } from "../ObjectFactory";
+import { ConnectionManager } from "../database";
+const { Config, Init, Inject, Logger } = ObjectDecorators;
 
 /**
  * The set of options required by all request handlers.
  */
-export interface RequestOptions {
+export interface RequestOptions extends RepoOperationOptions {
     /** The originating client request. */
     req?: XRequest;
     /** The outgoing client response. */
     res?: XResponse;
-    /** The authenticated user making the request. */
-    user?: any;
 }
 
 /**
  * The set of options required by create request handlers.
  */
 export interface CreateRequestOptions extends RequestOptions {
+    acl?: AccessControlList | AccessControlList[];
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
 }
 
 /**
@@ -43,6 +49,10 @@ export interface DeleteRequestOptions extends RequestOptions {
     productUid?: string;
     /** Set to true to permanently remove the object from the database (if applicable). */
     purge?: boolean;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
     /** The desired version number of the resource to delete. */
     version?: number | string;
 }
@@ -63,16 +73,29 @@ export interface FindRequestOptions extends RequestOptions {
 export interface TruncateRequestOptions extends DeleteRequestOptions {
     /** The list of URL parameters to use in the search. */
     params: any;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
     /** The list of query parameters to use in the search. */
     query: any;
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
 }
+
+/** A Partial type for a BaseEntity or SimpleEntity. */
+export type UpdateObject<T extends BaseEntity | SimpleEntity> = Partial<T> & Pick<T, "uid">;
 
 /**
  * The set of options required by update request handlers.
  */
-export interface UpdateRequestOptions extends RequestOptions {
+export interface UpdateRequestOptions<T extends BaseEntity | SimpleEntity> extends RequestOptions {
+    /** The existing object that has already been recently pulled from the datastore. */
+    existing?: T | null;
     /** The desired product uid of the resource to update. */
     productUid?: string;
+    /** An additional list of channel names to send push notifications to. */
+    pushChannels?: string[];
+    /** Set to `true` to not send a push notification. */
+    skipPush?: boolean;
     /** The desired version number of the resource to update. */
     version?: number | string;
 }
@@ -93,12 +116,12 @@ export interface UpdateRequestOptions extends RequestOptions {
  * @author Jean-Philippe Steinmetz
  */
 export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
+    @Inject(ACLUtils)
+    protected aclUtils?: ACLUtils;
+
     /** The redis client that will be used as a 2nd level cache for all cacheable models. */
     @RedisConnection("cache")
     protected cacheClient?: Redis;
-
-    /** The time, in milliseconds, that objects will be cached before being invalidated. */
-    protected cacheTTL?: number;
 
     /** The global application configuration. */
     @Config()
@@ -110,8 +133,17 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     @Logger
     protected logger: any;
 
-    /** The model class associated with the controller to perform operations against. */
-    protected abstract repo?: Repository<T>;
+    @Inject(NotificationUtils)
+    protected notificationUtils?: NotificationUtils;
+
+    @Inject(ObjectFactory)
+    protected objectFactory?: ObjectFactory;
+
+    /** The class of the RepoUtils to use when instantiating the utility. */
+    protected readonly abstract repoUtilsClass: any;
+
+    /** The repository utility class to use for common operations. */
+    protected repoUtils?: RepoUtils<T>;
 
     /**
      * The number of previous document versions to store in the database. A negative value indicates storing all
@@ -119,20 +151,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      */
     protected trackChanges: number = 0;
 
-    /**
-     * Initializes a new instance using any defaults.
-     */
-    protected constructor() {
-        // no-op 
-    }
-
-    /**
-     * The base key used to get or set data in the cache.
-     */
-    protected get baseCacheKey(): string {
-        const clazz: any = Object.getPrototypeOf(this).constructor;
-        return "db.cache." + clazz.modelClass.name;
-    }
+    @Config("trusted_roles", ["admin"])
+    protected trustedRoles: string[] = ["admin"];
 
     /**
      * The class type of the model this route is associated with.
@@ -143,147 +163,34 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
     }
 
     /**
-     * Hashes the given query object to a unique string.
-     * @param query The query object to hash.
-     */
-    protected hashQuery(query: any): string {
-        const queryStr: string = JSON.stringify(query);
-        return crypto
-            .createHash("sha512")
-            .update(queryStr)
-            .digest("hex");
-    }
-
-    /**
      * Called on server startup to initialize the route with any defaults.
      */
     @Init
     private async superInitialize() {
-        // Pull the cache and version configuration from the model class where applicable 
-        if (this.modelClass) {
-            this.cacheTTL = this.modelClass.cacheTTL || this.cacheTTL;
-            this.trackChanges = this.modelClass.trackChanges || this.trackChanges;
+        if (!this.objectFactory) {
+            throw new Error("objectFactory is not set!");
         }
 
-        // Does the model specify a MongoDB shard configuration?
-        const shardConfig: any = Reflect.getMetadata("axr:shardConfig", this.modelClass);
-        if (shardConfig && this.repo instanceof MongoRepository) {
-            const dbClient: any = this.repo.manager.mongoQueryRunner.databaseConnection;
-            if (dbClient) {
-                try {
-                    const admin: Admin = dbClient.db().admin() as Admin;
-                    if (admin) {
-                        // Find the EntityMetadata associated with this model class.
-                        let metadata: EntityMetadata | undefined = undefined;
-                        for (const md of this.repo.manager.connection.entityMetadatas) {
-                            if (md.target === this.modelClass) {
-                                metadata = md;
-                                break;
-                            }
-                        }
+        this.repoUtils = await this.objectFactory.newInstance(this.repoUtilsClass || RepoUtils, {
+            name: this.modelClass.name,
+            initialize: true,
+            args: [this.modelClass],
+        });
 
-                        if (metadata) {
-                            try {
-                                // Configure the sharded collection with the MongoDB server.
-                                const dbName: string = this.config.get(`datastores:${this.modelClass.datastore}:database`);
-                                this.logger.info(`Configuring sharding for: collection=${dbName}.${metadata.tableName}, key=${JSON.stringify(shardConfig.key)}, unique=${shardConfig.unique}, options=${JSON.stringify(shardConfig.options)})`);
-                                const result: any = await admin.command({
-                                    shardCollection: `${dbName}.${metadata.tableName}`,
-                                    key: shardConfig.key,
-                                    unique: shardConfig.unique,
-                                    ...shardConfig.options
-                                });
-                                this.logger.debug(`Result: ${JSON.stringify(result)}`);
-                            } catch (e: any) {
-                                this.logger.warn(`There was a problem trying to configure MongoDB sharding for collection '${metadata.tableName}'. Error=${e.message}`);
-                            }
-                        }
-                    } else {
-                        this.logger.debug("Failed to get mongodb admin interface.");
-                    }
-                } catch (e: any) {
-                    // Sharding is not supported or user doesnt' have permission
-                    this.logger.debug(`Sharding not supported or user lacks the clusterAdmin role. Error=${e.message}`);
-                }
-            }
+        let defaultAcl: AccessControlList | undefined = this.repoUtils.getDefaultACL();
+        if (defaultAcl) {
+            this.defaultACLUid = defaultAcl.uid;
         }
-    }
-
-    /**
-     * Retrieves the object with the given id from either the cache or the database. If retrieving from the database
-     * the cache is populated to speed up subsequent requests.
-     *
-     * @param id The unique identifier of the object to retrieve.
-     * @param version The desired version number of the object to retrieve. If `undefined` returns the latest.
-     * @param productUid The optional productUid associated with the object.
-     */
-    protected async getObj(id: string, version?: number | string, productUid?: string): Promise<T | null> {
-        if (!this.repo) {
-            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
-        }
-
-        const query: any = this.searchIdQuery(id, version, productUid);
-        if (this.cacheClient && this.cacheTTL) {
-            // First attempt to retrieve the object from the cache
-            const json: string | null = await this.cacheClient.get(`${this.baseCacheKey}.${this.hashQuery(query)}`);
-            if (json) {
-                try {
-                    const existing: T | null = JSON.parse(json);
-                    if (existing) {
-                        return existing;
-                    }
-                } catch (err) {
-                    // It doesn't matter if this fails
-                }
-            }
-        }
-
-        let existing: T | null = null;
-        if (this.repo instanceof MongoRepository) {
-            existing = await this.repo.aggregate(
-                [
-                    {
-                        $match: query,
-                    },
-                    {
-                        $sort: { version: -1 }
-                    }
-                ]
-            ).limit(1).next();
-        } else {
-            existing = await this.repo.findOne(query);
-        }
-
-        if (existing && this.cacheClient && this.cacheTTL) {
-            // Cache the object for faster retrieval
-            void this.cacheClient.setex(
-                `${this.baseCacheKey}.${this.hashQuery(query)}`,
-                this.cacheTTL,
-                JSON.stringify(existing)
-            );
-        }
-
-        // Make sure we return the correct data type
-        return existing ? new this.modelClass(existing) : null;
-    }
-
-    /**
-     * Search for existing object based on passed in id and version and product uid.
-     * 
-     * The result of this function is compatible with all `Repository.find()` functions.
-     */
-    private searchIdQuery(id: string, version?: number | string, productUid?: string): any {
-        return ModelUtils.buildIdSearchQuery(this.repo, this.modelClass, id, typeof version === "string" ? parseInt(version, 10) : version, productUid);
     }
 
     /**
      * Attempts to retrieve the number of data model objects matching the given set of criteria as specified in the
      * request `query`. Any results that have been found are set to the `content-length` header of the `res` argument.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doCount(options: FindRequestOptions): Promise<XResponse> {
-        if (!this.repo) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -291,15 +198,22 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
-        if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-            searchQuery.push({ $count: "count" });
-            const result: any = await (this.repo).aggregate(searchQuery).next();
-            options.res.setHeader('content-length', result ? result.count : 0);
-        } else {
-            const result: number = await this.repo.count(searchQuery);
-            options.res.setHeader('content-length', result);
-        }
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,    
+            this.repoUtils.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
+        const result: number = await this.repoUtils.count(searchQuery, {
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
+            user: options.user,
+        });
+        options.res.setHeader("content-length", result);
 
         return options.res.status(200);
     }
@@ -312,30 +226,23 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doCreateObject(obj: T, options: CreateRequestOptions): Promise<T> {
-        if (!this.repo) {
-            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
+    protected async doCreateObject(obj: Partial<T>, options: CreateRequestOptions): Promise<T> {
+        if (!this.repoUtils) {
+            throw new Error("repoUtils not set!");
         }
 
         // Make sure the provided object has the correct typing
-        obj = new this.modelClass(obj);
+        let result: T = this.repoUtils.instantiateObject(obj);
+        result = await this.repoUtils.create(result, options as any);
 
-        obj = await RepoUtils.preprocessBeforeSave(this.repo, obj, this.trackChanges !== 0);
-
-        // Are we tracking multiple versions for this object?
-        if (obj instanceof BaseEntity && this.trackChanges === 0) {
-            (obj as any).version = 0;
-        }
-
-        // HAX We shouldn't be casting obj to any here but this is the only way to get it to compile since T
-        // extends BaseEntity.
-        const result: T = new this.modelClass(await this.repo.save(obj as any));
-
-        if (this.cacheClient && this.cacheTTL) {
-            // Cache the object for faster retrieval
-            const query: any = this.searchIdQuery(obj.uid);
-            const cacheKey: string = `${this.baseCacheKey}.${this.hashQuery(query)}`;
-            void this.cacheClient.setex(cacheKey, this.cacheTTL, JSON.stringify(result));
+        if (options.recordEvent) {
+            const evt: any = {
+                type: `Create${this.modelClass.name}`,
+                objectUid: result.uid,
+                userUid: options.user ? options.user.uid : undefined,
+                ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
+            };
+            void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
         }
 
         return result;
@@ -349,7 +256,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param objs The object(s) to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doBulkCreate(objs: T[], options: CreateRequestOptions): Promise<T[]> {
+    protected async doBulkCreate(objs: Partial<T>[], options: CreateRequestOptions): Promise<T[]> {
         let thrownError: boolean = false;
         const errors: (Error | null)[] = [];
         const results: T[] = [];
@@ -379,11 +286,21 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object(s) to store in the database.
      * @param options The options to process the request using.
      */
-    protected async doCreate(obj: T | T[], options: CreateRequestOptions): Promise<T | T[]> {
+    protected async doCreate(obj: Partial<T> | Partial<T>[], options: CreateRequestOptions): Promise<T | T[]> {
+        if (!(await this.aclUtils?.hasPermission(options.user, this.defaultACLUid, ACLAction.CREATE))) {
+            throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+        }
+
         if (Array.isArray(obj)) {
-            return await this.doBulkCreate(obj, options);
+            return await this.doBulkCreate(obj, {
+                ...options,
+                ignoreACL: true,
+            });
         } else {
-            return await this.doCreateObject(obj, options);
+            return await this.doCreateObject(obj, {
+                ...options,
+                ignoreACL: true,
+            });
         }
     }
 
@@ -395,7 +312,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doDelete(id: string, options: DeleteRequestOptions): Promise<void> {
-        if (!this.repo) {
+        if (!this.repoUtils || !this.repoUtils.repo) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -404,54 +321,44 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        const query: any = this.searchIdQuery(id, options.version);
-        const objs: T[] | undefined = await this.repo.find(query);
-        const uid: string | undefined = objs && objs.length > 0 ? objs[0].uid : undefined;
-        const isRecoverable: boolean = (new this.modelClass()) instanceof RecoverableBaseEntity;
-        const isPurge: boolean = isRecoverable ? (options.purge || false) : true;
+        const existing: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.productUid,
+            version: options.version,
+        });
+        if (!existing) {
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
+        }
+        await this.repoUtils.delete(existing.uid, options as any);
 
-        if (uid && objs) {
-            // If the object(s) are being permenantly removed from the database do so and then clear the accompanying
-            // ACL(s). If the class type is recoverable and purge isn't desired, simply mark the object(s) as deleted.
-            if (isPurge) {
-                await this.repo.remove(objs);
-            } else {
-                if (this.repo instanceof MongoRepository) {
-                    await this.repo.updateMany(query, {
-                        $set: {
-                            deleted: true
-                        }
-                    });
-                } else {
-                    await this.repo.update(query, {
-                        deleted: true
-                    } as any);
-                }
-            }
-
-            if (this.cacheClient && this.cacheTTL) {
-                // Delete the object from cache
-                void this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(query)}`);
-                void this.cacheClient.del(`${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(uid))}`);
-            }
+        if (options.recordEvent) {
+            const count: number = await this.repoUtils.repo.count({ uid: existing.uid } as any);
+            const evt: any = {
+                type: `Delete${this.modelClass.name}`,
+                objectUid: existing.uid,
+                userUid: options.user ? options.user.uid : "anonymous",
+                ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
+                purged: count === 0,
+            };
+            void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
         }
     }
 
     /**
      * Attempts to determine if an existing object with the given unique identifier exists.
-     * 
+     *
      * @param id The unique identifier of the object to verify exists.
      * @param options The options to process the request using.
      */
     protected async doExists(id: string, options: FindRequestOptions): Promise<any> {
-        if (!this.repo) {
-            throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
-        }
-        if (!options.res) {
+        if (!this.repoUtils || !options.res) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -460,14 +367,25 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        const query: any = this.searchIdQuery(id, options.query.version);
-        const result: number = await this.repo.count(query);
+        // Check user permissions
+        if (this.aclUtils && !options.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
+        }
+
+        const query: any = this.repoUtils.searchIdQuery(id, options.query.version);
+        const result: number = await this.repoUtils.count(query);
         if (result > 0) {
-            return options.res.status(200).setHeader('content-length', result);
+            return options.res.status(200).setHeader("content-length", result);
         } else {
             return options.res.status(404);
         }
@@ -477,85 +395,46 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * Attempts to retrieve all data model objects matching the given set of criteria as specified in the request
      * `query`. Any results that have been found are set to the `result` property of the `res` argument. `result` is
      * never null.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doFindAll(options: FindRequestOptions): Promise<T[]> {
-        let results: T[] = [];
-
-        if (!this.repo) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
-        const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
-        const page: number = options.query.page ? Number(options.query.page) : 0;
+        // Check user permissions
+        if (this.aclUtils && !options.ignoreACL) {
+            if (!(await this.aclUtils.hasPermission(options.user, this.defaultACLUid, ACLAction.READ))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
+        }
 
-        // When we hash the seach query we need to ensure we're including the pagination information to preserve
-        // like queries and results.
-        const searchQueryHash: string = this.hashQuery({
-            ...searchQuery,
-            limit,
-            page
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,
+            this.repoUtils.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
+
+        return await this.repoUtils.find(searchQuery, {
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
+            user: options.user,
         });
-
-        // Pull from the cache if available
-        if (this.cacheClient && this.cacheTTL) {
-            const json: string | null = await this.cacheClient.get(
-                `${this.baseCacheKey}.${searchQueryHash}`
-            );
-            if (json) {
-                try {
-                    const uids: string[] = JSON.parse(json);
-                    for (const uid of uids) {
-                        // Retrieve the object from the cache or from database if not available
-                        const obj: T | null = await this.getObj(uid, options.query.version, options.query.productUid);
-                        if (obj) {
-                            results.push(obj);
-                        }
-                    }
-                } catch (err) {
-                    // It doesn't matter if this fails
-                }
-            }
-        }
-
-        // If the query wasn't cached retrieve from the database
-        if (results.length === 0) {
-            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                const skip: number = page * limit;
-                results = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            }
-            else {
-                results = await this.repo.find(searchQuery);
-            }
-
-            // Cache the results for future requests
-            if (this.cacheClient && this.cacheTTL) {
-                const uids: string[] = [];
-
-                for (const result of results) {
-                    uids.push(result.uid);
-                }
-
-                void this.cacheClient.setex(
-                    `${this.baseCacheKey}.${searchQueryHash}`,
-                    this.cacheTTL,
-                    JSON.stringify(uids)
-                );
-            }
-        }
-
-        return results;
     }
 
     /**
      * Attempts to retrieve a single data model object as identified by the `id` parameter in the URI.
-     * 
+     *
      * @param options The options to process the request using.
      */
     protected async doFindById(id: string, options: FindRequestOptions): Promise<T | null> {
-        if (!this.repo) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -564,13 +443,27 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        const result: T | null = await this.getObj(id, options.query.version, options.query.productUid);
+        const result: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.params?.productUid || options.query?.productUid,
+            version: options.params?.version || options.query?.version,
+        });
         if (!result) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
+        }
+
+        if (this.aclUtils && !options.ignoreACL) {
+            const acl: AccessControlList | null = await this.aclUtils.findACL(result.uid);
+            if (!(await this.aclUtils.hasPermission(options.user, acl ? acl : this.defaultACLUid, ACLAction.READ))) {
+                throw new ApiError(ApiErrors.AUTH_PERMISSION_FAILURE, 403, ApiErrorMessages.AUTH_PERMISSION_FAILURE);
+            }
         }
 
         return result;
@@ -583,33 +476,36 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param options The options to process the request using.
      */
     protected async doTruncate(options: TruncateRequestOptions): Promise<void> {
-        if (!this.repo) {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
-        try {
-            const searchQuery: any = ModelUtils.buildSearchQuery(this.modelClass, this.repo, options.params, options.query, true, options.user);
-            let objs: T[] | undefined = undefined;
-            if (this.repo instanceof MongoRepository && Array.isArray(searchQuery)) {
-                const limit: number = options.query.limit ? Math.min(options.query.limit, 1000) : 100;
-                const page: number = options.query.page ? options.query.page : 0;
-                const skip: number = page * limit;
-                objs = await this.repo.aggregate(searchQuery).skip(skip).limit(limit).toArray();
-            }
-            else {
-                objs = await this.repo.find(searchQuery);
-            }
+        const searchQuery: any = ModelUtils.buildSearchQuery(
+            this.modelClass,
+            this.repoUtils.repo,
+            options.params,
+            options.query,
+            true,
+            options.user
+        );
 
-            if (objs) {
-                for (const obj of objs) {
-                    await this.repo.remove(obj);
-                }
-            }
-        } catch (err: any) {
-            // The error "ns not found" occurs when the collection doesn't exist yet. We can ignore this error.
-            if (err.message !== "ns not found") {
-                throw err;
-            }
+        await this.repoUtils?.truncate(searchQuery, {
+            limit: options.query?.limit,
+            page: options.query?.page,
+            productUid: options.params?.productUid || options.query?.productUid,
+            pushChannels: options.pushChannels,
+            skipPush: options.skipPush,
+            version: options.params?.version || options.query?.version,
+            user: options.user,
+        });
+
+        if (options.recordEvent) {
+            const evt: any = {
+                type: `Truncate${this.modelClass.name}`,
+                userUid: options.user ? options.user.uid : "anonymous",
+                ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
+            };
+            void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
         }
     }
 
@@ -619,7 +515,7 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param objs The object(s) to bulk update in the database.
      * @param options The options to process the request using.
      */
-    protected async doBulkUpdate(objs: T[], options: UpdateRequestOptions): Promise<T[]> {
+    protected async doBulkUpdate(objs: UpdateObject<T>[], options: UpdateRequestOptions<T>): Promise<T[]> {
         let thrownError: boolean = false;
         const errors: (Error | null)[] = [];
         const result: T[] = [];
@@ -647,8 +543,8 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
      * @param obj The object to update in the database
      * @param options The options to process the request using.
      */
-    protected async doUpdate(id: string, obj: T, options: UpdateRequestOptions): Promise<T> {
-        if (!this.repo) {
+    protected async doUpdate(id: string, obj: UpdateObject<T>, options: UpdateRequestOptions<T>): Promise<T> {
+        if (!this.repoUtils) {
             throw new ApiError(ApiErrors.INTERNAL_ERROR, 500, ApiErrorMessages.INTERNAL_ERROR);
         }
 
@@ -657,132 +553,94 @@ export abstract class ModelRoute<T extends BaseEntity | SimpleEntity> {
             if (options.user) {
                 id = options.user.uid;
             } else {
-                throw new ApiError(ApiErrors.SEARCH_INVALID_ME_REFERENCE, 403, ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE);
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
             }
         }
 
-        let query: any = this.searchIdQuery(id, options.version || (obj as any).version, options.productUid || (obj as any).productUid);
-        const existing: T | null = await this.repo.findOne(query);
-        obj = await RepoUtils.preprocessBeforeUpdate(this.repo, this.modelClass, obj, existing);
-
-        const keepPrevious: boolean = this.trackChanges !== 0;
-        const testObj: T = new this.modelClass();
-
-        if (this.repo instanceof MongoRepository) {
-            if (testObj instanceof BaseEntity) {
-                if (keepPrevious) {
-                    obj = new this.modelClass(await this.repo.save({
-                        ...obj,
-                        _id: undefined, // Ensure we save a new document
-                        dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
-                    } as any));
-                } else {
-                    await this.repo.updateOne(
-                        { uid: obj.uid, version: (obj as BaseEntity).version },
-                        {
-                            $set: {
-                                ...obj,
-                                dateModified: new Date(),
-                                version: (obj as BaseEntity).version + 1,
-                            },
-                        }
-                    );
-                }
-            } else if (obj.uid) {
-                if (keepPrevious) {
-                    obj = new this.modelClass(await this.repo.save({
-                        ...obj,
-                        version: (obj as any).version + 1,
-                    } as any));
-                } else {
-                    await this.repo.updateOne(
-                        { uid: obj.uid },
-                        {
-                            $set: {
-                                ...obj,
-                            },
-                        }
-                    );
-                }
-            } else {
-                const toSave: any = obj as any;
-                if (keepPrevious) {
-                    toSave.version += 1;
-                }
-
-                const result: T | undefined = await this.repo.save(toSave);
-                if (result) {
-                    obj = new this.modelClass(result);
-                }
-            }
-        } else {
-            if (testObj instanceof BaseEntity) {
-                if (keepPrevious) {
-                    await this.repo.insert({
-                        ...obj,
-                        dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
-                    } as any);
-                } else {
-                    await this.repo.update(query.where, {
-                        ...obj,
-                        dateModified: new Date(),
-                        version: (obj as BaseEntity).version + 1,
-                    } as any);
-                }
-            } else {
-                const toSave: any = obj as any;
-
-                if (keepPrevious) {
-                    toSave.version += 1;
-                    await this.repo.save(toSave);
-                } else {
-                    await this.repo.update(query.where, toSave);
-                }
-            }
+        const existing: T | undefined = await this.repoUtils.findOne(id, {
+            productUid: options.productUid || (obj as any).productUid,
+            skipCache: true,
+        });
+        if (!existing) {
+            throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
-        query = this.searchIdQuery(obj.uid, obj instanceof BaseEntity ? obj.version + 1 : undefined);
-        const result: T | null = await this.repo.findOne(query);
-        if (result) {
-            obj = new this.modelClass(result);
+        const result: T = await this.repoUtils.update(obj, existing, options as any);
+
+        if (options.recordEvent) {
+            const evt: any = {
+                type: `Update${this.modelClass.name}`,
+                objectUid: obj.uid,
+                userUid: options.user ? options.user.uid : "anonymous",
+                ip: options.req ? NetUtils.getIPAddress(options.req) : undefined,
+            };
+            void EventUtils.record(new Event(this.config, options.user ? options.user.uid : "anonymous", evt));
         }
 
-        if (obj && this.cacheClient && this.cacheTTL) {
-            // Cache the object for faster retrieval
-            void this.cacheClient.setex(`${this.baseCacheKey}.${this.hashQuery(query)}`, this.cacheTTL, JSON.stringify(obj));
-            void this.cacheClient.setex(
-                `${this.baseCacheKey}.${this.hashQuery(this.searchIdQuery(obj.uid))}`,
-                this.cacheTTL,
-                JSON.stringify(obj)
-            );
-        }
-
-        return obj;
+        return result;
     }
 
     /**
      * Attempts to modify a single property of an existing data model object as identified by the `id` parameter in the URI.
      *
      * Note that this effectively bypasses optimistic locking and can cause unexpected data overwrites. Use with care.
-     * 
+     *
      * @param id The unique identifier of the object to update.
      * @param propertyName The name of the property to update.
      * @param value The value of the property to set.
      * @param options The options to process the request using.
      */
-    protected async doUpdateProperty(id: string, propertyName: string, value: any, options: UpdateRequestOptions): Promise<T> {
-        const existing: any = await this.getObj(id);
+    protected async doUpdateProperty(
+        id: string,
+        propertyName: string,
+        value: any,
+        options: UpdateRequestOptions<T>
+    ): Promise<T> {
+        // When id === `me` this is a special keyword meaning the authenticated user
+        if (id.toLowerCase() === "me") {
+            if (options.user) {
+                id = options.user.uid;
+            } else {
+                throw new ApiError(
+                    ApiErrors.SEARCH_INVALID_ME_REFERENCE,
+                    403,
+                    ApiErrorMessages.SEARCH_INVALID_ME_REFERENCE
+                );
+            }
+        }
+
+        const existing: T | null | undefined =
+            options.existing ||
+            (await this.repoUtils?.findOne(id, {
+                productUid: options.productUid,
+            }));
         if (!existing) {
             throw new ApiError(ApiErrors.NOT_FOUND, 404, ApiErrorMessages.NOT_FOUND);
         }
 
-        return await this.doUpdate(id, {
-            uid: existing.uid,
-            productUid: options.productUid || existing.productUid,
-            version: options.version || existing.version,
-            [propertyName]: value
-        } as any, options);
+        return await this.doUpdate(
+            id,
+            {
+                uid: existing.uid,
+                productUid: options.productUid || "productUid" in existing ? (existing as any).productUid : undefined,
+                version: options.version || "version" in existing ? (existing as any).version : undefined,
+                [propertyName]: value,
+            } as any,
+            {
+                ...options,
+                existing,
+            }
+        );
+    }
+
+    /**
+     * Calls `repoUtils.validate()` to validate the object(s) provided.
+     */
+    protected async doValidate(objs: Partial<T> | Partial<T>[], options?: CreateRequestOptions | UpdateRequestOptions<T>): Promise<void> {
+        await this.repoUtils?.validate(objs, options);
     }
 }

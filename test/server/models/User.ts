@@ -1,9 +1,14 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
+///////////////////////////////////////////////////////////////////////////////
 import { BaseMongoEntity } from "../../../src/models/BaseMongoEntity";
 import { Index, Entity, Column } from "typeorm";
-import { Identifier, Model } from "../../../src/decorators/ModelDecorators";
+import { Identifier, DataStore } from "../../../src/decorators/ModelDecorators";
 import { Description, TypeInfo } from "../../../src/decorators/DocDecorators";
+import { ObjectDecorators, ValidationUtils } from "@composer-js/core";
+const { Nullable, Validator } = ObjectDecorators;
 
-@Model("mongodb")
+@DataStore("mongodb")
 @Entity()
 @Description("The User class describes a user within the system.")
 export default class User extends BaseMongoEntity {
@@ -11,6 +16,7 @@ export default class User extends BaseMongoEntity {
     @Index()
     @Column()
     @Description("The unique identifier of the user.")
+    @Validator(ValidationUtils.checkName)
     public name: string = "";
 
     @Column()
@@ -22,28 +28,31 @@ export default class User extends BaseMongoEntity {
     public lastName: string = "";
 
     @Column()
-    @Description("The age of the user.")
+    @Description("The age of the user. Must be 13 or older.")
+    // TODO  @Validator(ValidationUtils.check((val) => val >= 13))
     public age: number = 0;
 
     @Identifier
     @Index()
     @Column()
     @Description("The uuid of the product that is associated with this user.")
+    @Nullable
     public productUid: string | undefined = undefined;
 
     @Column()
     @TypeInfo([String, Number, undefined])
+    @Nullable
     public uType: string | number | undefined = undefined;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<User>) {
         super(other);
 
         if (other) {
-            this.name = 'name' in other ? other.name : this.name;
-            this.firstName = 'firstName' in other ? other.firstName : this.firstName;
-            this.lastName = 'lastName' in other ? other.lastName : this.lastName;
-            this.age = 'age' in other ? other.age : this.age;
-            this.productUid = 'productUid' in other ? other.productUid : this.productUid;
+            this.name = other.name || this.name;
+            this.firstName = other.firstName || this.firstName;
+            this.lastName = other.lastName || this.lastName;
+            this.age = other.age || this.age;
+            this.productUid = other.productUid || this.productUid;
         }
     }
 }

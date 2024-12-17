@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { Default, Description } from "../decorators/DocDecorators";
 import { Identifier } from "../decorators/ModelDecorators";
@@ -49,12 +49,20 @@ export abstract class BaseEntity {
     @Column()
     public version: number = 0;
 
-    constructor(other?: any) {
+    constructor(other?: Partial<BaseEntity>) {
         if (other) {
-            this.uid = 'uid' in other ? other.uid : this.uid;
-            this.dateCreated = 'dateCreated' in other ? new Date(other.dateCreated) : this.dateCreated;
-            this.dateModified = 'dateModified' in other ? new Date(other.dateModified) : this.dateModified;
-            this.version = 'version' in other ? other.version : this.version;
+            this.uid = other.uid || this.uid;
+            this.dateCreated =
+                typeof other.dateCreated === "string"
+                    ? new Date(other.dateCreated)
+                    : other.dateCreated || this.dateCreated;
+            this.dateModified =
+                typeof other.dateModified === "string"
+                    ? new Date(other.dateModified)
+                    : other.dateModified || this.dateModified;
+            this.version = other.version || this.version;
         }
     }
 }
+
+export type PartialBaseEntity<T extends BaseEntity> = Partial<T> & Pick<T, "uid"> & Pick<T, "version">;

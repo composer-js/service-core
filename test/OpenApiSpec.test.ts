@@ -18,7 +18,7 @@ describe("OpenApiSpec Tests", () => {
 
     const createSpec = async (): Promise<OpenApiSpec | undefined> => {
         objectFactory.clear();
-        const apiSpec: OpenApiSpec | undefined = await objectFactory.newInstance(OpenApiSpec, "default");
+        const apiSpec: OpenApiSpec | undefined = await objectFactory.newInstance(OpenApiSpec, { name: "default" });
         const admin: AdminRoute = await objectFactory.newInstance(AdminRoute);
         const routeUtils: RouteUtils = await objectFactory.newInstance(RouteUtils);
         await routeUtils.registerRoute(express(), admin);
@@ -45,6 +45,7 @@ describe("OpenApiSpec Tests", () => {
                     url: config.get("cluster_url")
                 })
             ]));
+            expect(apiSpec1.paths["/admin/clear-cache"].get?.summary).toEqual("api_service - flush second-level cache");
         }
         expect(apiSpec2).toBeDefined();
         if (apiSpec2) {

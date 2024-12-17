@@ -92,7 +92,11 @@ export class BackgroundServiceManager {
                 this.logger.info("Starting service " + serviceName + "...");
 
                 // Instantiate the service class
-                const service: BackgroundService = await this.objectFactory.newInstance(clazz, serviceName, this.config, this.logger, ...args);
+                const service: BackgroundService = await this.objectFactory.newInstance(clazz, {
+                    name: serviceName,
+                    initialize: true,
+                    args: [this.config, this.logger, ...args],
+                });
                 this.services[serviceName] = service;
 
                 // Initialize the service

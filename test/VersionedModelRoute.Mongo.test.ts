@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
+// Copyright (C) Xsolla (USA), Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 import { default as config } from "./config";
 import * as request from "supertest";
@@ -8,19 +8,23 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import User from "./server/models/VersionedUser";
 import { MongoRepository, DataSource } from "typeorm";
 import { Logger } from "@composer-js/core";
-import * as rimraf from "rimraf";
 import * as uuid from "uuid";
 
 const mongod: MongoMemoryServer = new MongoMemoryServer({
     instance: {
         port: 9999,
-        dbName: "axr-test",
+        dbName: "mongomemory-cjs-test",
     },
 });
 let repo: MongoRepository<User>;
 const baseUrl: string = "/versionedusers";
 
-const createUser = async (firstName: string, lastName: string, age: number = 100, versions: number = 1): Promise<User[]> => {
+const createUser = async (
+    firstName: string,
+    lastName: string,
+    age: number = 100,
+    versions: number = 1
+): Promise<User[]> => {
     const results: User[] = [];
 
     const uid: string = uuid.v4();
@@ -31,7 +35,7 @@ const createUser = async (firstName: string, lastName: string, age: number = 100
             firstName,
             lastName,
             age,
-            version
+            version,
         });
 
         results.push(await repo.save(user));
@@ -70,7 +74,6 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
         await server.stop();
         await mongod.stop();
         await objectFactory.destroy();
-        rimraf.sync("tmp-*");
     });
 
     beforeEach(async () => {
@@ -91,9 +94,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
                 lastName: "Tennant",
                 age: 47,
             });
-            const result = await request(server.getApplication())
-                .post(baseUrl)
-                .send(user);
+            const result = await request(server.getApplication()).post(baseUrl).send(user);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
             expect(result.body.version).toEqual(user.version);
@@ -122,9 +123,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
                 age: 900,
             });
 
-            const result = await request(server.getApplication())
-                .post(baseUrl)
-                .send(userV2);
+            const result = await request(server.getApplication()).post(baseUrl).send(userV2);
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(userV2.uid);
             expect(result.body.version).toEqual(user.version + 1);
@@ -208,9 +207,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
 
         it("Can find document by id. [MongoDB]", async () => {
             const user: User = (await createUser("David", "Tennant", 47, 3))[2];
-            const result = await request(server.getApplication())
-                .get(`${baseUrl}/${user.uid}`)
-                .send();
+            const result = await request(server.getApplication()).get(`${baseUrl}/${user.uid}`).send();
             expect(result).toHaveProperty("body");
             expect(result.body.uid).toEqual(user.uid);
             expect(result.body.version).toEqual(user.version);
@@ -237,9 +234,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
             user.firstName = "Matt";
             user.lastName = "Smith";
             user.age = 36;
-            const result = await request(server.getApplication())
-                .put(`${baseUrl}/${user.uid}`)
-                .send(user);
+            const result = await request(server.getApplication()).put(`${baseUrl}/${user.uid}`).send(user);
             expect(result).toHaveProperty("body");
             expect(result.body).toHaveProperty("uid");
             expect(result.body.uid).toBe(user.uid);
@@ -269,14 +264,14 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
             const users: User[] = await createUsers(20);
             const result = await request(server.getApplication()).head(`${baseUrl}`);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe(users.length.toString());
+            expect(result.headers["content-length"]).toBe(users.length.toString());
         });
 
         it("Can count documents with multiple versions. [MongoDB]", async () => {
             const users: User[] = await createUsers(20, 3);
             const result = await request(server.getApplication()).head(`${baseUrl}`);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((20).toString());
+            expect(result.headers["content-length"]).toBe((20).toString());
         });
 
         it("Can count documents with criteria (eq). [MongoDB]", async () => {
@@ -285,7 +280,7 @@ describe("VersionedModelRoute Tests [MongoDB]", () => {
             await createUser("Matt", "Smith", 36, 4);
             const result = await request(server.getApplication()).head(`${baseUrl}?lastName=Doctor`);
             expect(result.headers).toHaveProperty("content-length");
-            expect(result.headers['content-length']).toBe((13).toString());
+            expect(result.headers["content-length"]).toBe((13).toString());
         });
 
         it("Can find all documents. [MongoDB]", async () => {
