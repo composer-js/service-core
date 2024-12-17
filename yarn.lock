@@ -505,7 +505,7 @@ __metadata:
     ws: "npm:^8.18.0"
   peerDependencies:
     "@composer-js/core": 6.x
-    connect-redis: 7.x
+    connect-redis: 8.x
     cors: 2.x
     express: 4.x
     express-session: 1.x
