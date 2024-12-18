@@ -28,7 +28,7 @@ import { BulkError } from "./BulkError";
 import { BackgroundService } from "./BackgroundService";
 import { AdminRoute } from "./routes";
 import { OpenApiSpec } from "./OpenApiSpec";
-import { ApiErrors } from "./ApiErrors";
+import { ApiErrorMessages, ApiErrors } from "./ApiErrors";
 import { RedisStore } from "connect-redis";
 import { ACLUtils } from "./security/ACLUtils";
 import { NotificationUtils } from "./NotificationUtils";
@@ -577,7 +577,7 @@ export class Server {
                                 const tmp: ApiError = new ApiError(
                                     ApiErrors.INTERNAL_ERROR,
                                     500,
-                                    ApiErrors.INTERNAL_ERROR
+                                    ApiErrorMessages.INTERNAL_ERROR
                                 );
                                 tmp.stack = err.stack;
                                 err = tmp;
@@ -589,11 +589,11 @@ export class Server {
                             if (!res.headersSent) {
                                 res.status(err.status);
                             }
-
                             const formattedError = {
                                 ...err,
                                 // https://stackoverflow.com/a/25245824
                                 level: err.level ? err.level.replace(/\u001b\[.*?m/g, "") : undefined, // eslint-disable-line no-control-regex
+                                message: err.message
                             };
                             res.json(formattedError);
                         }
