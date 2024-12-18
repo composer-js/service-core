@@ -1,9 +1,11 @@
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
-cache:
-    paths:
-        - node_modules/
-        - dist/
+default:
+    cache: &global_cachecache
+        paths:
+            - node_modules/
+            - dist/
+        policy: pull
 .job_template: &job_configuration
     image: node:lts-bookworm
     before_script:
@@ -12,6 +14,9 @@ cache:
 build:
     stage: build
     <<: *job_configuration
+    cache:
+        <<: *global_cachecache
+        policy: pull-push
     script:
         - yarn install
         - yarn build
@@ -22,11 +27,15 @@ test:
     <<: *job_configuration
     script:
         - yarn test --ci --forceExit
-
+    artifacts:
+        when: always
+        reports:
+            junit:
+                - junit.xml
 # Validation step
-validate: 
+validate:
     stage: test
-    <<: *job_configuration 
+    <<: *job_configuration
     allow_failure:
         exit_codes:
             - 101
@@ -35,10 +44,9 @@ validate:
         - bash ./validate.sh
 
 publish:
+    stage: deploy
     only:
         - tags
     <<: *job_configuration
-    stage: deploy
     script:
-        - yarn build
         - yarn npm publish --access public

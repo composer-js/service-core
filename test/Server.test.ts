@@ -6,7 +6,7 @@ process.env[`cors__origins`] = JSON.stringify(corsOrigins);
 
 import * as fs from "fs";
 import { default as config } from "./config";
-import { Server, ObjectFactory } from "../src";
+import { Server, ObjectFactory, ApiErrors } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as request from "supertest";
 import * as sqlite3 from "sqlite3";
@@ -239,6 +239,8 @@ describe("Server Tests", () => {
         expect(server.isRunning()).toBe(true);
         const result = await request(server.getApplication()).get("/error");
         expect(result.status).toBe(400);
-        expect(result.body.status).toBeDefined();
+        expect(result.body.status).toBe(400);
+        expect(result.body.code).toBe(ApiErrors.INVALID_REQUEST);
+        expect(result.body.message).toBe("This is a test.");
     });
 });
