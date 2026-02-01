@@ -741,7 +741,7 @@ export class OpenApiSpec {
                     result.additionalProperties = this.getSchemaReference(valType.name);
                 }
             } else {
-                result["$ref"] = this.getSchemaReference(subTypeInfo.name);
+                result["$ref"] = this.getSchemaReference(subTypeInfo.name)?.$ref;
             }
         } else if (this.isBuiltInType(typeInfo)) {
             // Convert the name to lowercase as that is compliant with OpenAPI
