@@ -1,7 +1,6 @@
 ﻿////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2018 AcceleratXR, Inc. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-import { Request } from "express";
 import { Strategy } from "passport-strategy";
 import { JWTUtils, JWTUtilsConfig, JWTUser, JWTPayload, ApiError } from "@composer-js/core";
 import { ApiErrorMessages, ApiErrors } from "../ApiErrors";
@@ -49,7 +48,7 @@ export class JWTStrategy extends Strategy {
         this.options.headerKey = options.headerKey.toLowerCase();
     }
 
-    public authenticate(req: Request, options?: any): void {
+    public authenticate(req: any, options?: any): void {
         options = options || {};
         let error: string = "";
         let user: JWTUser | undefined = undefined;
@@ -79,11 +78,7 @@ export class JWTStrategy extends Strategy {
         // them until we have a verified token.
         if (!user && this.options.headerKey && this.options.headerKey in req.headers) {
             const value: string | string[] | undefined = req.headers[this.options.headerKey];
-            const headers: string[] = Array.isArray(value)
-                ? value
-                : typeof value === "string"
-                    ? [value]
-                    : [];
+            const headers: string[] = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
 
             // Loop throught th
             for (const header in headers) {
