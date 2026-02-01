@@ -1,6 +1,6 @@
 {
     "name": "@composer-js/service-core",
-    "version": "8.0.3",
+    "version": "8.0.4",
     "description": "Provides all core functionality for ComposerJS based backend services.",
     "repository": "https://gitlab.com/AcceleratXR/composerjs/composer-service-core.git",
     "license": "MIT",
