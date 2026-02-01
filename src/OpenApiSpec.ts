@@ -10,10 +10,10 @@ const { Config, Init } = ObjectDecorators;
 
 /**
  * `OpenApiSpec` is a container for an OpenAPI specification.
- * 
+ *
  * This class wraps the behavior of openapi-ts to make it easier to build an OpenAPI
  * specification dynamically at runtime using the server ComposerJS information.
- * 
+ *
  * @author Jean-Philippe Steinmetz <info@acceleratxr.com>
  */
 export class OpenApiSpec {
@@ -86,8 +86,8 @@ export class OpenApiSpec {
             in: "path",
             required: true,
             schema: {
-                type: "string"
-            }
+                type: "string",
+            },
         });
         this.addParameter("page", {
             description: "The index of the current page when retrieving paginated results.",
@@ -95,8 +95,8 @@ export class OpenApiSpec {
             in: "query",
             required: false,
             schema: {
-                type: "number"
-            }
+                type: "number",
+            },
         });
         this.addParameter("limit", {
             description: "The maximum number of records to retrieve.",
@@ -104,8 +104,8 @@ export class OpenApiSpec {
             in: "query",
             required: false,
             schema: {
-                type: "number"
-            }
+                type: "number",
+            },
         });
         this.addParameter("sort", {
             description: "The property and direction with which to sort the results by.",
@@ -117,17 +117,17 @@ export class OpenApiSpec {
                     {
                         description: "The name of the property to sort by, in ascending order.",
                         type: "string",
-                        example: "propertyName"
+                        example: "propertyName",
                     },
                     {
                         description: "The name of the property to sort by, in ascending order.",
                         type: "object",
                         example: {
-                            "<propertyName>": "<direction>"
-                        }
-                    }
-                ]
-            }
+                            "<propertyName>": "<direction>",
+                        },
+                    },
+                ],
+            },
         });
         this.addParameter("version", {
             description: "The unique version of the resource.",
@@ -135,32 +135,32 @@ export class OpenApiSpec {
             in: "query",
             required: false,
             schema: {
-                type: "number"
-            }
+                type: "number",
+            },
         });
         this.addSchema("Error", {
             description: "Describes an error that has occurred within the service.",
             type: "object",
             properties: {
-                "message": {
+                message: {
                     description: "The textual description of the error.",
-                    type: "string"
+                    type: "string",
                 },
-                "stack": {
+                stack: {
                     description: "The stack trace of the error. Only available when `environment` is set to `dev`.",
-                    type: "object"
+                    type: "object",
                 },
-                "status": {
+                status: {
                     description: "The HTTP status code of the error.",
                     type: "number",
-                    example: 400
+                    example: 400,
                 },
-            }
+            },
         });
 
         // Add the URL to this cluster
         this.addServer({
-            url: this.config.get("cluster_url")
+            url: this.config.get("cluster_url"),
         });
     }
 
@@ -288,7 +288,7 @@ export class OpenApiSpec {
 
     /**
      * Adds a ComposerJS model class to the OpenAPI specification as a schema.
-     * 
+     *
      * @param name The name of the model to add.
      * @param clazz The class prototype to build the schema from.
      */
@@ -300,7 +300,7 @@ export class OpenApiSpec {
 
     /**
      * Adds a ComposerJS route handler to the OpenAPI specification.
-     * 
+     *
      * @param name The name of the route handler. (e.g. findAll)
      * @param path The complete path of the route handler. (e.g. `/my/resources/:id`)
      * @param method The HTTP verb type that the route handler processes. (e.g. `GET`)
@@ -308,7 +308,14 @@ export class OpenApiSpec {
      * @param docs The object containing all documentation information about the route handler.
      * @param routeClass The parent route class that the route handler belongs to.
      */
-    public addRoute(name: string, path: string, method: string, metadata: any, docs: DocumentsData, routeClass: any): OpenApiSpec {
+    public addRoute(
+        name: string,
+        path: string,
+        method: string,
+        metadata: any,
+        docs: DocumentsData,
+        routeClass: any
+    ): OpenApiSpec {
         const { after, authRequired, before } = metadata;
         let { authStrategies } = metadata;
         const { description, example, summary, tags } = docs;
@@ -475,54 +482,80 @@ export class OpenApiSpec {
         }
         const errorContent = {
             ["application/json"]: {
-                schema: this.getSchemaReference("Error")
-            }
+                schema: this.getSchemaReference("Error"),
+            },
         };
         // Finally add the operation object for the given method
         const opObject: oa.OperationObject = {
             description,
             parameters: mParams.length > 0 ? mParams : undefined,
-            requestBody: requestSchemas.length > 0 ? {
-                content: {
-                    [contentType]: {
-                        example: example,
-                        schema: requestSchemas.length > 1 ? {
-                            oneOf: requestSchemas
-                        } : requestSchemas[0]
-                    }
-                }
-            } : undefined,
+            requestBody:
+                requestSchemas.length > 0
+                    ? {
+                          content: {
+                              [contentType]: {
+                                  example: example,
+                                  schema:
+                                      requestSchemas.length > 1
+                                          ? {
+                                                oneOf: requestSchemas,
+                                            }
+                                          : requestSchemas[0],
+                              },
+                          },
+                      }
+                    : undefined,
             responses: {
-                ["200"]: responseSchemas.length > 0 ? {
-                    description: "Returned when the operation is successful.",
-                    content: {
-                        [contentType]: {
-                            schema: responseSchemas.length > 1 ? {
-                                oneOf: responseSchemas
-                            } : responseSchemas[0]
-                        }
-                    }
-                } : undefined,
-                ["204"]: responseSchemas.length === 0 ? {
-                    description: "No Content"
-                } : undefined,
-                ["400"]: requestSchemas.length > 0 ? {
-                    description: "Returned when the request content is invalid.",
-                    content: errorContent
-                } : undefined,
-                ["401"]: authRequired ? {
-                    description: "Returned when a valid authentication token is not provided.",
-                    content: errorContent
-                } : undefined,
-                ["403"]: aclInfo ? {
-                    description: "Returned when the user does not have permission to perform this action.",
-                    content: errorContent
-                } : undefined
+                ["200"]:
+                    responseSchemas.length > 0
+                        ? {
+                              description: "Returned when the operation is successful.",
+                              content: {
+                                  [contentType]: {
+                                      schema:
+                                          responseSchemas.length > 1
+                                              ? {
+                                                    oneOf: responseSchemas,
+                                                }
+                                              : responseSchemas[0],
+                                  },
+                              },
+                          }
+                        : undefined,
+                ["204"]:
+                    responseSchemas.length === 0
+                        ? {
+                              description: "No Content",
+                          }
+                        : undefined,
+                ["400"]:
+                    requestSchemas.length > 0
+                        ? {
+                              description: "Returned when the request content is invalid.",
+                              content: errorContent,
+                          }
+                        : undefined,
+                ["401"]: authRequired
+                    ? {
+                          description: "Returned when a valid authentication token is not provided.",
+                          content: errorContent,
+                      }
+                    : undefined,
+                ["403"]: aclInfo
+                    ? {
+                          description: "Returned when the user does not have permission to perform this action.",
+                          content: errorContent,
+                      }
+                    : undefined,
             },
             security,
-            summary: (summary && StringUtils.findAndReplace(summary, { serviceName: `${this.config.get("service_name")} -` || "Service -" })),
+            summary:
+                summary &&
+                StringUtils.findAndReplace(summary, {
+                    serviceName: `${this.config.get("service_name")} -` || "Service -",
+                }),
             tags,
-            "x-name": name
+            "x-name": name,
         };
 
         data[method] = opObject;
@@ -534,8 +567,8 @@ export class OpenApiSpec {
 
     /**
      * Determines if the given type is a primitive or built-in class type.
-     * @param value 
-     * @returns 
+     * @param value
+     * @returns
      */
     private isBuiltInType(value: any): boolean {
         // Is it a null or undefined type?
@@ -550,7 +583,7 @@ export class OpenApiSpec {
 
     /**
      * Creates a new SchemaObject given the specified class prototype.
-     * 
+     *
      * @param clazz The class prototype to build a schema object from.
      * @returns The schema object with all information derived from the given class prototype.
      */
@@ -601,7 +634,16 @@ export class OpenApiSpec {
             const schemas: (oa.SchemaObject | oa.ReferenceObject)[] = [];
             for (const typeInfo of typesInfo) {
                 if (typeInfo) {
-                    schemas.push(this.createSchemaObject(typeInfo, docs.default || defaults[member], description, example, format, identifier));
+                    schemas.push(
+                        this.createSchemaObject(
+                            typeInfo,
+                            docs.default || defaults[member],
+                            description,
+                            example,
+                            format,
+                            identifier
+                        )
+                    );
                 }
             }
 
@@ -610,14 +652,14 @@ export class OpenApiSpec {
                     default: docs.default || defaults[member],
                     description,
                     example,
-                    oneOf: schemas
+                    oneOf: schemas,
                 };
             } else if (schemas.length === 1) {
                 result.properties[member] = {
                     default: docs.default || defaults[member],
                     description,
                     example,
-                    ...schemas[0]
+                    ...schemas[0],
                 };
             }
 
@@ -631,16 +673,23 @@ export class OpenApiSpec {
 
     /**
      * Creates a schema object for the given type.
-     * 
-     * @param typeInfo 
-     * @param defaultValue 
-     * @param description 
-     * @param example 
-     * @param format 
-     * @param identifier 
-     * @returns 
+     *
+     * @param typeInfo
+     * @param defaultValue
+     * @param description
+     * @param example
+     * @param format
+     * @param identifier
+     * @returns
      */
-    public createSchemaObject(typeInfo: any, defaultValue?: any, description?: string, example?: any, format?: string, identifier?: boolean): oa.SchemaObject | oa.ReferenceObject {
+    public createSchemaObject(
+        typeInfo: any,
+        defaultValue?: any,
+        description?: string,
+        example?: any,
+        format?: string,
+        identifier?: boolean
+    ): oa.SchemaObject | oa.ReferenceObject {
         let result: oa.SchemaObject | oa.ReferenceObject = {
             default: defaultValue,
             description,
@@ -686,7 +735,7 @@ export class OpenApiSpec {
 
                 if (this.isBuiltInType(valType)) {
                     result.additionalProperties = {
-                        type: valType.name.toLowerCase()
+                        type: valType.name.toLowerCase(),
                     };
                 } else {
                     result.additionalProperties = this.getSchemaReference(valType.name);
@@ -716,7 +765,7 @@ export class OpenApiSpec {
             // to a schema even if one doesn't exist at this very moment (the schema for this type may not have
             // been created yet).
             result = {
-                $ref: `#/components/schemas/${typeInfo.fqn || typeInfo.name}`
+                $ref: `#/components/schemas/${typeInfo.fqn || typeInfo.name}`,
             };
         }
 
@@ -725,7 +774,7 @@ export class OpenApiSpec {
 
     /**
      * Returns a reference to an existing parameter defined in the OpenAPI specification for the given name.
-     * 
+     *
      * @param name The name of the parameter to find a reference for.
      * @returns The reference to the parameter with the given name, otherwise `undefined`.
      */
@@ -733,7 +782,7 @@ export class OpenApiSpec {
         const components: oa.ComponentsObject | undefined = this.components;
         if (components && components.parameters && components.parameters[name]) {
             return {
-                $ref: `#/components/parameters/${name}`
+                $ref: `#/components/parameters/${name}`,
             };
         }
         return undefined;
@@ -741,7 +790,7 @@ export class OpenApiSpec {
 
     /**
      * Returns a reference to an existing schema defined in the OpenAPI specification for the given name.
-     * 
+     *
      * @param name The name of the schema to find a reference for.
      * @returns The reference to the schema with the given name, otherwise `undefined`.
      */
@@ -749,7 +798,7 @@ export class OpenApiSpec {
         const components: oa.ComponentsObject | undefined = this.components;
         if (components && components.schemas && components.schemas[name]) {
             return {
-                $ref: `#/components/schemas/${name}`
+                $ref: `#/components/schemas/${name}`,
             };
         }
         return undefined;
@@ -765,19 +814,19 @@ export class OpenApiSpec {
         }
         const options = {
             arrayMerge: (target, source, options) => {
-                const destination = target.slice()
+                const destination = target.slice();
                 source.forEach((item, index) => {
-                    if (typeof destination[index] === 'undefined') {
-                        destination[index] = options.cloneUnlessOtherwiseSpecified(item, options)
+                    if (typeof destination[index] === "undefined") {
+                        destination[index] = options.cloneUnlessOtherwiseSpecified(item, options);
                     } else if (options.isMergeableObject(item)) {
                         if (!_.find(destination, item)) {
                             destination.push(item);
                         }
                     }
-                })
-                return destination
-            }
-        }
+                });
+                return destination;
+            },
+        };
         const otherSpec: oa.OpenApiBuilder = oa.OpenApiBuilder.create(other);
         const merged: any = merge(this.getSpec(), otherSpec.getSpec(), options);
         this._builder = oa.OpenApiBuilder.create(merged);

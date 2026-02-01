@@ -66,9 +66,9 @@ export class JWTStrategy extends Strategy {
                     user = payload.profile as JWTUser;
                 }
                 // Store the payload in the request in case someone needs it
-                (req as any).authPayload = payload;
+                req.authPayload = payload;
                 // Store the full token in the request in case someone needs it
-                (req as any).authToken = token;
+                req.authToken = token;
             } catch (err: any) {
                 error = err;
             }
@@ -104,9 +104,9 @@ export class JWTStrategy extends Strategy {
                         break;
                     }
                     // Store the payload in the request in case someone needs it
-                    (req as any).authPayload = payload;
+                    req.authPayload = payload;
                     // Store the full token in the request in case someone needs it
-                    (req as any).authToken = token;
+                    req.authToken = token;
                 } catch (err: any) {
                     error = err;
                 }
@@ -133,9 +133,9 @@ export class JWTStrategy extends Strategy {
                     user = payload.profile as JWTUser;
                 }
                 // Store the payload in the request in case someone needs it
-                (req as any).authPayload = payload;
+                req.authPayload = payload;
                 // Store the full token in the request in case someone needs it
-                (req as any).authToken = token;
+                req.authToken = token;
             } catch (err: any) {
                 error = err;
             }
